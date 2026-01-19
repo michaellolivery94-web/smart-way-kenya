@@ -7,20 +7,23 @@ import {
   ChevronDown,
   Wifi,
   WifiOff,
-  Zap
+  Zap,
+  Download
 } from "lucide-react";
 import { useState } from "react";
 import { DirectionCard } from "./DirectionCard";
 import { LaneGuidance } from "./LaneGuidance";
+import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 
 interface NavigationPanelProps {
   isNavigating?: boolean;
   isPro?: boolean;
+  onOpenOfflineMaps?: () => void;
 }
 
-export const NavigationPanel = ({ isNavigating = false, isPro = false }: NavigationPanelProps) => {
+export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOfflineMaps }: NavigationPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isOnline] = useState(true);
+  const { isOnline, downloadedRegions } = useOfflineMaps();
 
   const upcomingTurns = [
     {
@@ -65,15 +68,24 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false }: Navigat
                 <WifiOff className="w-4 h-4 text-warning" />
               )}
               <span className="text-xs text-muted-foreground">
-                {isOnline ? "Online" : "Offline Mode"}
+                {isOnline ? "Online" : `Offline (${downloadedRegions.length} maps)`}
               </span>
             </div>
-            {isPro && (
-              <div className="pro-badge">
-                <Zap className="w-3 h-3" />
-                PRO
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onOpenOfflineMaps}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-secondary text-secondary-foreground text-xs hover:bg-secondary/80 transition-colors"
+              >
+                <Download className="w-3 h-3" />
+                <span>Offline</span>
+              </button>
+              {isPro && (
+                <div className="pro-badge">
+                  <Zap className="w-3 h-3" />
+                  PRO
+                </div>
+              )}
+            </div>
           </div>
           
           <button className="nav-button-primary w-full py-4 text-lg">
@@ -117,7 +129,13 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false }: Navigat
           {isOnline ? (
             <Wifi className="w-4 h-4 text-primary-foreground/70" />
           ) : (
-            <WifiOff className="w-4 h-4 text-warning" />
+            <button 
+              onClick={onOpenOfflineMaps}
+              className="flex items-center gap-1 text-warning"
+            >
+              <WifiOff className="w-4 h-4" />
+              <span className="text-xs">{downloadedRegions.length} maps</span>
+            </button>
           )}
           {isPro && (
             <div className="pro-badge">
@@ -174,9 +192,12 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false }: Navigat
             <Fuel className="w-5 h-5" />
             <span className="text-xs">Fuel</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-            <Clock className="w-5 h-5" />
-            <span className="text-xs">ETA</span>
+          <button 
+            onClick={onOpenOfflineMaps}
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Download className="w-5 h-5" />
+            <span className="text-xs">Offline</span>
           </button>
         </div>
       </div>
