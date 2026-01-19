@@ -5,12 +5,18 @@ import { Header } from "@/components/navigation/Header";
 import { SearchBar } from "@/components/navigation/SearchBar";
 import { NavigationPanel } from "@/components/navigation/NavigationPanel";
 import { ReportButton } from "@/components/navigation/ReportButton";
+import { OfflineMapsManager } from "@/components/navigation/OfflineMapsManager";
+import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import { toast } from "sonner";
+import { WifiOff } from "lucide-react";
 
 const Index = () => {
   const [mode, setMode] = useState<"commuter" | "pro">("commuter");
   const [isNavigating, setIsNavigating] = useState(true);
   const [destination, setDestination] = useState<string | null>("Westlands, Nairobi");
+  const [showOfflineMaps, setShowOfflineMaps] = useState(false);
+  
+  const { isOnline, downloadedRegions } = useOfflineMaps();
 
   const handleModeChange = (newMode: "commuter" | "pro") => {
     setMode(newMode);
@@ -35,11 +41,36 @@ const Index = () => {
 
   return (
     <div className="h-screen w-screen overflow-hidden relative">
+      {/* Offline Banner */}
+      <AnimatePresence>
+        {!isOnline && (
+          <motion.div
+            initial={{ y: -50 }}
+            animate={{ y: 0 }}
+            exit={{ y: -50 }}
+            className="fixed top-0 left-0 right-0 bg-warning text-warning-foreground text-center py-2 text-sm font-medium z-50 flex items-center justify-center gap-2"
+          >
+            <WifiOff className="w-4 h-4" />
+            Offline Mode - Using cached maps
+            {downloadedRegions.length > 0 && (
+              <span className="opacity-75">
+                ({downloadedRegions.length} regions available)
+              </span>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Map Layer */}
       <MapView isNavigating={isNavigating} isPro={mode === "pro"} />
 
       {/* Header */}
-      <Header mode={mode} onModeChange={handleModeChange} isNavigating={isNavigating} />
+      <Header 
+        mode={mode} 
+        onModeChange={handleModeChange} 
+        isNavigating={isNavigating}
+        onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+      />
 
       {/* Search Bar - Only show when not navigating */}
       <AnimatePresence>
@@ -94,21 +125,20 @@ const Index = () => {
       </AnimatePresence>
 
       {/* Navigation Panel */}
-      <NavigationPanel isNavigating={isNavigating} isPro={mode === "pro"} />
+      <NavigationPanel 
+        isNavigating={isNavigating} 
+        isPro={mode === "pro"}
+        onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+      />
 
       {/* Report FAB */}
       <ReportButton onReport={handleReport} />
 
-      {/* Offline Banner - Demo */}
-      {false && (
-        <motion.div
-          initial={{ y: -50 }}
-          animate={{ y: 0 }}
-          className="fixed top-0 left-0 right-0 bg-warning text-warning-foreground text-center py-2 text-sm font-medium z-50"
-        >
-          Offline Mode - Using cached maps for Nairobi
-        </motion.div>
-      )}
+      {/* Offline Maps Manager */}
+      <OfflineMapsManager 
+        isOpen={showOfflineMaps} 
+        onClose={() => setShowOfflineMaps(false)} 
+      />
     </div>
   );
 };
