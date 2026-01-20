@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapView } from "@/components/navigation/MapView";
 import { Header } from "@/components/navigation/Header";
-import { SearchBar } from "@/components/navigation/SearchBar";
+import { LocationSearch } from "@/components/navigation/LocationSearch";
 import { NavigationPanel } from "@/components/navigation/NavigationPanel";
 import { ReportButton } from "@/components/navigation/ReportButton";
 import { OfflineMapsManager } from "@/components/navigation/OfflineMapsManager";
@@ -12,8 +12,9 @@ import { WifiOff } from "lucide-react";
 
 const Index = () => {
   const [mode, setMode] = useState<"commuter" | "pro">("commuter");
-  const [isNavigating, setIsNavigating] = useState(true);
-  const [destination, setDestination] = useState<string | null>("Westlands, Nairobi");
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [destination, setDestination] = useState<string | null>(null);
+  const [origin, setOrigin] = useState<string>("Current Location");
   const [showOfflineMaps, setShowOfflineMaps] = useState(false);
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
@@ -27,10 +28,13 @@ const Index = () => {
     );
   };
 
-  const handleSearch = (query: string) => {
-    setDestination(query);
+  const handleStartNavigation = (from: string, to: string) => {
+    setOrigin(from);
+    setDestination(to);
     setIsNavigating(true);
-    toast.success(`Navigating to ${query}`);
+    toast.success(`Navigating to ${to}`, {
+      description: `From: ${from}`,
+    });
   };
 
   const handleReport = (type: string) => {
@@ -72,16 +76,16 @@ const Index = () => {
         onOpenOfflineMaps={() => setShowOfflineMaps(true)}
       />
 
-      {/* Search Bar - Only show when not navigating */}
+      {/* Location Search - Only show when not navigating */}
       <AnimatePresence>
         {!isNavigating && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-24 left-4 right-4 z-20"
+            className="absolute top-20 sm:top-24 left-3 right-3 sm:left-4 sm:right-4 z-20"
           >
-            <SearchBar onSearch={handleSearch} />
+            <LocationSearch onStartNavigation={handleStartNavigation} />
           </motion.div>
         )}
       </AnimatePresence>
