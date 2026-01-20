@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Clock, Star, Navigation, ArrowDownUp, X, Locate } from "lucide-react";
-import { useState, useRef } from "react";
+import { Search, MapPin, Clock, Star, Navigation, ArrowDownUp, X, Locate, Mic, MicOff } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { toast } from "sonner";
 
 interface LocationSearchProps {
   onStartNavigation?: (from: string, to: string) => void;
@@ -22,7 +24,58 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
   const [toLocation, setToLocation] = useState("");
   const [activeField, setActiveField] = useState<"from" | "to" | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [voiceTargetField, setVoiceTargetField] = useState<"from" | "to" | null>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
+
+  const { 
+    isListening, 
+    isSupported, 
+    interimTranscript,
+    startListening, 
+    stopListening 
+  } = useVoiceInput({
+    onResult: (transcript) => {
+      if (voiceTargetField === "from") {
+        setFromLocation(transcript);
+      } else if (voiceTargetField === "to") {
+        setToLocation(transcript);
+      }
+      setVoiceTargetField(null);
+      toast.success(`Got it: "${transcript}"`);
+    },
+    onError: (error) => {
+      toast.error(error);
+      setVoiceTargetField(null);
+    },
+  });
+
+  // Update the field with interim transcript while speaking
+  useEffect(() => {
+    if (isListening && interimTranscript && voiceTargetField) {
+      if (voiceTargetField === "from") {
+        setFromLocation(interimTranscript);
+      } else if (voiceTargetField === "to") {
+        setToLocation(interimTranscript);
+      }
+    }
+  }, [interimTranscript, isListening, voiceTargetField]);
+
+  const handleVoiceInput = (field: "from" | "to") => {
+    if (isListening && voiceTargetField === field) {
+      stopListening();
+      setVoiceTargetField(null);
+    } else {
+      if (isListening) {
+        stopListening();
+      }
+      setVoiceTargetField(field);
+      setActiveField(null); // Close suggestions when using voice
+      startListening();
+      toast.info("Listening... Speak your location", {
+        duration: 2000,
+      });
+    }
+  };
 
   const handleSwapLocations = () => {
     const temp = fromLocation;
@@ -128,6 +181,8 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                     className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl transition-colors cursor-text ${
                       activeField === "from" 
                         ? "bg-secondary ring-2 ring-primary" 
+                        : isListening && voiceTargetField === "from"
+                        ? "bg-secondary ring-2 ring-success animate-pulse"
                         : "bg-secondary/50 hover:bg-secondary/80"
                     }`}
                     onClick={() => setActiveField("from")}
@@ -141,7 +196,7 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                       onFocus={() => setActiveField("from")}
                       className="flex-1 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                     />
-                    {fromLocation && fromLocation !== "Current Location" && (
+                    {fromLocation && fromLocation !== "Current Location" && !isListening && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -153,6 +208,27 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                         <X className="w-4 h-4 text-muted-foreground" />
                       </button>
                     )}
+                    {/* Voice input button for From field */}
+                    {isSupported && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVoiceInput("from");
+                        }}
+                        className={`p-2 rounded-full transition-all ${
+                          isListening && voiceTargetField === "from"
+                            ? "bg-success text-success-foreground animate-pulse"
+                            : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                        }`}
+                        aria-label={isListening && voiceTargetField === "from" ? "Stop listening" : "Voice input"}
+                      >
+                        {isListening && voiceTargetField === "from" ? (
+                          <MicOff className="w-4 h-4" />
+                        ) : (
+                          <Mic className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
 
                   {/* To field */}
@@ -160,6 +236,8 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                     className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl transition-colors cursor-text ${
                       activeField === "to" 
                         ? "bg-secondary ring-2 ring-primary" 
+                        : isListening && voiceTargetField === "to"
+                        ? "bg-secondary ring-2 ring-success animate-pulse"
                         : "bg-secondary/50 hover:bg-secondary/80"
                     }`}
                     onClick={() => setActiveField("to")}
@@ -174,7 +252,7 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                       onFocus={() => setActiveField("to")}
                       className="flex-1 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                     />
-                    {toLocation && (
+                    {toLocation && !isListening && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -184,6 +262,27 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                         aria-label="Clear"
                       >
                         <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    )}
+                    {/* Voice input button for To field */}
+                    {isSupported && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVoiceInput("to");
+                        }}
+                        className={`p-2 rounded-full transition-all ${
+                          isListening && voiceTargetField === "to"
+                            ? "bg-success text-success-foreground animate-pulse"
+                            : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                        }`}
+                        aria-label={isListening && voiceTargetField === "to" ? "Stop listening" : "Voice input"}
+                      >
+                        {isListening && voiceTargetField === "to" ? (
+                          <MicOff className="w-4 h-4" />
+                        ) : (
+                          <Mic className="w-4 h-4" />
+                        )}
                       </button>
                     )}
                   </div>
