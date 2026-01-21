@@ -257,3 +257,176 @@
     color: white;
   }
 }
+
+/* ========================================
+   LEAFLET MAP CUSTOMIZATIONS
+   ======================================== */
+
+/* Base container styling */
+.leaflet-container {
+  background: hsl(var(--background)) !important;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Attribution styling */
+.leaflet-control-attribution {
+  background: hsl(var(--card) / 0.85) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 10px !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--border) / 0.5) !important;
+}
+
+.leaflet-control-attribution a {
+  color: hsl(var(--primary)) !important;
+}
+
+/* Custom marker styles */
+.custom-location-marker,
+.custom-destination-marker,
+.custom-poi-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Popup customization */
+.leaflet-popup-content-wrapper {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-radius: 12px !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 8px 32px hsl(var(--background) / 0.6) !important;
+  backdrop-filter: blur(8px);
+}
+
+.leaflet-popup-content {
+  margin: 12px 16px !important;
+  font-size: 14px !important;
+}
+
+.leaflet-popup-tip {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.leaflet-popup-close-button {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Hide default zoom controls (we use custom) */
+.leaflet-control-zoom {
+  display: none !important;
+}
+
+/* Smooth tile transitions */
+.leaflet-tile {
+  transition: opacity 0.25s ease-in-out;
+}
+
+.leaflet-fade-anim .leaflet-tile {
+  will-change: opacity;
+}
+
+.leaflet-tile-loaded {
+  opacity: 1;
+}
+
+/* Touch handling improvements for mobile */
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+  border: none !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+/* Marker cluster styling (if used) */
+.marker-cluster {
+  background: hsl(var(--primary) / 0.3) !important;
+  border: 2px solid hsl(var(--primary)) !important;
+}
+
+.marker-cluster div {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600 !important;
+}
+
+/* Route line animation */
+@keyframes route-dash {
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
+.route-animated-line {
+  animation: route-dash 1s linear infinite;
+}
+
+/* Pulsing marker animation */
+@keyframes marker-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.marker-pulse {
+  animation: marker-pulse 2s ease-out infinite;
+}
+
+/* Direction arrow rotation */
+@keyframes arrow-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.direction-arrow {
+  animation: arrow-bounce 1.5s ease-in-out infinite;
+}
+
+/* Traffic layer colors */
+.traffic-light {
+  stroke: hsl(var(--success)) !important;
+}
+
+.traffic-moderate {
+  stroke: hsl(var(--warning)) !important;
+}
+
+.traffic-heavy {
+  stroke: hsl(var(--destructive)) !important;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .leaflet-control-attribution {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+  }
+  
+  .leaflet-popup-content-wrapper {
+    border-radius: 10px !important;
+  }
+  
+  .leaflet-popup-content {
+    margin: 10px 12px !important;
+    font-size: 13px !important;
+  }
+}
