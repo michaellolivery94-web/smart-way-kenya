@@ -1,321 +1,387 @@
-import { motion } from "framer-motion";
-import { Compass, Plus, Minus, Navigation2, Layers, MapPin, Building2, Fuel, ShoppingBag, Trees } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Compass, Plus, Minus, Navigation2, Layers, MapPin, 
+  Building2, Fuel, ShoppingBag, Trees, Locate, Satellite,
+  Map as MapIcon, TrafficCone
+} from "lucide-react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix Leaflet default marker icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
 
 interface MapViewProps {
   isNavigating?: boolean;
   isPro?: boolean;
+  origin?: { lat: number; lng: number } | null;
+  destination?: { lat: number; lng: number } | null;
 }
 
-export const MapView = ({ isNavigating = false, isPro = false }: MapViewProps) => {
+// Nairobi coordinates
+const NAIROBI_CENTER: [number, number] = [-1.2921, 36.8219];
+
+// POI locations in Nairobi
+const NAIROBI_POIS = [
+  { name: "Sarit Centre", lat: -1.2647, lng: 36.8027, icon: ShoppingBag, color: "warning" },
+  { name: "Westgate Mall", lat: -1.2634, lng: 36.8048, icon: ShoppingBag, color: "warning" },
+  { name: "The Hub Karen", lat: -1.3273, lng: 36.7127, icon: ShoppingBag, color: "warning" },
+  { name: "KICC", lat: -1.2864, lng: 36.8172, icon: Building2, color: "muted-foreground" },
+  { name: "Nation Centre", lat: -1.2844, lng: 36.8234, icon: Building2, color: "muted-foreground" },
+  { name: "Shell Westlands", lat: -1.2689, lng: 36.8092, icon: Fuel, color: "warning" },
+  { name: "Total Ngong Rd", lat: -1.3012, lng: 36.7892, icon: Fuel, color: "warning" },
+  { name: "Uhuru Park", lat: -1.2891, lng: 36.8126, icon: Trees, color: "success" },
+  { name: "Central Park", lat: -1.2755, lng: 36.8182, icon: Trees, color: "success" },
+  { name: "Karura Forest", lat: -1.2355, lng: 36.8327, icon: Trees, color: "success" },
+];
+
+// Map tile providers
+const MAP_TILES = {
+  streets: {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    name: "Streets"
+  },
+  satellite: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution: '&copy; Esri',
+    name: "Satellite"
+  },
+  dark: {
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+    name: "Dark"
+  },
+  terrain: {
+    url: "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
+    attribution: '&copy; Stamen Design',
+    name: "Terrain"
+  }
+};
+
+type MapTileType = keyof typeof MAP_TILES;
+
+export const MapView = ({ 
+  isNavigating = false, 
+  isPro = false,
+  origin = null,
+  destination = null 
+}: MapViewProps) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const routeLayerRef = useRef<L.LayerGroup | null>(null);
+  const markerLayerRef = useRef<L.LayerGroup | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  
+  const [mapTileType, setMapTileType] = useState<MapTileType>("dark");
+  const [showLayerPicker, setShowLayerPicker] = useState(false);
+  const [currentSpeed, setCurrentSpeed] = useState(45);
+  const [userLocation, setUserLocation] = useState<[number, number]>(NAIROBI_CENTER);
+  const [isLocating, setIsLocating] = useState(false);
+  const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    const map = L.map(mapRef.current, {
+      center: NAIROBI_CENTER,
+      zoom: 14,
+      zoomControl: false,
+      attributionControl: false,
+    });
+
+    // Add tile layer
+    const tileLayer = L.tileLayer(MAP_TILES[mapTileType].url, {
+      attribution: MAP_TILES[mapTileType].attribution,
+      maxZoom: 19,
+    }).addTo(map);
+
+    tileLayerRef.current = tileLayer;
+    
+    // Create layer groups for routes and markers
+    routeLayerRef.current = L.layerGroup().addTo(map);
+    markerLayerRef.current = L.layerGroup().addTo(map);
+
+    // Add attribution
+    L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
+
+    mapInstanceRef.current = map;
+
+    // Add current location marker
+    addCurrentLocationMarker(map, userLocation);
+
+    // Add POI markers
+    addPOIMarkers(map);
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  // Update tile layer when type changes
+  useEffect(() => {
+    if (!mapInstanceRef.current || !tileLayerRef.current) return;
+
+    tileLayerRef.current.setUrl(MAP_TILES[mapTileType].url);
+  }, [mapTileType]);
+
+  // Handle navigation route
+  useEffect(() => {
+    if (!mapInstanceRef.current || !routeLayerRef.current) return;
+
+    routeLayerRef.current.clearLayers();
+
+    if (isNavigating) {
+      // Demo route in Nairobi (Westlands to CBD)
+      const startPoint: [number, number] = origin 
+        ? [origin.lat, origin.lng] 
+        : [-1.2689, 36.8092]; // Westlands
+      const endPoint: [number, number] = destination 
+        ? [destination.lat, destination.lng] 
+        : [-1.2864, 36.8172]; // KICC
+
+      // Fetch route from OSRM
+      fetchRoute(startPoint, endPoint);
+    }
+  }, [isNavigating, origin, destination]);
+
+  // Simulate speed changes in Pro mode
+  useEffect(() => {
+    if (!isPro || !isNavigating) return;
+
+    const interval = setInterval(() => {
+      setCurrentSpeed(prev => {
+        const change = Math.floor(Math.random() * 10) - 5;
+        return Math.max(20, Math.min(80, prev + change));
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isPro, isNavigating]);
+
+  const fetchRoute = async (start: [number, number], end: [number, number]) => {
+    try {
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`
+      );
+      const data = await response.json();
+
+      if (data.routes && data.routes.length > 0 && routeLayerRef.current) {
+        const route = data.routes[0];
+        const coordinates = route.geometry.coordinates.map(
+          (coord: [number, number]) => [coord[1], coord[0]] as [number, number]
+        );
+
+        // Add route polyline with gradient effect
+        const routeLine = L.polyline(coordinates, {
+          color: '#10B981',
+          weight: 6,
+          opacity: 0.9,
+          lineCap: 'round',
+          lineJoin: 'round',
+        });
+
+        // Add glow effect
+        const glowLine = L.polyline(coordinates, {
+          color: '#10B981',
+          weight: 14,
+          opacity: 0.3,
+          lineCap: 'round',
+          lineJoin: 'round',
+        });
+
+        routeLayerRef.current.addLayer(glowLine);
+        routeLayerRef.current.addLayer(routeLine);
+
+        // Add destination marker
+        const destIcon = L.divIcon({
+          html: `<div class="relative">
+            <div class="w-10 h-10 bg-success rounded-full flex items-center justify-center shadow-lg animate-pulse">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            </div>
+          </div>`,
+          className: 'custom-destination-marker',
+          iconSize: [40, 40],
+          iconAnchor: [20, 40],
+        });
+
+        L.marker(coordinates[coordinates.length - 1], { icon: destIcon })
+          .addTo(routeLayerRef.current);
+
+        // Calculate and set route info
+        const distanceKm = (route.distance / 1000).toFixed(1);
+        const durationMins = Math.round(route.duration / 60);
+        setRouteInfo({
+          distance: `${distanceKm} km`,
+          duration: `${durationMins} min`
+        });
+
+        // Fit map to route bounds
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.fitBounds(routeLine.getBounds(), { 
+            padding: [50, 50],
+            maxZoom: 15
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch route:', error);
+      // Fallback: draw straight line
+      if (routeLayerRef.current) {
+        const fallbackLine = L.polyline([start, end], {
+          color: '#10B981',
+          weight: 5,
+          opacity: 0.8,
+          dashArray: '10, 10',
+        });
+        routeLayerRef.current.addLayer(fallbackLine);
+      }
+    }
+  };
+
+  const addCurrentLocationMarker = (map: L.Map, location: [number, number]) => {
+    const locationIcon = L.divIcon({
+      html: `<div class="relative">
+        <div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-30" style="width: 32px; height: 32px; margin: -8px;"></div>
+        <div class="w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center">
+          <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+          </svg>
+        </div>
+      </div>`,
+      className: 'custom-location-marker',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+
+    L.marker(location, { icon: locationIcon, zIndexOffset: 1000 }).addTo(map);
+  };
+
+  const addPOIMarkers = (map: L.Map) => {
+    if (!markerLayerRef.current) return;
+
+    NAIROBI_POIS.forEach((poi) => {
+      const colorClass = poi.color === 'success' ? '#10B981' 
+        : poi.color === 'warning' ? '#F59E0B' 
+        : '#6B7280';
+
+      const poiIcon = L.divIcon({
+        html: `<div class="bg-card/90 backdrop-blur px-2 py-1.5 rounded-lg shadow-lg border border-border flex items-center gap-1.5 whitespace-nowrap">
+          <div class="w-3 h-3" style="color: ${colorClass}">
+            <svg fill="currentColor" viewBox="0 0 24 24" class="w-full h-full">
+              ${poi.icon === ShoppingBag ? '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>' 
+                : poi.icon === Building2 ? '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>'
+                : poi.icon === Fuel ? '<path d="M3 22V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v14"/><path d="M15 13h1a2 2 0 0 1 2 2v4a1 1 0 0 0 1 1 1 1 0 0 0 1-1v-9a2 2 0 0 0-.59-1.42l-2.83-2.83a2 2 0 0 0-1.42-.59H15"/><path d="M3 22h12"/><path d="M6 10h6"/>'
+                : '<path d="M12 2 8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-4-4Z"/><path d="m6 14 3 3 5-5 4 4"/>'}
+            </svg>
+          </div>
+          <span class="text-xs font-medium text-foreground">${poi.name}</span>
+        </div>`,
+        className: 'custom-poi-marker',
+        iconSize: [100, 30],
+        iconAnchor: [50, 15],
+      });
+
+      L.marker([poi.lat, poi.lng], { icon: poiIcon })
+        .addTo(markerLayerRef.current!);
+    });
+  };
+
+  const handleZoomIn = useCallback(() => {
+    mapInstanceRef.current?.zoomIn();
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    mapInstanceRef.current?.zoomOut();
+  }, []);
+
+  const handleLocate = useCallback(() => {
+    if (!mapInstanceRef.current) return;
+    
+    setIsLocating(true);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation([latitude, longitude]);
+          mapInstanceRef.current?.setView([latitude, longitude], 16);
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          mapInstanceRef.current?.setView(NAIROBI_CENTER, 14);
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      mapInstanceRef.current.setView(NAIROBI_CENTER, 14);
+      setIsLocating(false);
+    }
+  }, []);
+
+  const handleResetNorth = useCallback(() => {
+    if (!mapInstanceRef.current) return;
+    // Reset rotation if any (standard Leaflet doesn't rotate, but this resets view)
+    mapInstanceRef.current.setView(mapInstanceRef.current.getCenter(), mapInstanceRef.current.getZoom());
+  }, []);
+
   return (
     <div className="map-container relative w-full h-full min-h-[400px] overflow-hidden">
-      {/* Simulated Map Background with Enhanced Road Network */}
-      <div className="absolute inset-0">
-        <svg 
-          className="w-full h-full"
-          viewBox="0 0 800 1200"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          <defs>
-            {/* Enhanced grid pattern */}
-            <pattern id="gridSmall" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path 
-                d="M 20 0 L 0 0 0 20" 
-                fill="none" 
-                stroke="hsl(var(--muted-foreground))" 
-                strokeWidth="0.3"
-                opacity="0.3"
-              />
-            </pattern>
-            <pattern id="gridLarge" width="80" height="80" patternUnits="userSpaceOnUse">
-              <path 
-                d="M 80 0 L 0 0 0 80" 
-                fill="none" 
-                stroke="hsl(var(--muted-foreground))" 
-                strokeWidth="0.5"
-                opacity="0.4"
-              />
-            </pattern>
-            
-            {/* Route gradient */}
-            <linearGradient id="routeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="1"/>
-              <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity="0.8"/>
-            </linearGradient>
-            
-            {/* Building pattern */}
-            <pattern id="buildings" width="60" height="60" patternUnits="userSpaceOnUse">
-              <rect x="5" y="5" width="20" height="25" fill="hsl(var(--muted))" opacity="0.4" rx="2"/>
-              <rect x="35" y="10" width="15" height="20" fill="hsl(var(--muted))" opacity="0.3" rx="2"/>
-              <rect x="10" y="40" width="25" height="15" fill="hsl(var(--muted))" opacity="0.35" rx="2"/>
-            </pattern>
-            
-            {/* Green area pattern */}
-            <pattern id="greenArea" width="30" height="30" patternUnits="userSpaceOnUse">
-              <circle cx="15" cy="15" r="8" fill="hsl(var(--success))" opacity="0.15"/>
-              <circle cx="5" cy="5" r="4" fill="hsl(var(--success))" opacity="0.1"/>
-              <circle cx="25" cy="25" r="5" fill="hsl(var(--success))" opacity="0.12"/>
-            </pattern>
-          </defs>
-          
-          {/* Base layer */}
-          <rect width="100%" height="100%" fill="hsl(var(--background))" />
-          <rect width="100%" height="100%" fill="url(#gridSmall)" />
-          <rect width="100%" height="100%" fill="url(#gridLarge)" />
-          
-          {/* Green areas / Parks */}
-          <ellipse cx="150" cy="300" rx="80" ry="60" fill="url(#greenArea)" />
-          <ellipse cx="650" cy="500" rx="100" ry="70" fill="url(#greenArea)" />
-          <rect x="50" y="800" width="120" height="80" rx="20" fill="url(#greenArea)" />
-          
-          {/* Building blocks */}
-          <rect x="200" y="100" width="150" height="120" fill="url(#buildings)" />
-          <rect x="500" y="200" width="180" height="150" fill="url(#buildings)" />
-          <rect x="100" y="450" width="130" height="100" fill="url(#buildings)" />
-          <rect x="550" y="700" width="160" height="130" fill="url(#buildings)" />
-          <rect x="250" y="900" width="200" height="150" fill="url(#buildings)" />
-          
-          {/* Major Highway - Mombasa Road style */}
-          <path
-            d="M 0 600 Q 200 600 400 550 T 800 500"
-            fill="none"
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth="16"
-            opacity="0.25"
-          />
-          <path
-            d="M 0 600 Q 200 600 400 550 T 800 500"
-            fill="none"
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth="12"
-            opacity="0.4"
-            strokeDasharray="2 0"
-          />
-          
-          {/* Main arterial roads */}
-          <path
-            d="M 400 0 L 400 400 Q 400 500 450 550 L 500 600 L 500 1200"
-            fill="none"
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth="10"
-            opacity="0.35"
-          />
-          <path
-            d="M 200 0 L 200 300 Q 200 400 250 450 L 350 500 L 350 1200"
-            fill="none"
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth="8"
-            opacity="0.3"
-          />
-          <path
-            d="M 600 0 L 600 350 Q 600 450 550 500 L 500 550"
-            fill="none"
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth="8"
-            opacity="0.3"
-          />
-          
-          {/* Secondary roads */}
-          <path d="M 0 300 L 300 300" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="5" opacity="0.25"/>
-          <path d="M 350 400 L 800 400" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="5" opacity="0.25"/>
-          <path d="M 0 800 L 250 800 Q 300 800 350 750 L 400 700" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="5" opacity="0.25"/>
-          <path d="M 500 800 L 800 800" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="5" opacity="0.25"/>
-          
-          {/* Minor roads / estate roads */}
-          <path d="M 100 200 L 100 500" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="3" opacity="0.2"/>
-          <path d="M 700 300 L 700 700" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="3" opacity="0.2"/>
-          <path d="M 0 450 L 200 450" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="3" opacity="0.2"/>
-          <path d="M 450 200 L 550 200" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="3" opacity="0.2"/>
-          <path d="M 300 650 L 300 850" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="3" opacity="0.2"/>
-          <path d="M 600 850 L 600 1100" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="3" opacity="0.2"/>
-          
-          {/* Roundabouts */}
-          <circle cx="400" cy="400" r="25" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="6" opacity="0.3"/>
-          <circle cx="400" cy="400" r="12" fill="hsl(var(--muted))" opacity="0.5"/>
-          <circle cx="250" cy="800" r="20" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="5" opacity="0.25"/>
-          <circle cx="500" cy="550" r="18" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="5" opacity="0.25"/>
-        </svg>
-      </div>
+      {/* Leaflet Map Container */}
+      <div 
+        ref={mapRef} 
+        className="absolute inset-0 z-0"
+        style={{ background: 'hsl(var(--background))' }}
+      />
 
-      {/* Active Route Overlay */}
-      {isNavigating && (
-        <svg 
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          viewBox="0 0 800 1200"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          {/* Route path */}
-          <motion.path
-            d="M 400 1100 L 400 800 Q 400 700 420 650 L 450 600 Q 480 550 500 520 L 500 400 Q 500 350 520 300 L 560 250"
-            fill="none"
-            stroke="url(#routeGradient)"
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 2.5, ease: "easeOut" }}
-          />
-          
-          {/* Route glow effect */}
-          <motion.path
-            d="M 400 1100 L 400 800 Q 400 700 420 650 L 450 600 Q 480 550 500 520 L 500 400 Q 500 350 520 300 L 560 250"
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="16"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.2"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 2.5, ease: "easeOut" }}
-          />
-          
-          {/* Destination marker */}
-          <motion.g
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 2, duration: 0.5, type: "spring" }}
-          >
-            <circle cx="560" cy="250" r="20" fill="hsl(var(--success))" opacity="0.3">
-              <animate attributeName="r" values="20;30;20" dur="2s" repeatCount="indefinite"/>
-              <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="560" cy="250" r="12" fill="hsl(var(--success))"/>
-            <circle cx="560" cy="250" r="5" fill="white"/>
-          </motion.g>
-          
-          {/* Turn indicator */}
-          <motion.g
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 1.2, type: "spring" }}
-          >
-            <circle cx="450" cy="600" r="10" fill="hsl(var(--warning))" />
-            <path d="M 445 600 L 455 595 L 455 605 Z" fill="white"/>
-          </motion.g>
-        </svg>
-      )}
-
-      {/* Current Location Marker */}
-      <motion.div
-        className="absolute left-1/2 bottom-[15%] sm:bottom-[18%] md:bottom-[20%] -translate-x-1/2 z-20"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      >
-        <div className="relative">
-          {/* Pulse rings */}
+      {/* Route Info Overlay */}
+      <AnimatePresence>
+        {isNavigating && routeInfo && (
           <motion.div
-            className="absolute inset-0 bg-info rounded-full"
-            style={{ width: 48, height: 48, marginLeft: -12, marginTop: -12 }}
-            animate={{ scale: [1, 2.5, 1], opacity: [0.4, 0, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-          <motion.div
-            className="absolute inset-0 bg-info rounded-full"
-            style={{ width: 48, height: 48, marginLeft: -12, marginTop: -12 }}
-            animate={{ scale: [1, 2, 1], opacity: [0.3, 0, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-          />
-          {/* Main marker */}
-          <div className="relative w-6 h-6 bg-info rounded-full border-[3px] border-white shadow-lg flex items-center justify-center">
-            <Navigation2 className="w-3 h-3 text-white rotate-0" fill="white" />
-          </div>
-          {/* Direction cone */}
-          <div 
-            className="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0"
-            style={{
-              borderLeft: '8px solid transparent',
-              borderRight: '8px solid transparent',
-              borderBottom: '16px solid hsl(var(--info))',
-              opacity: 0.4
-            }}
-          />
-        </div>
-      </motion.div>
-
-      {/* POI Markers - Responsive positioning */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Sarit Centre */}
-        <motion.div
-          className="absolute left-[15%] sm:left-[20%] top-[30%] sm:top-[28%] pointer-events-auto"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="nav-card px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-lg">
-            <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 text-warning" />
-            <span className="text-[10px] sm:text-xs font-semibold text-foreground whitespace-nowrap">Sarit Centre</span>
-          </div>
-        </motion.div>
-
-        {/* Destination */}
-        {isNavigating && (
-          <motion.div
-            className="absolute right-[15%] sm:right-[20%] top-[18%] sm:top-[15%] pointer-events-auto"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-16 left-1/2 -translate-x-1/2 z-20"
           >
-            <div className="bg-success text-success-foreground px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-[10px] sm:text-xs font-semibold shadow-lg flex items-center gap-1.5">
-              <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="whitespace-nowrap">Destination</span>
+            <div className="nav-card px-4 py-2 flex items-center gap-4 shadow-lg">
+              <div className="text-center">
+                <p className="text-lg font-bold text-foreground">{routeInfo.duration}</p>
+                <p className="text-xs text-muted-foreground">ETA</p>
+              </div>
+              <div className="w-px h-8 bg-border" />
+              <div className="text-center">
+                <p className="text-lg font-bold text-foreground">{routeInfo.distance}</p>
+                <p className="text-xs text-muted-foreground">Distance</p>
+              </div>
             </div>
           </motion.div>
         )}
+      </AnimatePresence>
 
-        {/* Westlands */}
-        <motion.div
-          className="absolute left-[8%] sm:left-[12%] top-[45%] sm:top-[42%] pointer-events-auto"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <div className="nav-card px-2 py-1 sm:px-2.5 sm:py-1.5 flex items-center gap-1 shadow-md">
-            <Building2 className="w-3 h-3 text-muted-foreground" />
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap">Westlands</span>
-          </div>
-        </motion.div>
-
-        {/* Shell Petrol */}
-        <motion.div
-          className="absolute right-[25%] sm:right-[30%] top-[55%] sm:top-[50%] pointer-events-auto"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-        >
-          <div className="nav-card px-1.5 py-1 sm:px-2 sm:py-1.5 flex items-center gap-1 shadow-md">
-            <Fuel className="w-3 h-3 text-warning" />
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap">Shell</span>
-          </div>
-        </motion.div>
-
-        {/* Uhuru Park */}
-        <motion.div
-          className="absolute left-[5%] sm:left-[10%] bottom-[30%] sm:bottom-[35%] pointer-events-auto"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
-        >
-          <div className="nav-card px-1.5 py-1 sm:px-2 sm:py-1.5 flex items-center gap-1 shadow-md">
-            <Trees className="w-3 h-3 text-success" />
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap">Uhuru Park</span>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Map Controls - Responsive */}
+      {/* Map Controls */}
       <div className="absolute right-2 sm:right-4 top-1/4 sm:top-1/3 flex flex-col gap-1.5 sm:gap-2 z-10">
         <motion.button
           whileTap={{ scale: 0.9 }}
+          onClick={handleResetNorth}
           className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
-          aria-label="Compass"
+          aria-label="Reset north"
         >
           <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
         </motion.button>
         <motion.button
           whileTap={{ scale: 0.9 }}
+          onClick={handleZoomIn}
           className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
           aria-label="Zoom in"
         >
@@ -323,66 +389,131 @@ export const MapView = ({ isNavigating = false, isPro = false }: MapViewProps) =
         </motion.button>
         <motion.button
           whileTap={{ scale: 0.9 }}
+          onClick={handleZoomOut}
           className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
           aria-label="Zoom out"
         >
           <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
         </motion.button>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
-          aria-label="Map layers"
-        >
-          <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
-        </motion.button>
+        <div className="relative">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowLayerPicker(!showLayerPicker)}
+            className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
+            aria-label="Map layers"
+          >
+            <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+          </motion.button>
+          
+          {/* Layer Picker */}
+          <AnimatePresence>
+            {showLayerPicker && (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="absolute right-full mr-2 top-0 nav-card rounded-lg shadow-lg p-2 min-w-[120px]"
+              >
+                {(Object.keys(MAP_TILES) as MapTileType[]).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setMapTileType(type);
+                      setShowLayerPicker(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
+                      mapTileType === type 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    {type === 'satellite' && <Satellite className="w-4 h-4" />}
+                    {type === 'streets' && <MapIcon className="w-4 h-4" />}
+                    {type === 'dark' && <MapIcon className="w-4 h-4" />}
+                    {type === 'terrain' && <MapIcon className="w-4 h-4" />}
+                    {MAP_TILES[type].name}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Re-center button - Responsive */}
+      {/* Re-center button */}
       <motion.button
         whileTap={{ scale: 0.9 }}
-        className="absolute right-2 sm:right-4 bottom-36 sm:bottom-48 p-3 sm:p-4 bg-primary rounded-full shadow-lg z-10"
+        onClick={handleLocate}
+        disabled={isLocating}
+        className={`absolute right-2 sm:right-4 bottom-36 sm:bottom-48 p-3 sm:p-4 bg-primary rounded-full shadow-lg z-10 ${
+          isLocating ? 'animate-pulse' : ''
+        }`}
         aria-label="Re-center map"
       >
-        <Navigation2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+        <Locate className={`w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground ${isLocating ? 'animate-spin' : ''}`} />
       </motion.button>
 
-      {/* Pro Mode Traffic Overlay - Responsive */}
-      {isPro && (
-        <motion.div 
-          className="absolute left-2 sm:left-4 top-2 sm:top-4 flex flex-col gap-1.5 sm:gap-2 z-10"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="nav-card px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-lg">
-            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-success" />
-            <span className="text-[10px] sm:text-xs text-foreground whitespace-nowrap">Light Traffic</span>
-          </div>
-          <div className="nav-card px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-lg">
-            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-warning animate-pulse" />
-            <span className="text-[10px] sm:text-xs text-foreground whitespace-nowrap">Mombasa Rd</span>
-          </div>
-          <div className="nav-card px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-lg">
-            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-destructive animate-pulse" />
-            <span className="text-[10px] sm:text-xs text-foreground whitespace-nowrap">Uhuru Highway</span>
-          </div>
-        </motion.div>
-      )}
+      {/* Pro Mode Traffic Overlay */}
+      <AnimatePresence>
+        {isPro && (
+          <motion.div 
+            className="absolute left-2 sm:left-4 top-2 sm:top-4 flex flex-col gap-1.5 sm:gap-2 z-10"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <div className="nav-card px-3 py-2 flex items-center gap-2 shadow-lg">
+              <TrafficCone className="w-4 h-4 text-warning" />
+              <span className="text-xs font-semibold text-foreground">Traffic</span>
+            </div>
+            <div className="nav-card px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-lg">
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-success" />
+              <span className="text-[10px] sm:text-xs text-foreground whitespace-nowrap">Westlands</span>
+            </div>
+            <div className="nav-card px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-lg">
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-warning animate-pulse" />
+              <span className="text-[10px] sm:text-xs text-foreground whitespace-nowrap">Mombasa Rd</span>
+            </div>
+            <div className="nav-card px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 sm:gap-2 shadow-lg">
+              <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-destructive animate-pulse" />
+              <span className="text-[10px] sm:text-xs text-foreground whitespace-nowrap">Uhuru Highway</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Speed indicator - Pro mode */}
-      {isPro && isNavigating && (
-        <motion.div
-          className="absolute left-2 sm:left-4 bottom-36 sm:bottom-48 z-10"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="nav-card w-14 h-14 sm:w-16 sm:h-16 rounded-full flex flex-col items-center justify-center shadow-lg">
-            <span className="text-lg sm:text-xl font-bold text-foreground">45</span>
-            <span className="text-[8px] sm:text-[10px] text-muted-foreground">km/h</span>
-          </div>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {isPro && isNavigating && (
+          <motion.div
+            className="absolute left-2 sm:left-4 bottom-36 sm:bottom-48 z-10"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+          >
+            <div className="nav-card w-16 h-16 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center shadow-lg border-2 border-primary">
+              <span className="text-xl sm:text-2xl font-bold text-foreground">{currentSpeed}</span>
+              <span className="text-[8px] sm:text-[10px] text-muted-foreground">km/h</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Navigation Arrow Overlay - appears when navigating */}
+      <AnimatePresence>
+        {isNavigating && (
+          <motion.div
+            className="absolute bottom-44 sm:bottom-56 left-1/2 -translate-x-1/2 z-20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-info rounded-full border-4 border-white shadow-xl flex items-center justify-center">
+              <Navigation2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="white" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
