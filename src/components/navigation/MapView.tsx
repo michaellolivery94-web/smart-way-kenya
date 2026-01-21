@@ -3,10 +3,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Compass, Plus, Minus, Navigation2, Layers, MapPin, 
   Building2, Fuel, ShoppingBag, Trees, Locate, Satellite,
-  Map as MapIcon, TrafficCone
+  Map as MapIcon, TrafficCone, Mountain, Moon
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -369,89 +375,193 @@ export const MapView = ({
         )}
       </AnimatePresence>
 
-      {/* Map Controls */}
-      <div className="absolute right-2 sm:right-4 top-1/4 sm:top-1/3 flex flex-col gap-1.5 sm:gap-2 z-10">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={handleResetNorth}
-          className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
-          aria-label="Reset north"
-        >
-          <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
-        </motion.button>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={handleZoomIn}
-          className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
-          aria-label="Zoom in"
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
-        </motion.button>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={handleZoomOut}
-          className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
-          aria-label="Zoom out"
-        >
-          <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
-        </motion.button>
-        <div className="relative">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setShowLayerPicker(!showLayerPicker)}
-            className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg"
-            aria-label="Map layers"
-          >
-            <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
-          </motion.button>
-          
-          {/* Layer Picker */}
-          <AnimatePresence>
-            {showLayerPicker && (
-              <motion.div
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                className="absolute right-full mr-2 top-0 nav-card rounded-lg shadow-lg p-2 min-w-[120px]"
+      {/* Map Controls with Tooltips */}
+      <TooltipProvider delayDuration={300}>
+        <div className="absolute right-2 sm:right-4 top-1/4 sm:top-1/3 flex flex-col gap-1.5 sm:gap-2 z-10">
+          {/* Compass Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={handleResetNorth}
+                className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg hover:bg-muted/50 transition-colors group"
+                aria-label="Reset north"
               >
-                {(Object.keys(MAP_TILES) as MapTileType[]).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => {
-                      setMapTileType(type);
-                      setShowLayerPicker(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${
-                      mapTileType === type 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-muted text-foreground'
-                    }`}
-                  >
-                    {type === 'satellite' && <Satellite className="w-4 h-4" />}
-                    {type === 'streets' && <MapIcon className="w-4 h-4" />}
-                    {type === 'dark' && <MapIcon className="w-4 h-4" />}
-                    {type === 'terrain' && <MapIcon className="w-4 h-4" />}
-                    {MAP_TILES[type].name}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+                <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary transition-colors" />
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="flex items-center gap-2 px-3 py-2">
+              <Compass className="w-4 h-4 text-primary" />
+              <div>
+                <p className="font-semibold">Reset North</p>
+                <p className="text-xs text-muted-foreground">Align map to north direction</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
 
-      {/* Re-center button */}
-      <motion.button
-        whileTap={{ scale: 0.9 }}
-        onClick={handleLocate}
-        disabled={isLocating}
-        className={`absolute right-2 sm:right-4 bottom-36 sm:bottom-48 p-3 sm:p-4 bg-primary rounded-full shadow-lg z-10 ${
-          isLocating ? 'animate-pulse' : ''
-        }`}
-        aria-label="Re-center map"
-      >
-        <Locate className={`w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground ${isLocating ? 'animate-spin' : ''}`} />
-      </motion.button>
+          {/* Zoom In Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={handleZoomIn}
+                className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg hover:bg-muted/50 transition-colors group"
+                aria-label="Zoom in"
+              >
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary transition-colors" />
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="flex items-center gap-2 px-3 py-2">
+              <Plus className="w-4 h-4 text-primary" />
+              <div>
+                <p className="font-semibold">Zoom In</p>
+                <p className="text-xs text-muted-foreground">Get a closer view of the map</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Zoom Out Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={handleZoomOut}
+                className="p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg hover:bg-muted/50 transition-colors group"
+                aria-label="Zoom out"
+              >
+                <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary transition-colors" />
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="flex items-center gap-2 px-3 py-2">
+              <Minus className="w-4 h-4 text-primary" />
+              <div>
+                <p className="font-semibold">Zoom Out</p>
+                <p className="text-xs text-muted-foreground">See more of Nairobi</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Layers Button */}
+          <div className="relative">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => setShowLayerPicker(!showLayerPicker)}
+                  className={`p-2 sm:p-3 nav-card rounded-lg sm:rounded-xl shadow-lg hover:bg-muted/50 transition-colors group ${
+                    showLayerPicker ? 'ring-2 ring-primary' : ''
+                  }`}
+                  aria-label="Map layers"
+                >
+                  <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-primary transition-colors" />
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="flex items-center gap-2 px-3 py-2">
+                <Layers className="w-4 h-4 text-primary" />
+                <div>
+                  <p className="font-semibold">Map Layers</p>
+                  <p className="text-xs text-muted-foreground">Switch between map styles</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+            
+            {/* Layer Picker Dropdown */}
+            <AnimatePresence>
+              {showLayerPicker && (
+                <motion.div
+                  initial={{ opacity: 0, x: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-full mr-2 top-0 nav-card rounded-xl shadow-xl p-2 min-w-[160px] border border-border"
+                >
+                  <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Map Style
+                  </p>
+                  {(Object.keys(MAP_TILES) as MapTileType[]).map((type) => {
+                    const LayerIcon = type === 'satellite' ? Satellite 
+                      : type === 'terrain' ? Mountain 
+                      : type === 'dark' ? Moon 
+                      : MapIcon;
+                    
+                    const description = type === 'satellite' ? 'Aerial imagery view'
+                      : type === 'terrain' ? 'Elevation & terrain'
+                      : type === 'dark' ? 'Night driving mode'
+                      : 'Standard road map';
+
+                    return (
+                      <Tooltip key={type}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => {
+                              setMapTileType(type);
+                              setShowLayerPicker(false);
+                            }}
+                            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-3 transition-all ${
+                              mapTileType === type 
+                                ? 'bg-primary text-primary-foreground shadow-md' 
+                                : 'hover:bg-muted text-foreground'
+                            }`}
+                          >
+                            <LayerIcon className="w-4 h-4" />
+                            <div className="flex-1">
+                              <p className="font-medium">{MAP_TILES[type].name}</p>
+                              <p className={`text-[10px] ${mapTileType === type ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                                {description}
+                              </p>
+                            </div>
+                            {mapTileType === type && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="w-2 h-2 rounded-full bg-primary-foreground"
+                              />
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="hidden sm:block">
+                          <p>{description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </TooltipProvider>
+
+      {/* Re-center button with Tooltip */}
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={handleLocate}
+              disabled={isLocating}
+              className={`absolute right-2 sm:right-4 bottom-36 sm:bottom-48 p-3 sm:p-4 bg-primary rounded-full shadow-lg z-10 hover:shadow-xl transition-shadow ${
+                isLocating ? 'animate-pulse' : ''
+              }`}
+              aria-label="Find my location"
+            >
+              <Locate className={`w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground ${isLocating ? 'animate-spin' : ''}`} />
+            </motion.button>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="flex items-center gap-2 px-3 py-2">
+            <Locate className="w-4 h-4 text-primary" />
+            <div>
+              <p className="font-semibold">Find My Location</p>
+              <p className="text-xs text-muted-foreground">Center map on your current position</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       {/* Pro Mode Traffic Overlay */}
       <AnimatePresence>
