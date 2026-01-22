@@ -1,31 +1,56 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Clock, Star, Navigation, ArrowDownUp, X, Locate, Mic, MicOff } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { 
+  Search, MapPin, Clock, Star, Navigation, ArrowDownUp, X, 
+  Locate, Mic, MicOff, Loader2, Building2, MapPinned, Globe 
+} from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { useGeocoding, getCurrentPosition, GeocodingResult } from "@/hooks/useGeocoding";
 import { toast } from "sonner";
 
 interface LocationSearchProps {
-  onStartNavigation?: (from: string, to: string) => void;
+  onStartNavigation?: (from: string, to: string, coords: { 
+    origin: { lat: number; lng: number } | null;
+    destination: { lat: number; lng: number };
+  }) => void;
+  onLocationSelect?: (location: { lat: number; lng: number; name: string }) => void;
 }
 
-const SUGGESTIONS = [
-  { icon: Star, text: "Home - Kilimani", type: "favorite" as const },
-  { icon: Star, text: "Work - Westlands", type: "favorite" as const },
-  { icon: Clock, text: "JKIA Airport", type: "recent" as const },
-  { icon: Clock, text: "Sarit Centre", type: "recent" as const },
-  { icon: Clock, text: "Two Rivers Mall", type: "recent" as const },
-  { icon: MapPin, text: "Upper Hill", type: "nearby" as const },
-  { icon: MapPin, text: "CBD Nairobi", type: "nearby" as const },
-  { icon: MapPin, text: "Village Market", type: "nearby" as const },
+interface SavedLocation {
+  icon: typeof Star | typeof Clock | typeof MapPin;
+  text: string;
+  type: "favorite" | "recent" | "nearby";
+  lat?: number;
+  lng?: number;
+}
+
+const SUGGESTIONS: SavedLocation[] = [
+  { icon: Star, text: "Sarit Centre, Westlands", type: "favorite", lat: -1.2647, lng: 36.8027 },
+  { icon: Star, text: "JKIA Airport", type: "favorite", lat: -1.3192, lng: 36.9258 },
+  { icon: Clock, text: "Two Rivers Mall", type: "recent", lat: -1.2112, lng: 36.8058 },
+  { icon: Clock, text: "Westgate Mall", type: "recent", lat: -1.2634, lng: 36.8048 },
+  { icon: MapPin, text: "KICC, CBD Nairobi", type: "nearby", lat: -1.2864, lng: 36.8172 },
+  { icon: MapPin, text: "Village Market", type: "nearby", lat: -1.2289, lng: 36.8031 },
 ];
 
-export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
+export const LocationSearch = ({ onStartNavigation, onLocationSelect }: LocationSearchProps) => {
   const [fromLocation, setFromLocation] = useState("Current Location");
   const [toLocation, setToLocation] = useState("");
   const [activeField, setActiveField] = useState<"from" | "to" | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [voiceTargetField, setVoiceTargetField] = useState<"from" | "to" | null>(null);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  
+  // Coordinates state
+  const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
+  
   const toInputRef = useRef<HTMLInputElement>(null);
+  const fromInputRef = useRef<HTMLInputElement>(null);
+
+  // Geocoding hooks for both fields
+  const fromGeocoding = useGeocoding({ debounceMs: 250, limit: 6 });
+  const toGeocoding = useGeocoding({ debounceMs: 250, limit: 6 });
 
   const { 
     isListening, 
@@ -37,11 +62,13 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
     onResult: (transcript) => {
       if (voiceTargetField === "from") {
         setFromLocation(transcript);
+        fromGeocoding.search(transcript);
       } else if (voiceTargetField === "to") {
         setToLocation(transcript);
+        toGeocoding.search(transcript);
       }
       setVoiceTargetField(null);
-      toast.success(`Got it: "${transcript}"`);
+      toast.success(`Searching: "${transcript}"`);
     },
     onError: (error) => {
       toast.error(error);
@@ -60,6 +87,23 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
     }
   }, [interimTranscript, isListening, voiceTargetField]);
 
+  // Search as user types
+  const handleFromChange = useCallback((value: string) => {
+    setFromLocation(value);
+    setOriginCoords(null);
+    if (value !== "Current Location") {
+      fromGeocoding.search(value);
+    } else {
+      fromGeocoding.clearResults();
+    }
+  }, [fromGeocoding]);
+
+  const handleToChange = useCallback((value: string) => {
+    setToLocation(value);
+    setDestinationCoords(null);
+    toGeocoding.search(value);
+  }, [toGeocoding]);
+
   const handleVoiceInput = (field: "from" | "to") => {
     if (isListening && voiceTargetField === field) {
       stopListening();
@@ -69,40 +113,113 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
         stopListening();
       }
       setVoiceTargetField(field);
-      setActiveField(null); // Close suggestions when using voice
+      setActiveField(field);
       startListening();
-      toast.info("Listening... Speak your location", {
-        duration: 2000,
-      });
+      toast.info("Listening... Speak your location", { duration: 2000 });
     }
   };
 
   const handleSwapLocations = () => {
-    const temp = fromLocation;
+    const tempLocation = fromLocation;
+    const tempCoords = originCoords;
+    
     setFromLocation(toLocation || "Current Location");
-    setToLocation(temp === "Current Location" ? "" : temp);
+    setOriginCoords(toLocation ? destinationCoords : null);
+    
+    setToLocation(tempLocation === "Current Location" ? "" : tempLocation);
+    setDestinationCoords(tempLocation === "Current Location" ? null : tempCoords);
+    
+    fromGeocoding.clearResults();
+    toGeocoding.clearResults();
   };
 
-  const handleSelectSuggestion = (text: string) => {
-    if (activeField === "from") {
-      setFromLocation(text);
+  const handleSelectGeocodingResult = (result: GeocodingResult, field: "from" | "to") => {
+    const coords = { lat: result.lat, lng: result.lng };
+    
+    if (field === "from") {
+      setFromLocation(result.shortName);
+      setOriginCoords(coords);
+      fromGeocoding.clearResults();
     } else {
-      setToLocation(text);
+      setToLocation(result.shortName);
+      setDestinationCoords(coords);
+      toGeocoding.clearResults();
+      
+      // Preview location on map
+      onLocationSelect?.({ ...coords, name: result.shortName });
     }
+    
     setActiveField(null);
+    toast.success(`Selected: ${result.shortName}`);
   };
 
-  const handleUseCurrentLocation = () => {
-    setFromLocation("Current Location");
-    setActiveField(null);
-  };
-
-  const handleStartNavigation = () => {
-    if (toLocation && fromLocation) {
-      onStartNavigation?.(fromLocation, toLocation);
-      setIsExpanded(false);
+  const handleSelectSuggestion = (suggestion: SavedLocation, field: "from" | "to") => {
+    if (suggestion.lat && suggestion.lng) {
+      const coords = { lat: suggestion.lat, lng: suggestion.lng };
+      
+      if (field === "from") {
+        setFromLocation(suggestion.text);
+        setOriginCoords(coords);
+        fromGeocoding.clearResults();
+      } else {
+        setToLocation(suggestion.text);
+        setDestinationCoords(coords);
+        toGeocoding.clearResults();
+        
+        // Preview on map
+        onLocationSelect?.({ ...coords, name: suggestion.text });
+      }
+      
       setActiveField(null);
     }
+  };
+
+  const handleUseCurrentLocation = async () => {
+    setIsGettingLocation(true);
+    try {
+      const position = await getCurrentPosition();
+      setOriginCoords(position);
+      setFromLocation("Current Location");
+      fromGeocoding.clearResults();
+      setActiveField(null);
+      toast.success("Location found!");
+    } catch (error) {
+      toast.error("Could not get your location. Please enable GPS.");
+      console.error("Geolocation error:", error);
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
+
+  const handleStartNavigation = async () => {
+    if (!toLocation || !destinationCoords) {
+      toast.error("Please select a destination");
+      return;
+    }
+
+    let finalOriginCoords = originCoords;
+
+    // Get current location if using "Current Location"
+    if (fromLocation === "Current Location" && !originCoords) {
+      setIsGettingLocation(true);
+      try {
+        finalOriginCoords = await getCurrentPosition();
+        setOriginCoords(finalOriginCoords);
+      } catch (error) {
+        toast.error("Could not get your location. Please enable GPS or enter a starting point.");
+        setIsGettingLocation(false);
+        return;
+      }
+      setIsGettingLocation(false);
+    }
+
+    onStartNavigation?.(fromLocation, toLocation, {
+      origin: finalOriginCoords,
+      destination: destinationCoords,
+    });
+    
+    setIsExpanded(false);
+    setActiveField(null);
   };
 
   const handleExpand = () => {
@@ -110,15 +227,35 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
     setTimeout(() => toInputRef.current?.focus(), 100);
   };
 
+  // Get icon for result type
+  const getResultIcon = (type: string) => {
+    switch (type) {
+      case "amenity":
+      case "shop":
+      case "building":
+        return Building2;
+      case "highway":
+      case "road":
+        return MapPinned;
+      default:
+        return MapPin;
+    }
+  };
+
+  // Determine which results to show
+  const currentResults = activeField === "from" ? fromGeocoding.results : toGeocoding.results;
+  const isSearching = activeField === "from" ? fromGeocoding.isLoading : toGeocoding.isLoading;
+  const currentQuery = activeField === "from" ? fromLocation : toLocation;
+
+  // Filter saved suggestions based on query
   const filteredSuggestions = SUGGESTIONS.filter(s => {
-    const query = activeField === "from" ? fromLocation : toLocation;
-    if (!query || query === "Current Location") return true;
-    return s.text.toLowerCase().includes(query.toLowerCase());
+    if (!currentQuery || currentQuery === "Current Location") return true;
+    return s.text.toLowerCase().includes(currentQuery.toLowerCase());
   });
 
   return (
     <div className="relative w-full">
-      {/* Collapsed View - Simple tap to expand */}
+      {/* Collapsed View */}
       <AnimatePresence>
         {!isExpanded && (
           <motion.button
@@ -133,14 +270,14 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-base sm:text-lg font-semibold text-foreground">Where to?</p>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">Search destination</p>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">Search any location</p>
             </div>
             <MapPin className="w-5 h-5 text-muted-foreground flex-shrink-0" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Expanded View - Full search interface */}
+      {/* Expanded View */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -156,6 +293,8 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                 onClick={() => {
                   setIsExpanded(false);
                   setActiveField(null);
+                  fromGeocoding.clearResults();
+                  toGeocoding.clearResults();
                 }}
                 className="p-2 rounded-full hover:bg-secondary/50 transition-colors"
                 aria-label="Close"
@@ -185,22 +324,37 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                         ? "bg-secondary ring-2 ring-success animate-pulse"
                         : "bg-secondary/50 hover:bg-secondary/80"
                     }`}
-                    onClick={() => setActiveField("from")}
+                    onClick={() => {
+                      setActiveField("from");
+                      fromInputRef.current?.focus();
+                    }}
                   >
-                    <Locate className="w-4 h-4 sm:w-5 sm:h-5 text-info flex-shrink-0" />
+                    {originCoords ? (
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-info flex items-center justify-center flex-shrink-0">
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      </div>
+                    ) : (
+                      <Locate className="w-4 h-4 sm:w-5 sm:h-5 text-info flex-shrink-0" />
+                    )}
                     <input
+                      ref={fromInputRef}
                       type="text"
                       placeholder="From: Current location"
                       value={fromLocation}
-                      onChange={(e) => setFromLocation(e.target.value)}
+                      onChange={(e) => handleFromChange(e.target.value)}
                       onFocus={() => setActiveField("from")}
                       className="flex-1 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                     />
+                    {fromGeocoding.isLoading && (
+                      <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                    )}
                     {fromLocation && fromLocation !== "Current Location" && !isListening && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setFromLocation("Current Location");
+                          setOriginCoords(null);
+                          fromGeocoding.clearResults();
                         }}
                         className="p-1 rounded-full hover:bg-muted transition-colors"
                         aria-label="Clear"
@@ -208,7 +362,6 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                         <X className="w-4 h-4 text-muted-foreground" />
                       </button>
                     )}
-                    {/* Voice input button for From field */}
                     {isSupported && (
                       <button
                         onClick={(e) => {
@@ -240,23 +393,37 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                         ? "bg-secondary ring-2 ring-success animate-pulse"
                         : "bg-secondary/50 hover:bg-secondary/80"
                     }`}
-                    onClick={() => setActiveField("to")}
+                    onClick={() => {
+                      setActiveField("to");
+                      toInputRef.current?.focus();
+                    }}
                   >
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-success flex-shrink-0" />
+                    {destinationCoords ? (
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-success flex items-center justify-center flex-shrink-0">
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      </div>
+                    ) : (
+                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-success flex-shrink-0" />
+                    )}
                     <input
                       ref={toInputRef}
                       type="text"
                       placeholder="To: Where are you going?"
                       value={toLocation}
-                      onChange={(e) => setToLocation(e.target.value)}
+                      onChange={(e) => handleToChange(e.target.value)}
                       onFocus={() => setActiveField("to")}
                       className="flex-1 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                     />
+                    {toGeocoding.isLoading && (
+                      <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                    )}
                     {toLocation && !isListening && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setToLocation("");
+                          setDestinationCoords(null);
+                          toGeocoding.clearResults();
                         }}
                         className="p-1 rounded-full hover:bg-muted transition-colors"
                         aria-label="Clear"
@@ -264,7 +431,6 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
                         <X className="w-4 h-4 text-muted-foreground" />
                       </button>
                     )}
-                    {/* Voice input button for To field */}
                     {isSupported && (
                       <button
                         onClick={(e) => {
@@ -299,71 +465,135 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
               </div>
             </div>
 
-            {/* Suggestions */}
+            {/* Search Results & Suggestions */}
             <AnimatePresence>
               {activeField && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="border-t border-border/50 max-h-[40vh] overflow-y-auto"
+                  className="border-t border-border/50 max-h-[45vh] overflow-y-auto"
                 >
                   {/* Current location option for "from" field */}
                   {activeField === "from" && (
                     <button
                       onClick={handleUseCurrentLocation}
-                      className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:py-4 hover:bg-secondary/50 transition-colors text-left border-b border-border/30"
+                      disabled={isGettingLocation}
+                      className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:py-4 hover:bg-secondary/50 transition-colors text-left border-b border-border/30 disabled:opacity-50"
                     >
                       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-info/20 flex items-center justify-center">
-                        <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-info" />
+                        {isGettingLocation ? (
+                          <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-info animate-spin" />
+                        ) : (
+                          <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-info" />
+                        )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm sm:text-base font-medium text-foreground">Current Location</p>
+                        <p className="text-sm sm:text-base font-medium text-foreground">
+                          {isGettingLocation ? "Getting location..." : "Current Location"}
+                        </p>
                         <p className="text-xs text-muted-foreground">Use GPS location</p>
                       </div>
                     </button>
                   )}
 
-                  {/* Suggestion categories */}
-                  <div className="px-4 py-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      {activeField === "to" ? "Suggestions" : "Recent & Favorites"}
-                    </p>
-                  </div>
+                  {/* Live Search Results */}
+                  {currentResults.length > 0 && (
+                    <>
+                      <div className="px-4 py-2 bg-secondary/30">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <Globe className="w-3 h-3" />
+                          Search Results
+                        </p>
+                      </div>
+                      {currentResults.map((result) => {
+                        const ResultIcon = getResultIcon(result.type);
+                        return (
+                          <motion.button
+                            key={result.placeId}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            onClick={() => handleSelectGeocodingResult(result, activeField)}
+                            className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:py-4 hover:bg-primary/10 active:bg-primary/20 transition-colors text-left"
+                          >
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                              <ResultIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm sm:text-base text-foreground font-medium truncate">
+                                {result.shortName}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {result.displayName}
+                              </p>
+                            </div>
+                            <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          </motion.button>
+                        );
+                      })}
+                    </>
+                  )}
 
-                  {filteredSuggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSelectSuggestion(suggestion.text)}
-                      className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:py-4 hover:bg-secondary/50 active:bg-secondary transition-colors text-left"
-                    >
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
-                        suggestion.type === "favorite" 
-                          ? "bg-warning/20" 
-                          : suggestion.type === "recent"
-                          ? "bg-muted"
-                          : "bg-success/20"
-                      }`}>
-                        <suggestion.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                          suggestion.type === "favorite" 
-                            ? "text-warning" 
-                            : suggestion.type === "recent"
-                            ? "text-muted-foreground"
-                            : "text-success"
-                        }`} />
+                  {/* Loading State */}
+                  {isSearching && currentQuery && currentQuery !== "Current Location" && currentQuery.length >= 2 && (
+                    <div className="px-4 py-8 flex flex-col items-center gap-2">
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">Searching locations...</p>
+                    </div>
+                  )}
+
+                  {/* No Results */}
+                  {!isSearching && currentResults.length === 0 && currentQuery && currentQuery !== "Current Location" && currentQuery.length >= 2 && (
+                    <div className="px-4 py-6 text-center">
+                      <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No locations found for "{currentQuery}"</p>
+                      <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
+                    </div>
+                  )}
+
+                  {/* Saved Suggestions */}
+                  {(!currentQuery || currentQuery === "Current Location" || currentResults.length === 0) && filteredSuggestions.length > 0 && (
+                    <>
+                      <div className="px-4 py-2 bg-secondary/30">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          {activeField === "to" ? "Popular Destinations" : "Saved Places"}
+                        </p>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm sm:text-base text-foreground truncate">{suggestion.text}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{suggestion.type}</p>
-                      </div>
-                    </button>
-                  ))}
+                      {filteredSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSelectSuggestion(suggestion, activeField)}
+                          className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:py-4 hover:bg-secondary/50 active:bg-secondary transition-colors text-left"
+                        >
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
+                            suggestion.type === "favorite" 
+                              ? "bg-warning/20" 
+                              : suggestion.type === "recent"
+                              ? "bg-muted"
+                              : "bg-success/20"
+                          }`}>
+                            <suggestion.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                              suggestion.type === "favorite" 
+                                ? "text-warning" 
+                                : suggestion.type === "recent"
+                                ? "text-muted-foreground"
+                                : "text-success"
+                            }`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm sm:text-base text-foreground truncate">{suggestion.text}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{suggestion.type}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Start Navigation Button */}
-            {!activeField && toLocation && (
+            {!activeField && toLocation && destinationCoords && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -371,13 +601,38 @@ export const LocationSearch = ({ onStartNavigation }: LocationSearchProps) => {
               >
                 <button
                   onClick={handleStartNavigation}
-                  className="w-full py-4 sm:py-5 rounded-xl bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 sm:gap-3"
+                  disabled={isGettingLocation}
+                  className="w-full py-4 sm:py-5 rounded-xl bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50"
                 >
-                  <Navigation className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
-                  <span className="text-base sm:text-lg font-semibold text-primary-foreground">
-                    Start Navigation
-                  </span>
+                  {isGettingLocation ? (
+                    <>
+                      <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-spin" />
+                      <span className="text-base sm:text-lg font-semibold text-primary-foreground">
+                        Getting Location...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Navigation className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+                      <span className="text-base sm:text-lg font-semibold text-primary-foreground">
+                        Start Navigation
+                      </span>
+                    </>
+                  )}
                 </button>
+              </motion.div>
+            )}
+
+            {/* Hint when destination not selected */}
+            {!activeField && toLocation && !destinationCoords && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-4 border-t border-border/50 text-center"
+              >
+                <p className="text-sm text-muted-foreground">
+                  Tap the destination field to search and select a location
+                </p>
               </motion.div>
             )}
           </motion.div>
