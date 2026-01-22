@@ -13,6 +13,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { VoiceNavigationControl } from "./VoiceNavigationControl";
+import { useVoiceNavigation, parseOSRMSteps } from "@/hooks/useVoiceNavigation";
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -90,6 +92,18 @@ export const MapView = ({
   const [userLocation, setUserLocation] = useState<[number, number]>(NAIROBI_CENTER);
   const [isLocating, setIsLocating] = useState(false);
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
+  
+  // Voice navigation hook
+  const voiceNav = useVoiceNavigation({
+    enabled: true,
+    announceDistance: 200,
+    reminderDistance: 50,
+  });
+  
+  // Simulated position tracking for demo
+  const positionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const routeCoordinatesRef = useRef<[number, number][]>([]);
+  const currentPositionIndexRef = useRef(0);
 
   // Initialize map
   useEffect(() => {
@@ -174,8 +188,9 @@ export const MapView = ({
 
   const fetchRoute = async (start: [number, number], end: [number, number]) => {
     try {
+      // Request with steps for turn-by-turn navigation
       const response = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`
+        `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`
       );
       const data = await response.json();
 
@@ -184,6 +199,16 @@ export const MapView = ({
         const coordinates = route.geometry.coordinates.map(
           (coord: [number, number]) => [coord[1], coord[0]] as [number, number]
         );
+
+        // Store route coordinates for position simulation
+        routeCoordinatesRef.current = coordinates;
+        currentPositionIndexRef.current = 0;
+
+        // Parse steps for voice navigation
+        if (route.legs && route.legs[0]?.steps) {
+          const instructions = parseOSRMSteps(route.legs[0].steps);
+          voiceNav.setInstructions(instructions);
+        }
 
         // Add route polyline with gradient effect
         const routeLine = L.polyline(coordinates, {
@@ -238,6 +263,9 @@ export const MapView = ({
             maxZoom: 15
           });
         }
+
+        // Start simulated position tracking for demo
+        startPositionSimulation(coordinates);
       }
     } catch (error) {
       console.error('Failed to fetch route:', error);
@@ -253,6 +281,36 @@ export const MapView = ({
       }
     }
   };
+
+  // Simulate user moving along the route for demo purposes
+  const startPositionSimulation = useCallback((coordinates: [number, number][]) => {
+    if (positionIntervalRef.current) {
+      clearInterval(positionIntervalRef.current);
+    }
+
+    positionIntervalRef.current = setInterval(() => {
+      const idx = currentPositionIndexRef.current;
+      if (idx < coordinates.length) {
+        const [lat, lng] = coordinates[idx];
+        voiceNav.updateUserPosition(lat, lng);
+        setUserLocation([lat, lng]);
+        currentPositionIndexRef.current = Math.min(idx + 3, coordinates.length - 1);
+      } else {
+        if (positionIntervalRef.current) {
+          clearInterval(positionIntervalRef.current);
+        }
+      }
+    }, 2000);
+  }, [voiceNav]);
+
+  // Cleanup position simulation
+  useEffect(() => {
+    return () => {
+      if (positionIntervalRef.current) {
+        clearInterval(positionIntervalRef.current);
+      }
+    };
+  }, []);
 
   const addCurrentLocationMarker = (map: L.Map, location: [number, number]) => {
     const locationIcon = L.divIcon({
@@ -545,7 +603,7 @@ export const MapView = ({
               whileHover={{ scale: 1.05 }}
               onClick={handleLocate}
               disabled={isLocating}
-              className={`absolute right-2 sm:right-4 bottom-36 sm:bottom-48 p-3 sm:p-4 bg-primary rounded-full shadow-lg z-10 hover:shadow-xl transition-shadow ${
+              className={`absolute right-2 sm:right-4 ${isNavigating && isPro ? 'bottom-56 sm:bottom-72' : 'bottom-36 sm:bottom-48'} p-3 sm:p-4 bg-primary rounded-full shadow-lg z-10 hover:shadow-xl transition-all ${
                 isLocating ? 'animate-pulse' : ''
               }`}
               aria-label="Find my location"
@@ -592,11 +650,27 @@ export const MapView = ({
         )}
       </AnimatePresence>
 
-      {/* Speed indicator - Pro mode */}
+      {/* Voice Navigation Control - shows during navigation */}
+      <AnimatePresence>
+        {isNavigating && (
+          <VoiceNavigationControl
+            isEnabled={voiceNav.isEnabled}
+            isSpeaking={voiceNav.isSpeaking}
+            volume={voiceNav.volume}
+            currentInstruction={voiceNav.currentInstruction}
+            upcomingInstructions={voiceNav.upcomingInstructions}
+            onToggle={voiceNav.toggleVoice}
+            onVolumeChange={voiceNav.setVolume}
+            onAnnounce={voiceNav.announceInstruction}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Speed indicator - Pro mode (repositioned) */}
       <AnimatePresence>
         {isPro && isNavigating && (
           <motion.div
-            className="absolute left-2 sm:left-4 bottom-36 sm:bottom-48 z-10"
+            className="absolute right-2 sm:right-4 bottom-36 sm:bottom-48 z-10"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
