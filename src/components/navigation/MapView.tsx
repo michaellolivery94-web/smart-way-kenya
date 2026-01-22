@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Compass, Plus, Minus, Navigation2, Layers, MapPin, 
@@ -24,11 +24,17 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+export interface MapViewHandle {
+  flyTo: (lat: number, lng: number, zoom?: number) => void;
+  getMap: () => L.Map | null;
+}
+
 interface MapViewProps {
   isNavigating?: boolean;
   isPro?: boolean;
   origin?: { lat: number; lng: number } | null;
   destination?: { lat: number; lng: number } | null;
+  previewLocation?: { lat: number; lng: number } | null;
 }
 
 // Nairobi coordinates
@@ -74,16 +80,18 @@ const MAP_TILES = {
 
 type MapTileType = keyof typeof MAP_TILES;
 
-export const MapView = ({ 
+export const MapView = forwardRef<MapViewHandle, MapViewProps>(({ 
   isNavigating = false, 
   isPro = false,
   origin = null,
-  destination = null 
-}: MapViewProps) => {
+  destination = null,
+  previewLocation = null
+}, ref) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const routeLayerRef = useRef<L.LayerGroup | null>(null);
   const markerLayerRef = useRef<L.LayerGroup | null>(null);
+  const previewMarkerRef = useRef<L.Marker | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   
   const [mapTileType, setMapTileType] = useState<MapTileType>("dark");
@@ -104,6 +112,14 @@ export const MapView = ({
   const positionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const routeCoordinatesRef = useRef<[number, number][]>([]);
   const currentPositionIndexRef = useRef(0);
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    flyTo: (lat: number, lng: number, zoom = 15) => {
+      mapInstanceRef.current?.flyTo([lat, lng], zoom, { duration: 1 });
+    },
+    getMap: () => mapInstanceRef.current,
+  }));
 
   // Initialize map
   useEffect(() => {
@@ -152,20 +168,59 @@ export const MapView = ({
     tileLayerRef.current.setUrl(MAP_TILES[mapTileType].url);
   }, [mapTileType]);
 
+  // Handle preview location marker
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    // Remove existing preview marker
+    if (previewMarkerRef.current) {
+      previewMarkerRef.current.remove();
+      previewMarkerRef.current = null;
+    }
+
+    // Add new preview marker if location provided and not navigating
+    if (previewLocation && !isNavigating) {
+      const previewIcon = L.divIcon({
+        html: `<div class="relative">
+          <div class="absolute inset-0 bg-primary rounded-full animate-ping opacity-40" style="width: 48px; height: 48px; margin: -12px;"></div>
+          <div class="w-10 h-10 bg-primary rounded-full border-4 border-white shadow-xl flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+        </div>`,
+        className: 'custom-preview-marker',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+      });
+
+      previewMarkerRef.current = L.marker([previewLocation.lat, previewLocation.lng], { 
+        icon: previewIcon,
+        zIndexOffset: 900
+      }).addTo(mapInstanceRef.current);
+    }
+  }, [previewLocation, isNavigating]);
+
   // Handle navigation route
   useEffect(() => {
     if (!mapInstanceRef.current || !routeLayerRef.current) return;
 
     routeLayerRef.current.clearLayers();
+    
+    // Remove preview marker when navigating starts
+    if (previewMarkerRef.current && isNavigating) {
+      previewMarkerRef.current.remove();
+      previewMarkerRef.current = null;
+    }
 
     if (isNavigating) {
-      // Demo route in Nairobi (Westlands to CBD)
+      // Use actual coordinates if provided
       const startPoint: [number, number] = origin 
         ? [origin.lat, origin.lng] 
-        : [-1.2689, 36.8092]; // Westlands
+        : [-1.2689, 36.8092]; // Default: Westlands
       const endPoint: [number, number] = destination 
         ? [destination.lat, destination.lng] 
-        : [-1.2864, 36.8172]; // KICC
+        : [-1.2864, 36.8172]; // Default: KICC
 
       // Fetch route from OSRM
       fetchRoute(startPoint, endPoint);
@@ -700,4 +755,6 @@ export const MapView = ({
       </AnimatePresence>
     </div>
   );
-};
+});
+
+MapView.displayName = "MapView";

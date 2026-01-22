@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapView } from "@/components/navigation/MapView";
+import { MapView, MapViewHandle } from "@/components/navigation/MapView";
 import { Header } from "@/components/navigation/Header";
 import { LocationSearch } from "@/components/navigation/LocationSearch";
 import { NavigationPanel } from "@/components/navigation/NavigationPanel";
@@ -10,6 +10,11 @@ import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import { toast } from "sonner";
 import { WifiOff } from "lucide-react";
 
+interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
 const Index = () => {
   const [mode, setMode] = useState<"commuter" | "pro">("commuter");
   const [isNavigating, setIsNavigating] = useState(false);
@@ -17,7 +22,15 @@ const Index = () => {
   const [origin, setOrigin] = useState<string>("Current Location");
   const [showOfflineMaps, setShowOfflineMaps] = useState(false);
   
+  // Coordinate states for map
+  const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
+  const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
+  const [previewLocation, setPreviewLocation] = useState<Coordinates | null>(null);
+  
   const { isOnline, downloadedRegions } = useOfflineMaps();
+  
+  // Ref to access map methods
+  const mapRef = useRef<MapViewHandle>(null);
 
   const handleModeChange = (newMode: "commuter" | "pro") => {
     setMode(newMode);
@@ -28,13 +41,34 @@ const Index = () => {
     );
   };
 
-  const handleStartNavigation = (from: string, to: string) => {
+  const handleStartNavigation = (
+    from: string, 
+    to: string, 
+    coords: { origin: Coordinates | null; destination: Coordinates }
+  ) => {
     setOrigin(from);
     setDestination(to);
+    setOriginCoords(coords.origin);
+    setDestinationCoords(coords.destination);
+    setPreviewLocation(null);
     setIsNavigating(true);
     toast.success(`Navigating to ${to}`, {
       description: `From: ${from}`,
     });
+  };
+
+  const handleLocationSelect = useCallback((location: { lat: number; lng: number; name: string }) => {
+    // Preview the selected location on map
+    setPreviewLocation({ lat: location.lat, lng: location.lng });
+    mapRef.current?.flyTo(location.lat, location.lng, 15);
+  }, []);
+
+  const handleEndNavigation = () => {
+    setIsNavigating(false);
+    setDestination(null);
+    setDestinationCoords(null);
+    setOriginCoords(null);
+    setPreviewLocation(null);
   };
 
   const handleReport = (type: string) => {
@@ -66,7 +100,14 @@ const Index = () => {
       </AnimatePresence>
 
       {/* Map Layer */}
-      <MapView isNavigating={isNavigating} isPro={mode === "pro"} />
+      <MapView 
+        ref={mapRef}
+        isNavigating={isNavigating} 
+        isPro={mode === "pro"} 
+        origin={originCoords}
+        destination={destinationCoords}
+        previewLocation={previewLocation}
+      />
 
       {/* Header */}
       <Header 
@@ -85,7 +126,10 @@ const Index = () => {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-20 sm:top-24 left-3 right-3 sm:left-4 sm:right-4 z-20"
           >
-            <LocationSearch onStartNavigation={handleStartNavigation} />
+            <LocationSearch 
+              onStartNavigation={handleStartNavigation}
+              onLocationSelect={handleLocationSelect}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -102,14 +146,14 @@ const Index = () => {
             <div className="bg-card/95 backdrop-blur-sm border-b border-border p-4">
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => setIsNavigating(false)}
+                  onClick={handleEndNavigation}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   ✕ End
                 </button>
                 <div className="text-center">
                   <h1 className="font-display font-semibold text-foreground">{destination}</h1>
-                  <p className="text-xs text-muted-foreground">via Ring Road Parklands</p>
+                  <p className="text-xs text-muted-foreground">via fastest route</p>
                 </div>
                 <motion.button
                   whileTap={{ scale: 0.95 }}
