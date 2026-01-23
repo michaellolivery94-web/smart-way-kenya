@@ -91,6 +91,76 @@ const TRAFFIC_LIGHTS = [
   { name: "Langata Road Junction", lat: -1.3100, lng: 36.8050, status: "red" },
 ];
 
+// Nairobi Expressway & Bypasses - Simplified coordinates for subtle highlights
+const EXPRESSWAY_BYPASSES = [
+  {
+    name: "Nairobi Expressway",
+    color: "rgba(59, 130, 246, 0.35)", // Subtle blue
+    weight: 4,
+    coords: [
+      [-1.3192, 36.9278], // JKIA
+      [-1.3150, 36.9000],
+      [-1.3100, 36.8700],
+      [-1.3050, 36.8450],
+      [-1.3000, 36.8300],
+      [-1.2920, 36.8200],
+      [-1.2800, 36.8050],
+      [-1.2700, 36.7900],
+      [-1.2600, 36.7750], // Westlands end
+    ]
+  },
+  {
+    name: "Northern Bypass",
+    color: "rgba(139, 92, 246, 0.3)", // Subtle purple
+    weight: 3,
+    coords: [
+      [-1.2100, 36.9200], // Ruiru
+      [-1.2050, 36.8800],
+      [-1.2080, 36.8400],
+      [-1.2150, 36.8000],
+      [-1.2200, 36.7600],
+      [-1.2250, 36.7200], // Limuru Road
+    ]
+  },
+  {
+    name: "Eastern Bypass",
+    color: "rgba(236, 72, 153, 0.3)", // Subtle pink
+    weight: 3,
+    coords: [
+      [-1.2100, 36.9200], // Northern connection
+      [-1.2400, 36.9300],
+      [-1.2700, 36.9350],
+      [-1.3000, 36.9300],
+      [-1.3192, 36.9278], // JKIA connection
+    ]
+  },
+  {
+    name: "Southern Bypass",
+    color: "rgba(245, 158, 11, 0.3)", // Subtle amber
+    weight: 3,
+    coords: [
+      [-1.3192, 36.9278], // JKIA
+      [-1.3400, 36.8800],
+      [-1.3500, 36.8400],
+      [-1.3550, 36.8000],
+      [-1.3500, 36.7600],
+      [-1.3400, 36.7300], // Langata
+    ]
+  },
+  {
+    name: "Western Bypass",
+    color: "rgba(16, 185, 129, 0.3)", // Subtle green
+    weight: 3,
+    coords: [
+      [-1.2250, 36.7200], // Northern Bypass connection
+      [-1.2500, 36.7100],
+      [-1.2800, 36.7000],
+      [-1.3100, 36.7050],
+      [-1.3400, 36.7300], // Southern Bypass connection
+    ]
+  },
+];
+
 // Map tile providers
 const MAP_TILES = {
   streets: {
@@ -200,6 +270,9 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
 
     // Add traffic lights
     addTrafficLights(map);
+
+    // Add expressway & bypass highlights
+    addExpresswayBypasses(map);
 
     return () => {
       map.remove();
@@ -565,6 +638,43 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
 
       L.marker([light.lat, light.lng], { icon: trafficLightIcon, zIndexOffset: 700 })
         .addTo(markerLayerRef.current!);
+    });
+  };
+
+  // Add subtle expressway & bypass polylines
+  const addExpresswayBypasses = (map: L.Map) => {
+    EXPRESSWAY_BYPASSES.forEach((bypass) => {
+      const coords = bypass.coords as [number, number][];
+      
+      // Main line - subtle and thin
+      const bypassLine = L.polyline(coords, {
+        color: bypass.color,
+        weight: bypass.weight,
+        opacity: 1,
+        lineCap: 'round',
+        lineJoin: 'round',
+        dashArray: bypass.name === 'Nairobi Expressway' ? undefined : '8, 4',
+      });
+
+      bypassLine.addTo(map);
+
+      // Add subtle label at midpoint for expressway only
+      if (bypass.name === 'Nairobi Expressway' && markerLayerRef.current) {
+        const midIdx = Math.floor(coords.length / 2);
+        const midPoint: [number, number] = coords[midIdx];
+
+        const labelIcon = L.divIcon({
+          html: `<div class="bg-blue-500/20 backdrop-blur-sm px-2 py-0.5 rounded border border-blue-500/30 whitespace-nowrap">
+            <span class="text-[9px] font-medium text-blue-400/80 tracking-wide">EXPRESSWAY</span>
+          </div>`,
+          className: 'expressway-label',
+          iconSize: [80, 18],
+          iconAnchor: [40, 9],
+        });
+
+        L.marker(midPoint, { icon: labelIcon, zIndexOffset: 400 })
+          .addTo(markerLayerRef.current);
+      }
     });
   };
 
