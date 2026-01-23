@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Compass, Plus, Minus, Navigation2, Layers, MapPin, 
   Building2, Fuel, ShoppingBag, Trees, Locate, Satellite,
-  Map as MapIcon, TrafficCone, Mountain, Moon
+  Map as MapIcon, TrafficCone, Mountain, Moon, CircleDot,
+  Trophy, Landmark, Route
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -42,16 +43,52 @@ const NAIROBI_CENTER: [number, number] = [-1.2921, 36.8219];
 
 // POI locations in Nairobi
 const NAIROBI_POIS = [
-  { name: "Sarit Centre", lat: -1.2647, lng: 36.8027, icon: ShoppingBag, color: "warning" },
-  { name: "Westgate Mall", lat: -1.2634, lng: 36.8048, icon: ShoppingBag, color: "warning" },
-  { name: "The Hub Karen", lat: -1.3273, lng: 36.7127, icon: ShoppingBag, color: "warning" },
-  { name: "KICC", lat: -1.2864, lng: 36.8172, icon: Building2, color: "muted-foreground" },
-  { name: "Nation Centre", lat: -1.2844, lng: 36.8234, icon: Building2, color: "muted-foreground" },
-  { name: "Shell Westlands", lat: -1.2689, lng: 36.8092, icon: Fuel, color: "warning" },
-  { name: "Total Ngong Rd", lat: -1.3012, lng: 36.7892, icon: Fuel, color: "warning" },
-  { name: "Uhuru Park", lat: -1.2891, lng: 36.8126, icon: Trees, color: "success" },
-  { name: "Central Park", lat: -1.2755, lng: 36.8182, icon: Trees, color: "success" },
-  { name: "Karura Forest", lat: -1.2355, lng: 36.8327, icon: Trees, color: "success" },
+  { name: "Sarit Centre", lat: -1.2647, lng: 36.8027, icon: ShoppingBag, color: "warning", type: "shopping" },
+  { name: "Westgate Mall", lat: -1.2634, lng: 36.8048, icon: ShoppingBag, color: "warning", type: "shopping" },
+  { name: "The Hub Karen", lat: -1.3273, lng: 36.7127, icon: ShoppingBag, color: "warning", type: "shopping" },
+  { name: "KICC", lat: -1.2864, lng: 36.8172, icon: Building2, color: "muted-foreground", type: "landmark" },
+  { name: "Nation Centre", lat: -1.2844, lng: 36.8234, icon: Building2, color: "muted-foreground", type: "landmark" },
+  { name: "Shell Westlands", lat: -1.2689, lng: 36.8092, icon: Fuel, color: "warning", type: "fuel" },
+  { name: "Total Ngong Rd", lat: -1.3012, lng: 36.7892, icon: Fuel, color: "warning", type: "fuel" },
+  { name: "Uhuru Park", lat: -1.2891, lng: 36.8126, icon: Trees, color: "success", type: "park" },
+  { name: "Central Park", lat: -1.2755, lng: 36.8182, icon: Trees, color: "success", type: "park" },
+  { name: "Karura Forest", lat: -1.2355, lng: 36.8327, icon: Trees, color: "success", type: "park" },
+];
+
+// Major Nairobi Landmarks
+const MAJOR_LANDMARKS = [
+  { name: "Talanta Stadium", lat: -1.2675, lng: 36.8310, icon: Trophy, description: "Sports & Events Venue" },
+  { name: "Kenyatta International Convention Centre", lat: -1.2864, lng: 36.8172, icon: Landmark, description: "Iconic Tower" },
+  { name: "Nairobi Railway Station", lat: -1.2920, lng: 36.8298, icon: Building2, description: "Central Station" },
+  { name: "Uhuru Gardens", lat: -1.3189, lng: 36.8135, icon: Landmark, description: "National Monument" },
+  { name: "Nyayo Stadium", lat: -1.3059, lng: 36.8278, icon: Trophy, description: "Sports Complex" },
+  { name: "Jomo Kenyatta International Airport", lat: -1.3192, lng: 36.9278, icon: Building2, description: "JKIA" },
+];
+
+// Major Roads in Nairobi
+const MAJOR_ROADS = [
+  { name: "Mombasa Road", points: [[-1.3192, 36.9278], [-1.3100, 36.8500], [-1.3050, 36.8350]], color: "#F59E0B" },
+  { name: "Uhuru Highway", points: [[-1.2891, 36.8126], [-1.2980, 36.8190], [-1.3050, 36.8250]], color: "#EF4444" },
+  { name: "Thika Road", points: [[-1.2200, 36.8800], [-1.2400, 36.8600], [-1.2600, 36.8400]], color: "#10B981" },
+  { name: "Waiyaki Way", points: [[-1.2647, 36.8027], [-1.2580, 36.7800], [-1.2550, 36.7600]], color: "#3B82F6" },
+  { name: "Ngong Road", points: [[-1.2891, 36.8126], [-1.3012, 36.7892], [-1.3100, 36.7700]], color: "#8B5CF6" },
+  { name: "Langata Road", points: [[-1.3050, 36.8100], [-1.3189, 36.8000], [-1.3300, 36.7900]], color: "#EC4899" },
+];
+
+// Traffic Light Locations
+const TRAFFIC_LIGHTS = [
+  { name: "Westlands Roundabout", lat: -1.2660, lng: 36.8030, status: "green" },
+  { name: "Museum Hill", lat: -1.2730, lng: 36.8150, status: "red" },
+  { name: "Globe Roundabout", lat: -1.2820, lng: 36.8170, status: "amber" },
+  { name: "Kenyatta Avenue Junction", lat: -1.2850, lng: 36.8220, status: "green" },
+  { name: "University Way Junction", lat: -1.2800, lng: 36.8160, status: "red" },
+  { name: "Ngong Road Junction", lat: -1.2950, lng: 36.8050, status: "amber" },
+  { name: "Adams Arcade", lat: -1.3000, lng: 36.7870, status: "green" },
+  { name: "Yaya Centre Junction", lat: -1.2970, lng: 36.7930, status: "green" },
+  { name: "Nyayo Stadium Junction", lat: -1.3059, lng: 36.8278, status: "red" },
+  { name: "Haile Selassie Junction", lat: -1.2890, lng: 36.8250, status: "amber" },
+  { name: "Railways Junction", lat: -1.2910, lng: 36.8300, status: "green" },
+  { name: "Langata Road Junction", lat: -1.3100, lng: 36.8050, status: "red" },
 ];
 
 // Map tile providers
@@ -154,6 +191,15 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
 
     // Add POI markers
     addPOIMarkers(map);
+
+    // Add major landmarks
+    addLandmarkMarkers(map);
+
+    // Add road labels
+    addRoadLabels(map);
+
+    // Add traffic lights
+    addTrafficLights(map);
 
     return () => {
       map.remove();
@@ -394,7 +440,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
         : '#6B7280';
 
       const poiIcon = L.divIcon({
-        html: `<div class="bg-card/90 backdrop-blur px-2 py-1.5 rounded-lg shadow-lg border border-border flex items-center gap-1.5 whitespace-nowrap">
+        html: `<div class="bg-card/90 backdrop-blur px-2 py-1.5 rounded-lg shadow-lg border border-border flex items-center gap-1.5 whitespace-nowrap hover:scale-105 transition-transform cursor-pointer">
           <div class="w-3 h-3" style="color: ${colorClass}">
             <svg fill="currentColor" viewBox="0 0 24 24" class="w-full h-full">
               ${poi.icon === ShoppingBag ? '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>' 
@@ -411,6 +457,113 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
       });
 
       L.marker([poi.lat, poi.lng], { icon: poiIcon })
+        .addTo(markerLayerRef.current!);
+    });
+  };
+
+  // Add major landmark markers with prominent styling
+  const addLandmarkMarkers = (map: L.Map) => {
+    if (!markerLayerRef.current) return;
+
+    MAJOR_LANDMARKS.forEach((landmark) => {
+      const isStadium = landmark.icon === Trophy;
+      
+      const landmarkIcon = L.divIcon({
+        html: `<div class="relative group cursor-pointer">
+          <div class="absolute -inset-2 bg-gradient-to-r ${isStadium ? 'from-emerald-500 to-teal-500' : 'from-blue-500 to-indigo-500'} rounded-full opacity-40 blur-sm animate-pulse"></div>
+          <div class="relative bg-gradient-to-br ${isStadium ? 'from-emerald-500 to-teal-600' : 'from-blue-500 to-indigo-600'} px-3 py-2 rounded-xl shadow-xl border-2 border-white/30 flex items-center gap-2 whitespace-nowrap transform hover:scale-110 transition-all duration-300">
+            <div class="w-5 h-5 text-white">
+              ${isStadium 
+                ? '<svg fill="currentColor" viewBox="0 0 24 24" class="w-full h-full"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>'
+                : '<svg fill="currentColor" viewBox="0 0 24 24" class="w-full h-full"><path d="M3 22V8l9-6 9 6v14H3z"/><path d="M9 22V12h6v10"/></svg>'}
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-white drop-shadow-md">${landmark.name}</span>
+              <span class="text-[10px] text-white/80">${landmark.description}</span>
+            </div>
+          </div>
+        </div>`,
+        className: 'custom-landmark-marker',
+        iconSize: [180, 50],
+        iconAnchor: [90, 25],
+      });
+
+      L.marker([landmark.lat, landmark.lng], { icon: landmarkIcon, zIndexOffset: 800 })
+        .addTo(markerLayerRef.current!);
+    });
+  };
+
+  // Add road labels as polyline labels
+  const addRoadLabels = (map: L.Map) => {
+    if (!markerLayerRef.current) return;
+
+    MAJOR_ROADS.forEach((road) => {
+      // Add road line (subtle, just for label positioning)
+      const midPoint = road.points[Math.floor(road.points.length / 2)] as [number, number];
+      
+      const roadLabelIcon = L.divIcon({
+        html: `<div class="relative group">
+          <div class="bg-gradient-to-r from-card/95 to-card/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg border border-border/50 flex items-center gap-2 whitespace-nowrap transform hover:scale-105 transition-all cursor-pointer">
+            <div class="w-2 h-2 rounded-full" style="background-color: ${road.color}; box-shadow: 0 0 6px ${road.color}"></div>
+            <svg class="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+            <span class="text-xs font-semibold text-foreground tracking-wide">${road.name}</span>
+          </div>
+        </div>`,
+        className: 'custom-road-label',
+        iconSize: [140, 30],
+        iconAnchor: [70, 15],
+      });
+
+      L.marker(midPoint, { icon: roadLabelIcon, zIndexOffset: 600 })
+        .addTo(markerLayerRef.current!);
+    });
+  };
+
+  // Add traffic light indicators
+  const addTrafficLights = (map: L.Map) => {
+    if (!markerLayerRef.current) return;
+
+    TRAFFIC_LIGHTS.forEach((light) => {
+      const statusColor = light.status === 'green' ? '#10B981' 
+        : light.status === 'amber' ? '#F59E0B' 
+        : '#EF4444';
+      
+      const statusText = light.status === 'green' ? 'Clear' 
+        : light.status === 'amber' ? 'Slowing' 
+        : 'Stop';
+
+      const pulseClass = light.status === 'red' ? 'animate-pulse' : '';
+
+      const trafficLightIcon = L.divIcon({
+        html: `<div class="relative group cursor-pointer">
+          <div class="relative flex flex-col items-center">
+            <!-- Traffic Light Post -->
+            <div class="bg-gray-800 rounded-t-lg px-1.5 py-1 border border-gray-600 shadow-lg">
+              <div class="flex flex-col gap-0.5">
+                <div class="w-2.5 h-2.5 rounded-full ${light.status === 'red' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'bg-red-900/50'}"></div>
+                <div class="w-2.5 h-2.5 rounded-full ${light.status === 'amber' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]' : 'bg-amber-900/50'}"></div>
+                <div class="w-2.5 h-2.5 rounded-full ${light.status === 'green' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-emerald-900/50'}"></div>
+              </div>
+            </div>
+            <div class="w-1 h-3 bg-gray-700"></div>
+            <!-- Label on hover -->
+            <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
+              <div class="bg-card/95 backdrop-blur px-2 py-1 rounded-md shadow-lg border border-border whitespace-nowrap flex items-center gap-1.5">
+                <div class="w-2 h-2 rounded-full ${pulseClass}" style="background-color: ${statusColor}; box-shadow: 0 0 4px ${statusColor}"></div>
+                <span class="text-[10px] font-medium text-foreground">${light.name}</span>
+                <span class="text-[9px] px-1 py-0.5 rounded text-white" style="background-color: ${statusColor}">${statusText}</span>
+              </div>
+            </div>
+          </div>
+        </div>`,
+        className: 'custom-traffic-light',
+        iconSize: [24, 40],
+        iconAnchor: [12, 35],
+      });
+
+      L.marker([light.lat, light.lng], { icon: trafficLightIcon, zIndexOffset: 700 })
         .addTo(markerLayerRef.current!);
     });
   };
