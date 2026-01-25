@@ -599,27 +599,63 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                 animate={{ opacity: 1, y: 0 }}
                 className="p-3 sm:p-4 border-t border-border/50"
               >
-                <button
+                <motion.button
                   onClick={handleStartNavigation}
                   disabled={isGettingLocation}
-                  className="w-full py-4 sm:py-5 rounded-xl bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50"
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 17,
+                    mass: 0.8
+                  }}
+                  className="relative w-full py-4 sm:py-5 rounded-xl bg-primary overflow-hidden shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 disabled:opacity-50 disabled:shadow-none group"
                 >
-                  {isGettingLocation ? (
-                    <>
-                      <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-spin" />
-                      <span className="text-base sm:text-lg font-semibold text-primary-foreground">
-                        Getting Location...
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Navigation className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
-                      <span className="text-base sm:text-lg font-semibold text-primary-foreground">
-                        Start Navigation
-                      </span>
-                    </>
-                  )}
-                </button>
+                  {/* Ripple/Glow Effect on Tap */}
+                  <motion.span
+                    className="absolute inset-0 bg-gradient-to-r from-primary-foreground/0 via-primary-foreground/20 to-primary-foreground/0"
+                    initial={{ x: "-100%", opacity: 0 }}
+                    whileTap={{ 
+                      x: "100%", 
+                      opacity: 1,
+                      transition: { duration: 0.4, ease: "easeOut" }
+                    }}
+                  />
+                  
+                  {/* Pulse Ring Effect */}
+                  <span className="absolute inset-0 rounded-xl ring-2 ring-primary-foreground/0 group-active:ring-primary-foreground/30 transition-all duration-150" />
+                  
+                  {/* Button Content */}
+                  <span className="relative flex items-center justify-center gap-2 sm:gap-3">
+                    {isGettingLocation ? (
+                      <>
+                        <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-spin" />
+                        <span className="text-base sm:text-lg font-semibold text-primary-foreground">
+                          Getting Location...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <motion.span
+                          animate={{ 
+                            rotate: [0, -10, 10, -5, 0],
+                          }}
+                          transition={{ 
+                            duration: 0.5,
+                            repeat: Infinity,
+                            repeatDelay: 3
+                          }}
+                        >
+                          <Navigation className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+                        </motion.span>
+                        <span className="text-base sm:text-lg font-semibold text-primary-foreground">
+                          Start Navigation
+                        </span>
+                      </>
+                    )}
+                  </span>
+                </motion.button>
               </motion.div>
             )}
 
