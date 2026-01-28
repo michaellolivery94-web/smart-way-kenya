@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapView, MapViewHandle } from "@/components/navigation/MapView";
 import { Header } from "@/components/navigation/Header";
@@ -7,6 +7,8 @@ import { NavigationPanel } from "@/components/navigation/NavigationPanel";
 import { ReportButton } from "@/components/navigation/ReportButton";
 import { OfflineMapsManager } from "@/components/navigation/OfflineMapsManager";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
 import { WifiOff } from "lucide-react";
 
@@ -78,7 +80,7 @@ const Index = () => {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative">
+    <div className="h-screen w-screen overflow-hidden relative bg-background">
       {/* Offline Banner */}
       <AnimatePresence>
         {!isOnline && (
@@ -86,7 +88,7 @@ const Index = () => {
             initial={{ y: -50 }}
             animate={{ y: 0 }}
             exit={{ y: -50 }}
-            className="fixed top-0 left-0 right-0 bg-warning text-warning-foreground text-center py-2 text-sm font-medium z-50 flex items-center justify-center gap-2"
+            className="fixed top-0 left-0 right-0 bg-warning text-warning-foreground text-center py-2.5 text-sm font-medium z-50 flex items-center justify-center gap-2 shadow-lg"
           >
             <WifiOff className="w-4 h-4" />
             Offline Mode - Using cached maps
@@ -99,15 +101,37 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Map Layer */}
-      <MapView 
-        ref={mapRef}
-        isNavigating={isNavigating} 
-        isPro={mode === "pro"} 
-        origin={originCoords}
-        destination={destinationCoords}
-        previewLocation={previewLocation}
-      />
+      {/* Map Layer with Error Boundary */}
+      <ErrorBoundary
+        fallback={
+          <div className="absolute inset-0 flex items-center justify-center bg-background">
+            <div className="text-center p-6">
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                <WifiOff className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Map unavailable</h3>
+              <p className="text-sm text-muted-foreground">Please check your connection</p>
+            </div>
+          </div>
+        }
+      >
+        <Suspense 
+          fallback={
+            <div className="absolute inset-0 flex items-center justify-center bg-background">
+              <LoadingSpinner size="lg" label="Loading map..." />
+            </div>
+          }
+        >
+          <MapView 
+            ref={mapRef}
+            isNavigating={isNavigating} 
+            isPro={mode === "pro"} 
+            origin={originCoords}
+            destination={destinationCoords}
+            previewLocation={previewLocation}
+          />
+        </Suspense>
+      </ErrorBoundary>
 
       {/* Header */}
       <Header 

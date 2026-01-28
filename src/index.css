@@ -153,9 +153,13 @@
 
 @layer components {
   .nav-card {
-    @apply bg-card rounded-xl border border-border/50;
+    @apply bg-card rounded-xl border border-border/50 transition-all duration-200;
     background: var(--gradient-card);
     box-shadow: var(--shadow-card);
+  }
+
+  .nav-card:hover {
+    border-color: hsl(var(--border) / 0.8);
   }
 
   .nav-button-primary {
@@ -171,6 +175,12 @@
 
   .nav-button-primary:active {
     transform: translateY(0);
+  }
+
+  .nav-button-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
   }
 
   .lane-indicator {
