@@ -4,7 +4,7 @@ import {
   Compass, Plus, Minus, Navigation2, Layers, MapPin, 
   Building2, Fuel, ShoppingBag, Trees, Locate, Satellite,
   Map as MapIcon, TrafficCone, Mountain, Moon, CircleDot,
-  Trophy, Landmark, Route
+  Trophy, Landmark, Route, Construction, AlertTriangle, Waves
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 import { VoiceNavigationControl } from "./VoiceNavigationControl";
 import { useVoiceNavigation, parseOSRMSteps } from "@/hooks/useVoiceNavigation";
+import { useRoadConditions, RoadConditionType } from "@/contexts/RoadConditionsContext";
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -214,11 +215,15 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     announceDistance: 200,
     reminderDistance: 50,
   });
+
+  // Road conditions hook
+  const { conditions, checkProximity } = useRoadConditions();
   
   // Simulated position tracking for demo
   const positionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const routeCoordinatesRef = useRef<[number, number][]>([]);
   const currentPositionIndexRef = useRef(0);
+  const roadConditionsLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
@@ -250,6 +255,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     // Create layer groups for routes and markers
     routeLayerRef.current = L.layerGroup().addTo(map);
     markerLayerRef.current = L.layerGroup().addTo(map);
+    roadConditionsLayerRef.current = L.layerGroup().addTo(map);
 
     // Add attribution
     L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
@@ -273,6 +279,9 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
 
     // Add expressway & bypass highlights
     addExpresswayBypasses(map);
+
+    // Add road conditions markers
+    addRoadConditionsMarkers();
 
     return () => {
       map.remove();
@@ -677,6 +686,104 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
       }
     });
   };
+
+  // Add road conditions markers (murram, construction, etc.)
+  const addRoadConditionsMarkers = useCallback(() => {
+    if (!roadConditionsLayerRef.current) return;
+    
+    roadConditionsLayerRef.current.clearLayers();
+
+    const conditionConfig: Record<RoadConditionType, { color: string; bgColor: string; icon: string; pulseColor: string }> = {
+      murram: { 
+        color: "#F59E0B", 
+        bgColor: "bg-amber-500", 
+        icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>`,
+        pulseColor: "rgba(245, 158, 11, 0.4)"
+      },
+      construction: { 
+        color: "#F97316", 
+        bgColor: "bg-orange-500", 
+        icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+        pulseColor: "rgba(249, 115, 22, 0.4)"
+      },
+      pothole: { 
+        color: "#EAB308", 
+        bgColor: "bg-yellow-500", 
+        icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4l7.53 14H4.47L12 6zm-1 6v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>`,
+        pulseColor: "rgba(234, 179, 8, 0.4)"
+      },
+      flooded: { 
+        color: "#3B82F6", 
+        bgColor: "bg-blue-500", 
+        icon: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/></svg>`,
+        pulseColor: "rgba(59, 130, 246, 0.4)"
+      },
+    };
+
+    const severitySize = {
+      low: { outer: 40, inner: 32 },
+      medium: { outer: 48, inner: 38 },
+      high: { outer: 56, inner: 44 },
+    };
+
+    conditions.forEach((condition) => {
+      const config = conditionConfig[condition.type];
+      const size = severitySize[condition.severity];
+      
+      const markerIcon = L.divIcon({
+        html: `<div class="relative group cursor-pointer">
+          <!-- Pulse Ring -->
+          <div class="absolute inset-0 rounded-full animate-ping" 
+               style="width: ${size.outer}px; height: ${size.outer}px; background: ${config.pulseColor}; margin: -${(size.outer - size.inner) / 2}px;"></div>
+          
+          <!-- Main Marker -->
+          <div class="relative flex items-center justify-center rounded-full shadow-xl border-2 border-white/50"
+               style="width: ${size.inner}px; height: ${size.inner}px; background: ${config.color};">
+            <div class="text-white w-5 h-5 flex items-center justify-center">
+              ${condition.type === 'murram' ? '⬛' : condition.type === 'construction' ? '🚧' : condition.type === 'pothole' ? '⚠️' : '💧'}
+            </div>
+          </div>
+          
+          <!-- Label on hover -->
+          <div class="absolute -bottom-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 pointer-events-none">
+            <div class="bg-card/95 backdrop-blur px-3 py-2 rounded-lg shadow-lg border border-border whitespace-nowrap">
+              <div class="flex items-center gap-2 mb-1">
+                <div class="w-3 h-3 rounded-full" style="background: ${config.color}"></div>
+                <span class="text-xs font-bold text-foreground">${condition.type.charAt(0).toUpperCase() + condition.type.slice(1)}</span>
+                ${condition.verified ? '<span class="w-2 h-2 rounded-full bg-green-500"></span>' : ''}
+              </div>
+              <p class="text-[10px] text-muted-foreground max-w-[150px] truncate">${condition.name}</p>
+              <span class="text-[9px] px-1.5 py-0.5 rounded mt-1 inline-block ${
+                condition.severity === 'high' ? 'bg-red-500/20 text-red-400' : 
+                condition.severity === 'medium' ? 'bg-yellow-500/20 text-yellow-400' : 
+                'bg-green-500/20 text-green-400'
+              }">${condition.severity}</span>
+            </div>
+          </div>
+        </div>`,
+        className: 'custom-road-condition-marker',
+        iconSize: [size.inner, size.inner],
+        iconAnchor: [size.inner / 2, size.inner / 2],
+      });
+
+      L.marker([condition.lat, condition.lng], { icon: markerIcon, zIndexOffset: 850 })
+        .addTo(roadConditionsLayerRef.current!);
+    });
+  }, [conditions]);
+
+  // Update road conditions markers when conditions change
+  useEffect(() => {
+    if (mapInstanceRef.current && roadConditionsLayerRef.current) {
+      addRoadConditionsMarkers();
+    }
+  }, [conditions, addRoadConditionsMarkers]);
+
+  // Check proximity to road conditions during navigation
+  useEffect(() => {
+    if (isNavigating && userLocation) {
+      checkProximity(userLocation[0], userLocation[1]);
+    }
+  }, [isNavigating, userLocation, checkProximity]);
 
   const handleZoomIn = useCallback(() => {
     mapInstanceRef.current?.zoomIn();

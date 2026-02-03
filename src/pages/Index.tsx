@@ -6,11 +6,13 @@ import { LocationSearch } from "@/components/navigation/LocationSearch";
 import { NavigationPanel } from "@/components/navigation/NavigationPanel";
 import { ReportButton } from "@/components/navigation/ReportButton";
 import { OfflineMapsManager } from "@/components/navigation/OfflineMapsManager";
+import { RoadConditionAlert } from "@/components/navigation/RoadConditionAlert";
+import { RoadConditionsList } from "@/components/navigation/RoadConditionsList";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
-import { WifiOff } from "lucide-react";
+import { WifiOff, Construction } from "lucide-react";
 
 interface Coordinates {
   lat: number;
@@ -23,7 +25,7 @@ const Index = () => {
   const [destination, setDestination] = useState<string | null>(null);
   const [origin, setOrigin] = useState<string>("Current Location");
   const [showOfflineMaps, setShowOfflineMaps] = useState(false);
-  
+  const [showRoadConditions, setShowRoadConditions] = useState(false);
   // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
@@ -133,12 +135,16 @@ const Index = () => {
         </Suspense>
       </ErrorBoundary>
 
+      {/* Road Condition Alert */}
+      <RoadConditionAlert />
+
       {/* Header */}
       <Header 
         mode={mode} 
         onModeChange={handleModeChange} 
         isNavigating={isNavigating}
         onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+        onOpenRoadConditions={() => setShowRoadConditions(true)}
       />
 
       {/* Location Search - Only show when not navigating */}
@@ -210,6 +216,12 @@ const Index = () => {
       <OfflineMapsManager 
         isOpen={showOfflineMaps} 
         onClose={() => setShowOfflineMaps(false)} 
+      />
+
+      {/* Road Conditions List */}
+      <RoadConditionsList
+        isOpen={showRoadConditions}
+        onClose={() => setShowRoadConditions(false)}
       />
     </div>
   );
