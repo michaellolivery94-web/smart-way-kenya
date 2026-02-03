@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Menu, Bell, Settings, Download, User, MapPin } from "lucide-react";
+import { Menu, Bell, Settings, Download, User, MapPin, Construction } from "lucide-react";
 import { ModeToggle } from "./ModeToggle";
 import {
   Tooltip,
@@ -13,9 +13,10 @@ interface HeaderProps {
   onModeChange: (mode: "commuter" | "pro") => void;
   isNavigating?: boolean;
   onOpenOfflineMaps?: () => void;
+  onOpenRoadConditions?: () => void;
 }
 
-export const Header = ({ mode, onModeChange, isNavigating = false, onOpenOfflineMaps }: HeaderProps) => {
+export const Header = ({ mode, onModeChange, isNavigating = false, onOpenOfflineMaps, onOpenRoadConditions }: HeaderProps) => {
   if (isNavigating) {
     return null; // Hide header during active navigation
   }
@@ -66,6 +67,32 @@ export const Header = ({ mode, onModeChange, isNavigating = false, onOpenOffline
               <TooltipContent side="bottom" className="bg-card border-border">
                 <p className="flex items-center gap-2 text-sm font-medium">
                   <Download className="w-4 h-4" /> Save Maps Offline
+                </p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Road Conditions */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button 
+                  onClick={onOpenRoadConditions}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative w-12 h-12 sm:w-14 sm:h-14 nav-card rounded-2xl flex items-center justify-center shadow-lg"
+                >
+                  <Construction className="w-6 h-6 sm:w-7 sm:h-7 text-warning" />
+                  {/* Alert indicator */}
+                  <motion.div 
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-warning rounded-full flex items-center justify-center"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <span className="text-[8px] font-bold text-warning-foreground">!</span>
+                  </motion.div>
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-card border-border">
+                <p className="flex items-center gap-2 text-sm font-medium">
+                  <Construction className="w-4 h-4" /> Road Conditions
                 </p>
               </TooltipContent>
             </Tooltip>
