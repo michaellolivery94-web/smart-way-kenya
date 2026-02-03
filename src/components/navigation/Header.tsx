@@ -100,6 +100,7 @@ export const Header = ({ mode, onModeChange, isNavigating = false, onOpenOffline
               <TooltipTrigger asChild>
                 <motion.button 
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => window.location.href = "/settings"}
                   className="relative w-12 h-12 sm:w-14 sm:h-14 nav-card rounded-2xl flex items-center justify-center shadow-lg"
                 >
                   <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-foreground" />
