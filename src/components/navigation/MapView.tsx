@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 import { VoiceNavigationControl } from "./VoiceNavigationControl";
 import { useVoiceNavigation, parseOSRMSteps } from "@/hooks/useVoiceNavigation";
-import { useRoadConditions, RoadConditionType } from "@/contexts/RoadConditionsContext";
+import { useRoadConditions, RoadConditionType, SpeedCamera } from "@/contexts/RoadConditionsContext";
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -217,13 +217,14 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   });
 
   // Road conditions hook
-  const { conditions, checkProximity } = useRoadConditions();
+  const { conditions, cameras, checkProximity } = useRoadConditions();
   
   // Simulated position tracking for demo
   const positionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const routeCoordinatesRef = useRef<[number, number][]>([]);
   const currentPositionIndexRef = useRef(0);
   const roadConditionsLayerRef = useRef<L.LayerGroup | null>(null);
+  const speedCamerasLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
@@ -256,6 +257,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     routeLayerRef.current = L.layerGroup().addTo(map);
     markerLayerRef.current = L.layerGroup().addTo(map);
     roadConditionsLayerRef.current = L.layerGroup().addTo(map);
+    speedCamerasLayerRef.current = L.layerGroup().addTo(map);
 
     // Add attribution
     L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
@@ -282,6 +284,9 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
 
     // Add road conditions markers
     addRoadConditionsMarkers();
+
+    // Add speed camera markers
+    addSpeedCameraMarkers();
 
     return () => {
       map.remove();
@@ -771,12 +776,84 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     });
   }, [conditions]);
 
+  // Add speed camera markers
+  const addSpeedCameraMarkers = useCallback(() => {
+    if (!speedCamerasLayerRef.current) return;
+    
+    speedCamerasLayerRef.current.clearLayers();
+
+    const cameraTypeConfig = {
+      fixed: { label: "Fixed", color: "#EF4444" },
+      mobile: { label: "Mobile", color: "#F97316" },
+      average: { label: "Avg Speed", color: "#DC2626" },
+    };
+
+    cameras.forEach((camera) => {
+      const config = cameraTypeConfig[camera.type];
+      
+      const markerIcon = L.divIcon({
+        html: `<div class="relative group cursor-pointer">
+          <!-- Pulse Ring -->
+          <div class="absolute inset-0 rounded-full animate-ping" 
+               style="width: 44px; height: 44px; background: rgba(239, 68, 68, 0.3); margin: -6px;"></div>
+          
+          <!-- Main Marker -->
+          <div class="relative flex items-center justify-center rounded-lg shadow-xl border-2 border-white/50"
+               style="width: 32px; height: 32px; background: ${config.color};">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+          </div>
+          
+          <!-- Speed Limit Badge -->
+          <div class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center border border-red-500">
+            <span class="text-[8px] font-bold text-red-600">${camera.speedLimit}</span>
+          </div>
+          
+          <!-- Label on hover -->
+          <div class="absolute -bottom-16 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 pointer-events-none">
+            <div class="bg-card/95 backdrop-blur px-3 py-2 rounded-lg shadow-lg border border-border whitespace-nowrap">
+              <div class="flex items-center gap-2 mb-1">
+                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                  <circle cx="12" cy="13" r="3"/>
+                </svg>
+                <span class="text-xs font-bold text-foreground">${config.label} Camera</span>
+              </div>
+              <p class="text-[10px] text-muted-foreground max-w-[180px]">${camera.name}</p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-medium">
+                  ${camera.speedLimit} km/h
+                </span>
+                ${camera.direction ? `<span class="text-[9px] text-muted-foreground">${camera.direction}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>`,
+        className: 'custom-speed-camera-marker',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+
+      L.marker([camera.lat, camera.lng], { icon: markerIcon, zIndexOffset: 900 })
+        .addTo(speedCamerasLayerRef.current!);
+    });
+  }, [cameras]);
+
   // Update road conditions markers when conditions change
   useEffect(() => {
     if (mapInstanceRef.current && roadConditionsLayerRef.current) {
       addRoadConditionsMarkers();
     }
   }, [conditions, addRoadConditionsMarkers]);
+
+  // Update speed camera markers when cameras change
+  useEffect(() => {
+    if (mapInstanceRef.current && speedCamerasLayerRef.current) {
+      addSpeedCameraMarkers();
+    }
+  }, [cameras, addSpeedCameraMarkers]);
 
   // Check proximity to road conditions during navigation
   useEffect(() => {
