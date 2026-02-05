@@ -7,6 +7,7 @@ import { NavigationPanel } from "@/components/navigation/NavigationPanel";
 import { ReportButton } from "@/components/navigation/ReportButton";
 import { OfflineMapsManager } from "@/components/navigation/OfflineMapsManager";
 import { RoadConditionAlert } from "@/components/navigation/RoadConditionAlert";
+import { SpeedCameraAlert } from "@/components/navigation/SpeedCameraAlert";
 import { RoadConditionsList } from "@/components/navigation/RoadConditionsList";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -137,6 +138,9 @@ const Index = () => {
 
       {/* Road Condition Alert */}
       <RoadConditionAlert />
+      
+      {/* Speed Camera Alert */}
+      <SpeedCameraAlert />
 
       {/* Header */}
       <Header 

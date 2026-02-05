@@ -14,10 +14,24 @@ export interface RoadCondition {
   verified: boolean;
 }
 
+export interface SpeedCamera {
+  id: string;
+  lat: number;
+  lng: number;
+  name: string;
+  speedLimit: number; // km/h
+  type: "fixed" | "mobile" | "average";
+  direction?: string;
+  active: boolean;
+}
+
 interface RoadConditionsContextType {
   conditions: RoadCondition[];
+  cameras: SpeedCamera[];
   activeAlert: RoadCondition | null;
+  activeCameraAlert: SpeedCamera | null;
   dismissAlert: () => void;
+  dismissCameraAlert: () => void;
   checkProximity: (userLat: number, userLng: number) => void;
   reportCondition: (condition: Omit<RoadCondition, "id" | "reportedAt" | "verified">) => void;
 }
@@ -140,9 +154,172 @@ const INITIAL_CONDITIONS: RoadCondition[] = [
   },
 ];
 
+// Speed camera locations in Nairobi
+const INITIAL_CAMERAS: SpeedCamera[] = [
+  // Mombasa Road
+  {
+    id: "cam-1",
+    lat: -1.3150,
+    lng: 36.8500,
+    name: "Mombasa Road - Nyayo Stadium",
+    speedLimit: 50,
+    type: "fixed",
+    direction: "Both directions",
+    active: true,
+  },
+  {
+    id: "cam-2",
+    lat: -1.3080,
+    lng: 36.8400,
+    name: "Mombasa Road - Bellevue",
+    speedLimit: 50,
+    type: "fixed",
+    direction: "City-bound",
+    active: true,
+  },
+  // Uhuru Highway
+  {
+    id: "cam-3",
+    lat: -1.2920,
+    lng: 36.8200,
+    name: "Uhuru Highway - Nyayo House",
+    speedLimit: 50,
+    type: "fixed",
+    direction: "Both directions",
+    active: true,
+  },
+  {
+    id: "cam-4",
+    lat: -1.2850,
+    lng: 36.8150,
+    name: "Uhuru Highway - Kenyatta Ave",
+    speedLimit: 50,
+    type: "fixed",
+    direction: "Westlands-bound",
+    active: true,
+  },
+  // Thika Road
+  {
+    id: "cam-5",
+    lat: -1.2400,
+    lng: 36.8600,
+    name: "Thika Road - Muthaiga",
+    speedLimit: 80,
+    type: "fixed",
+    direction: "Both directions",
+    active: true,
+  },
+  {
+    id: "cam-6",
+    lat: -1.2200,
+    lng: 36.8750,
+    name: "Thika Road - Kasarani",
+    speedLimit: 80,
+    type: "average",
+    direction: "City-bound",
+    active: true,
+  },
+  {
+    id: "cam-7",
+    lat: -1.2050,
+    lng: 36.8850,
+    name: "Thika Road - Roysambu",
+    speedLimit: 80,
+    type: "fixed",
+    direction: "Both directions",
+    active: true,
+  },
+  // Waiyaki Way
+  {
+    id: "cam-8",
+    lat: -1.2650,
+    lng: 36.8000,
+    name: "Waiyaki Way - Westlands",
+    speedLimit: 50,
+    type: "fixed",
+    direction: "City-bound",
+    active: true,
+  },
+  {
+    id: "cam-9",
+    lat: -1.2580,
+    lng: 36.7850,
+    name: "Waiyaki Way - ABC Place",
+    speedLimit: 50,
+    type: "mobile",
+    direction: "Variable",
+    active: true,
+  },
+  // Ngong Road
+  {
+    id: "cam-10",
+    lat: -1.2970,
+    lng: 36.7950,
+    name: "Ngong Road - Prestige Plaza",
+    speedLimit: 50,
+    type: "fixed",
+    direction: "Both directions",
+    active: true,
+  },
+  {
+    id: "cam-11",
+    lat: -1.3050,
+    lng: 36.7800,
+    name: "Ngong Road - Junction Mall",
+    speedLimit: 50,
+    type: "fixed",
+    direction: "Karen-bound",
+    active: true,
+  },
+  // Langata Road
+  {
+    id: "cam-12",
+    lat: -1.3100,
+    lng: 36.8050,
+    name: "Langata Road - Carnivore",
+    speedLimit: 50,
+    type: "fixed",
+    direction: "Both directions",
+    active: true,
+  },
+  // Nairobi Expressway
+  {
+    id: "cam-13",
+    lat: -1.3000,
+    lng: 36.8300,
+    name: "Expressway - Haile Selassie",
+    speedLimit: 100,
+    type: "average",
+    direction: "Both directions",
+    active: true,
+  },
+  {
+    id: "cam-14",
+    lat: -1.2750,
+    lng: 36.7950,
+    name: "Expressway - Westlands Exit",
+    speedLimit: 80,
+    type: "fixed",
+    direction: "Exit ramp",
+    active: true,
+  },
+  // Outer Ring Road
+  {
+    id: "cam-15",
+    lat: -1.2550,
+    lng: 36.8700,
+    name: "Outer Ring - Allsops",
+    speedLimit: 50,
+    type: "mobile",
+    direction: "Variable",
+    active: true,
+  },
+];
+
 const RoadConditionsContext = createContext<RoadConditionsContextType | undefined>(undefined);
 
 const ALERT_RADIUS_METERS = 500; // Alert when within 500m
+const CAMERA_ALERT_RADIUS_METERS = 300; // Camera alert at 300m
 
 function getDistanceFromLatLng(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371e3; // Earth's radius in meters
@@ -160,8 +337,11 @@ function getDistanceFromLatLng(lat1: number, lng1: number, lat2: number, lng2: n
 
 export const RoadConditionsProvider = ({ children }: { children: ReactNode }) => {
   const [conditions, setConditions] = useState<RoadCondition[]>(INITIAL_CONDITIONS);
+  const [cameras] = useState<SpeedCamera[]>(INITIAL_CAMERAS);
   const [activeAlert, setActiveAlert] = useState<RoadCondition | null>(null);
+  const [activeCameraAlert, setActiveCameraAlert] = useState<SpeedCamera | null>(null);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const [dismissedCameraAlerts, setDismissedCameraAlerts] = useState<Set<string>>(new Set());
 
   const dismissAlert = useCallback(() => {
     if (activeAlert) {
@@ -170,26 +350,52 @@ export const RoadConditionsProvider = ({ children }: { children: ReactNode }) =>
     }
   }, [activeAlert]);
 
+  const dismissCameraAlert = useCallback(() => {
+    if (activeCameraAlert) {
+      setDismissedCameraAlerts((prev) => new Set(prev).add(activeCameraAlert.id));
+      setActiveCameraAlert(null);
+    }
+  }, [activeCameraAlert]);
+
   const checkProximity = useCallback((userLat: number, userLng: number) => {
-    // Find nearest condition that hasn't been dismissed
+    // Check road conditions
     let nearestCondition: RoadCondition | null = null;
-    let nearestDistance = Infinity;
+    let nearestConditionDistance = Infinity;
 
     for (const condition of conditions) {
       if (dismissedAlerts.has(condition.id)) continue;
 
       const distance = getDistanceFromLatLng(userLat, userLng, condition.lat, condition.lng);
       
-      if (distance < ALERT_RADIUS_METERS && distance < nearestDistance) {
+      if (distance < ALERT_RADIUS_METERS && distance < nearestConditionDistance) {
         nearestCondition = condition;
-        nearestDistance = distance;
+        nearestConditionDistance = distance;
       }
     }
 
     if (nearestCondition && (!activeAlert || nearestCondition.id !== activeAlert.id)) {
       setActiveAlert(nearestCondition);
     }
-  }, [conditions, dismissedAlerts, activeAlert]);
+
+    // Check speed cameras
+    let nearestCamera: SpeedCamera | null = null;
+    let nearestCameraDistance = Infinity;
+
+    for (const camera of cameras) {
+      if (dismissedCameraAlerts.has(camera.id) || !camera.active) continue;
+
+      const distance = getDistanceFromLatLng(userLat, userLng, camera.lat, camera.lng);
+      
+      if (distance < CAMERA_ALERT_RADIUS_METERS && distance < nearestCameraDistance) {
+        nearestCamera = camera;
+        nearestCameraDistance = distance;
+      }
+    }
+
+    if (nearestCamera && (!activeCameraAlert || nearestCamera.id !== activeCameraAlert.id)) {
+      setActiveCameraAlert(nearestCamera);
+    }
+  }, [conditions, cameras, dismissedAlerts, dismissedCameraAlerts, activeAlert, activeCameraAlert]);
 
   const reportCondition = useCallback((condition: Omit<RoadCondition, "id" | "reportedAt" | "verified">) => {
     const newCondition: RoadCondition = {
@@ -203,7 +409,16 @@ export const RoadConditionsProvider = ({ children }: { children: ReactNode }) =>
 
   return (
     <RoadConditionsContext.Provider
-      value={{ conditions, activeAlert, dismissAlert, checkProximity, reportCondition }}
+      value={{ 
+        conditions, 
+        cameras,
+        activeAlert, 
+        activeCameraAlert,
+        dismissAlert, 
+        dismissCameraAlert,
+        checkProximity, 
+        reportCondition 
+      }}
     >
       {children}
     </RoadConditionsContext.Provider>
