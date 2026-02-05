@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# WayFinder Kenya - Smart Road Alert System
 
-## Project info
+A mobile-first navigation app that alerts drivers of murram roads, construction zones, and road hazards in Kenya.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- 🚧 **Real-time Road Alerts**: Get notified of murram roads, construction zones, potholes, and flooded sections
+- 📍 **GPS-based Proximity Alerts**: Automatic warnings when approaching road hazards (within 500m)
+- 🗺️ **Interactive Map**: View all reported conditions on an intuitive Leaflet-based map
+- 📱 **Mobile-First Design**: Optimized for use while driving or stopped briefly
+- 🌍 **Offline Support**: Download maps for offline navigation
+- 🗣️ **Voice Navigation**: English and Swahili language support
 
-There are several ways of editing your application.
+## Quick Start
 
-**Use Lovable**
+```bash
+# Install dependencies
+npm install
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-**Edit a file directly in GitHub**
+## Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Vercel (Recommended)
 
-**Use GitHub Codespaces**
+1. Connect your GitHub repository to Vercel
+2. Vercel will auto-detect the Vite framework
+3. Deploy with zero configuration
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Or use the CLI:
+```bash
+npm i -g vercel
+vercel --prod
+```
 
-## What technologies are used for this project?
+### Netlify
 
-This project is built with:
+1. Connect your GitHub repository to Netlify
+2. Build settings are auto-configured via `netlify.toml`
+3. Deploy automatically on push
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Or use the CLI:
+```bash
+npm i -g netlify-cli
+netlify deploy --prod --dir=dist
+```
 
-## How can I deploy this project?
+### Manual Deployment
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```bash
+npm run build
+# Upload the `dist` folder to any static hosting service
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Tech Stack
 
-Yes, you can!
+- **Framework**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui + Radix UI
+- **Maps**: Leaflet + React-Leaflet
+- **Animations**: Framer Motion
+- **State Management**: React Context + TanStack Query
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Project Structure
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```
+src/
+├── components/
+│   ├── navigation/     # Map and navigation components
+│   └── ui/             # Reusable UI components
+├── contexts/           # React context providers
+├── hooks/              # Custom React hooks
+├── lib/                # Utilities (validation, rate limiting)
+└── pages/              # Page components
+```
+
+## Environment Variables
+
+No environment variables required for the basic app. The app runs without manual configuration.
+
+## License
+
+MIT
