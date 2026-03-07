@@ -324,8 +324,8 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
             </div>
 
             {/* Location Inputs - Enhanced with larger touch targets */}
-            <div className="p-4 sm:p-5">
-              <div className="flex gap-3 sm:gap-4">
+            <div className="p-3 sm:p-4">
+              <div className="flex gap-2 sm:gap-3">
                 {/* Route indicators - Larger and more visible */}
                 <div className="flex flex-col items-center py-4 gap-1">
                   {/* Blue circle for START */}
