@@ -364,7 +364,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-info font-semibold uppercase tracking-wide mb-1">Start From</p>
+                      <p className="text-[10px] text-info font-semibold uppercase tracking-wide">Start</p>
                       <input
                         ref={fromInputRef}
                         type="text"
@@ -372,7 +372,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                         value={fromLocation}
                         onChange={(e) => handleFromChange(e.target.value)}
                         onFocus={() => setActiveField("from")}
-                        className="w-full bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground focus:outline-none font-medium"
+                        className="w-full bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none font-medium"
                       />
                     </div>
                     {fromGeocoding.isLoading && (
