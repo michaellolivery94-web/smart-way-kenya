@@ -316,10 +316,10 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                   fromGeocoding.clearResults();
                   toGeocoding.clearResults();
                 }}
-                className="w-10 h-10 rounded-xl bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
                 aria-label="Close"
               >
-                <X className="w-5 h-5 text-destructive" />
+                <X className="w-4 h-4 text-destructive" />
               </button>
             </div>
 
