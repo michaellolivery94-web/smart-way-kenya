@@ -26,24 +26,23 @@ export const Header = ({ mode, onModeChange, isNavigating = false, onOpenOffline
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute top-0 left-0 right-0 z-30 p-3 sm:p-4"
+        className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-3"
       >
-        <div className="flex items-center justify-between gap-3">
-          {/* Menu Button - Enhanced */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Menu Button */}
           <Tooltip>
             <TooltipTrigger asChild>
               <motion.button 
                 whileTap={{ scale: 0.95 }}
-                className="relative w-12 h-12 sm:w-14 sm:h-14 nav-card rounded-2xl flex items-center justify-center shadow-lg"
+                className="relative w-9 h-9 sm:w-10 sm:h-10 nav-card rounded-xl flex items-center justify-center shadow-md"
               >
-                <Menu className="w-6 h-6 sm:w-7 sm:h-7 text-foreground" />
-                {/* Visual indicator dot */}
-                <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-primary rounded-full" />
+                <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+                <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
               </motion.button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="bg-card border-border">
-              <p className="flex items-center gap-2 text-sm font-medium">
-                <Menu className="w-4 h-4" /> Menu
+              <p className="flex items-center gap-2 text-xs font-medium">
+                <Menu className="w-3 h-3" /> Menu
               </p>
             </TooltipContent>
           </Tooltip>
