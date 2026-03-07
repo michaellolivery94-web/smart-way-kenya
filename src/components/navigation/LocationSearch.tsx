@@ -327,26 +327,13 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
             <div className="p-3 sm:p-4">
               <div className="flex gap-2 sm:gap-3">
                 {/* Route indicators - Larger and more visible */}
-                <div className="flex flex-col items-center py-4 gap-1">
-                  {/* Blue circle for START */}
+                <div className="flex flex-col items-center py-3 gap-0.5">
                   <div className="relative">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-info border-3 border-info shadow-lg shadow-info/30" />
-                    <motion.div 
-                      className="absolute inset-0 rounded-full border-2 border-info"
-                      animate={{ scale: [1, 1.5], opacity: [0.8, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    />
+                    <div className="w-4 h-4 rounded-full bg-info border-2 border-info shadow-md shadow-info/30" />
                   </div>
-                  {/* Dashed connector line */}
-                  <div className="flex-1 w-1 bg-gradient-to-b from-info via-muted to-success rounded-full" />
-                  {/* Green circle for END */}
+                  <div className="flex-1 w-0.5 bg-gradient-to-b from-info via-muted to-success rounded-full" />
                   <div className="relative">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-success border-3 border-success shadow-lg shadow-success/30" />
-                    <motion.div 
-                      className="absolute inset-0 rounded-full border-2 border-success"
-                      animate={{ scale: [1, 1.5], opacity: [0.8, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-                    />
+                    <div className="w-4 h-4 rounded-full bg-success border-2 border-success shadow-md shadow-success/30" />
                   </div>
                 </div>
 
