@@ -578,29 +578,18 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                     </>
                   )}
 
-                  {/* Loading State - Enhanced */}
                   {isSearching && currentQuery && currentQuery !== "Current Location" && currentQuery.length >= 2 && (
-                    <div className="px-5 py-10 flex flex-col items-center gap-3">
-                      <div className="relative">
-                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                        <motion.div 
-                          className="absolute inset-0 rounded-full border-4 border-primary/20"
-                          animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
-                          transition={{ duration: 1, repeat: Infinity }}
-                        />
-                      </div>
-                      <p className="text-base text-muted-foreground font-medium">Searching...</p>
+                    <div className="px-4 py-6 flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">Searching...</p>
                     </div>
                   )}
 
-                  {/* No Results - Enhanced */}
                   {!isSearching && currentResults.length === 0 && currentQuery && currentQuery !== "Current Location" && currentQuery.length >= 2 && (
-                    <div className="px-5 py-10 text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                        <MapPin className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <p className="text-base text-foreground font-medium">No places found</p>
-                      <p className="text-sm text-muted-foreground mt-1">Try different words</p>
+                    <div className="px-4 py-6 text-center">
+                      <MapPin className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-foreground font-medium">No places found</p>
+                      <p className="text-xs text-muted-foreground">Try different words</p>
                     </div>
                   )}
 
