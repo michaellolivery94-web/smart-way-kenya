@@ -58,73 +58,70 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOff
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="absolute bottom-0 left-0 right-0 p-3 sm:p-4"
+        className="absolute bottom-0 left-0 right-0 p-2 sm:p-3"
       >
-        <div className="nav-card p-4 sm:p-5">
-          {/* Status Bar - Cleaner layout */}
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/30">
-            <div className="flex items-center gap-2">
-              <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-success' : 'bg-warning'} ${isOnline ? '' : 'animate-pulse'}`} />
-              <span className="text-sm font-medium text-foreground">
-                {isOnline ? "Ready to navigate" : "Offline mode"}
+        <div className="nav-card p-3 sm:p-4">
+          {/* Status Bar */}
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/30">
+            <div className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-success' : 'bg-warning'} ${isOnline ? '' : 'animate-pulse'}`} />
+              <span className="text-xs font-medium text-foreground">
+                {isOnline ? "Ready" : "Offline"}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={onOpenOfflineMaps}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-medium transition-colors"
+                className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground text-[10px] font-medium transition-colors"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Save Maps</span>
+                <Download className="w-3 h-3" />
+                <span className="hidden sm:inline">Offline</span>
               </motion.button>
               {isPro && (
                 <div className="pro-badge">
-                  <Zap className="w-3 h-3" />
+                  <Zap className="w-2.5 h-2.5" />
                   PRO
                 </div>
               )}
             </div>
           </div>
           
-          {/* Start Button - Already enhanced, keeping consistent */}
+          {/* Start Button */}
           <motion.button 
             whileTap={{ scale: 0.98 }}
             whileHover={{ scale: 1.01 }}
-            className="nav-button-primary w-full py-4 sm:py-5 text-lg sm:text-xl font-bold flex items-center justify-center gap-3 rounded-2xl"
+            className="nav-button-primary w-full py-3 sm:py-3.5 text-base font-bold flex items-center justify-center gap-2 rounded-xl"
           >
             <span>Start Navigation</span>
           </motion.button>
 
-          {/* Trip Summary - Improved visual hierarchy */}
-          <div className="flex items-center justify-center gap-4 sm:gap-8 mt-4 pt-3 border-t border-border/30">
-            <div className="flex items-center gap-2 text-foreground">
-              <div className="w-8 h-8 rounded-lg bg-info/15 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-info" />
+          {/* Trip Summary */}
+          <div className="flex items-center justify-center gap-3 sm:gap-6 mt-3 pt-2 border-t border-border/30">
+            <div className="flex items-center gap-1.5 text-foreground">
+              <div className="w-6 h-6 rounded-md bg-info/15 flex items-center justify-center">
+                <Clock className="w-3 h-3 text-info" />
               </div>
               <div>
-                <span className="font-bold text-base">18 min</span>
-                <p className="text-[10px] text-muted-foreground">Duration</p>
+                <span className="font-bold text-sm">18 min</span>
               </div>
             </div>
-            <div className="w-px h-8 bg-border/50" />
-            <div className="flex items-center gap-2 text-foreground">
-              <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center">
-                <MapPin className="w-4 h-4 text-success" />
+            <div className="w-px h-6 bg-border/50" />
+            <div className="flex items-center gap-1.5 text-foreground">
+              <div className="w-6 h-6 rounded-md bg-success/15 flex items-center justify-center">
+                <MapPin className="w-3 h-3 text-success" />
               </div>
               <div>
-                <span className="font-bold text-base">7.2 km</span>
-                <p className="text-[10px] text-muted-foreground">Distance</p>
+                <span className="font-bold text-sm">7.2 km</span>
               </div>
             </div>
-            <div className="w-px h-8 bg-border/50" />
-            <div className="flex items-center gap-2 text-foreground">
-              <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center">
-                <Fuel className="w-4 h-4 text-warning" />
+            <div className="w-px h-6 bg-border/50" />
+            <div className="flex items-center gap-1.5 text-foreground">
+              <div className="w-6 h-6 rounded-md bg-warning/15 flex items-center justify-center">
+                <Fuel className="w-3 h-3 text-warning" />
               </div>
               <div>
-                <span className="font-bold text-base">Ksh 120</span>
-                <p className="text-[10px] text-muted-foreground">Fuel cost</p>
+                <span className="font-bold text-sm">Ksh 120</span>
               </div>
             </div>
           </div>

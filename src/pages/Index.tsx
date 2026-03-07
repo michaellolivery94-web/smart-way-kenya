@@ -158,7 +158,7 @@ const Index = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-20 sm:top-24 left-3 right-3 sm:left-4 sm:right-4 z-20"
+            className="absolute top-14 sm:top-16 left-2 right-2 sm:left-3 sm:right-3 z-20"
           >
             <LocationSearch 
               onStartNavigation={handleStartNavigation}

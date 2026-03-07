@@ -265,32 +265,25 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
             onClick={handleExpand}
             whileTap={{ scale: 0.97 }}
             whileHover={{ scale: 1.01 }}
-            className="w-full nav-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 text-left shadow-lg"
+            className="w-full nav-card p-3 sm:p-4 flex items-center gap-3 text-left shadow-md"
           >
-            {/* Large, color-coded search icon */}
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center flex-shrink-0 border-2 border-primary/40">
-              <Search className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
-              {/* Pulsing indicator */}
-              <motion.div
-                className="absolute inset-0 rounded-2xl border-2 border-primary/50"
-                animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
+            {/* Compact search icon */}
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center flex-shrink-0 border border-primary/40">
+              <Search className="w-5 h-5 sm:w-5 sm:h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-lg sm:text-xl font-bold text-foreground">Where to?</p>
-              <p className="text-sm sm:text-base text-muted-foreground truncate flex items-center gap-2 mt-1">
-                <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <p className="text-base sm:text-lg font-bold text-foreground">Where to?</p>
+              <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 Tap to search
               </p>
             </div>
-            {/* Visual arrow indicator */}
             <motion.div 
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary flex items-center justify-center flex-shrink-0"
-              animate={{ x: [0, 4, 0] }}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0"
+              animate={{ x: [0, 3, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              <MapPin className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </motion.div>
           </motion.button>
         )}
@@ -306,14 +299,14 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
             className="nav-card overflow-hidden"
           >
             {/* Header - Enhanced with visual guide */}
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Navigation className="w-5 h-5 text-primary" />
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Navigation className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-foreground">Plan Your Trip</h3>
-                  <p className="text-xs text-muted-foreground">Set start & destination</p>
+                  <h3 className="text-sm sm:text-base font-bold text-foreground">Plan Your Trip</h3>
+                  <p className="text-[10px] text-muted-foreground">Set start & destination</p>
                 </div>
               </div>
               <button
@@ -323,49 +316,36 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                   fromGeocoding.clearResults();
                   toGeocoding.clearResults();
                 }}
-                className="w-10 h-10 rounded-xl bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
                 aria-label="Close"
               >
-                <X className="w-5 h-5 text-destructive" />
+                <X className="w-4 h-4 text-destructive" />
               </button>
             </div>
 
             {/* Location Inputs - Enhanced with larger touch targets */}
-            <div className="p-4 sm:p-5">
-              <div className="flex gap-3 sm:gap-4">
+            <div className="p-3 sm:p-4">
+              <div className="flex gap-2 sm:gap-3">
                 {/* Route indicators - Larger and more visible */}
-                <div className="flex flex-col items-center py-4 gap-1">
-                  {/* Blue circle for START */}
+                <div className="flex flex-col items-center py-3 gap-0.5">
                   <div className="relative">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-info border-3 border-info shadow-lg shadow-info/30" />
-                    <motion.div 
-                      className="absolute inset-0 rounded-full border-2 border-info"
-                      animate={{ scale: [1, 1.5], opacity: [0.8, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    />
+                    <div className="w-4 h-4 rounded-full bg-info border-2 border-info shadow-md shadow-info/30" />
                   </div>
-                  {/* Dashed connector line */}
-                  <div className="flex-1 w-1 bg-gradient-to-b from-info via-muted to-success rounded-full" />
-                  {/* Green circle for END */}
+                  <div className="flex-1 w-0.5 bg-gradient-to-b from-info via-muted to-success rounded-full" />
                   <div className="relative">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-success border-3 border-success shadow-lg shadow-success/30" />
-                    <motion.div 
-                      className="absolute inset-0 rounded-full border-2 border-success"
-                      animate={{ scale: [1, 1.5], opacity: [0.8, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-                    />
+                    <div className="w-4 h-4 rounded-full bg-success border-2 border-success shadow-md shadow-success/30" />
                   </div>
                 </div>
 
                 {/* Input fields - Enhanced with larger touch targets */}
                 <div className="flex-1 flex flex-col gap-3">
-                  {/* From field - Enhanced */}
+                  {/* From field */}
                   <div
-                    className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl transition-all cursor-text border-2 ${
+                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl transition-all cursor-text border ${
                       activeField === "from" 
-                        ? "bg-info/10 border-info ring-2 ring-info/30" 
+                        ? "bg-info/10 border-info ring-1 ring-info/30" 
                         : isListening && voiceTargetField === "from"
-                        ? "bg-success/10 border-success ring-2 ring-success/30 animate-pulse"
+                        ? "bg-success/10 border-success ring-1 ring-success/30 animate-pulse"
                         : "bg-secondary/50 border-transparent hover:bg-secondary/80 hover:border-info/30"
                     }`}
                     onClick={() => {
@@ -374,17 +354,17 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                     }}
                   >
                     {/* Visual icon indicator */}
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                       originCoords ? "bg-info" : "bg-info/20"
                     }`}>
                       {originCoords ? (
-                        <div className="w-3 h-3 rounded-full bg-white shadow-lg" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-white shadow" />
                       ) : (
-                        <Locate className="w-5 h-5 sm:w-6 sm:h-6 text-info" />
+                        <Locate className="w-4 h-4 text-info" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-info font-semibold uppercase tracking-wide mb-1">Start From</p>
+                      <p className="text-[10px] text-info font-semibold uppercase tracking-wide">Start</p>
                       <input
                         ref={fromInputRef}
                         type="text"
@@ -392,11 +372,11 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                         value={fromLocation}
                         onChange={(e) => handleFromChange(e.target.value)}
                         onFocus={() => setActiveField("from")}
-                        className="w-full bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground focus:outline-none font-medium"
+                        className="w-full bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none font-medium"
                       />
                     </div>
                     {fromGeocoding.isLoading && (
-                      <Loader2 className="w-5 h-5 text-info animate-spin" />
+                      <Loader2 className="w-4 h-4 text-info animate-spin" />
                     )}
                     {fromLocation && fromLocation !== "Current Location" && !isListening && (
                       <button
@@ -406,10 +386,10 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           setOriginCoords(null);
                           fromGeocoding.clearResults();
                         }}
-                        className="w-9 h-9 rounded-lg bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
+                        className="w-7 h-7 rounded-md bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
                         aria-label="Clear"
                       >
-                        <X className="w-4 h-4 text-destructive" />
+                        <X className="w-3.5 h-3.5 text-destructive" />
                       </button>
                     )}
                     {isSupported && (
@@ -418,29 +398,29 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           e.stopPropagation();
                           handleVoiceInput("from");
                         }}
-                        className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all ${
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
                           isListening && voiceTargetField === "from"
-                            ? "bg-success text-success-foreground animate-pulse shadow-lg shadow-success/30"
+                            ? "bg-success text-success-foreground animate-pulse shadow-md shadow-success/30"
                             : "bg-primary/20 hover:bg-primary/30 text-primary"
                         }`}
                         aria-label={isListening && voiceTargetField === "from" ? "Stop listening" : "Voice input"}
                       >
                         {isListening && voiceTargetField === "from" ? (
-                          <MicOff className="w-5 h-5 sm:w-6 sm:h-6" />
+                          <MicOff className="w-4 h-4" />
                         ) : (
-                          <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
+                          <Mic className="w-4 h-4" />
                         )}
                       </button>
                     )}
                   </div>
 
-                  {/* To field - Enhanced */}
+                  {/* To field */}
                   <div
-                    className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl transition-all cursor-text border-2 ${
+                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl transition-all cursor-text border ${
                       activeField === "to" 
-                        ? "bg-success/10 border-success ring-2 ring-success/30" 
+                        ? "bg-success/10 border-success ring-1 ring-success/30" 
                         : isListening && voiceTargetField === "to"
-                        ? "bg-success/10 border-success ring-2 ring-success/30 animate-pulse"
+                        ? "bg-success/10 border-success ring-1 ring-success/30 animate-pulse"
                         : "bg-secondary/50 border-transparent hover:bg-secondary/80 hover:border-success/30"
                     }`}
                     onClick={() => {
@@ -448,18 +428,17 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                       toInputRef.current?.focus();
                     }}
                   >
-                    {/* Visual icon indicator */}
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                       destinationCoords ? "bg-success" : "bg-success/20"
                     }`}>
                       {destinationCoords ? (
-                        <div className="w-3 h-3 rounded-full bg-white shadow-lg" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-white shadow" />
                       ) : (
-                        <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
+                        <MapPin className="w-4 h-4 text-success" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-success font-semibold uppercase tracking-wide mb-1">Going To</p>
+                      <p className="text-[10px] text-success font-semibold uppercase tracking-wide">Destination</p>
                       <input
                         ref={toInputRef}
                         type="text"
@@ -467,11 +446,11 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                         value={toLocation}
                         onChange={(e) => handleToChange(e.target.value)}
                         onFocus={() => setActiveField("to")}
-                        className="w-full bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground focus:outline-none font-medium"
+                        className="w-full bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none font-medium"
                       />
                     </div>
                     {toGeocoding.isLoading && (
-                      <Loader2 className="w-5 h-5 text-success animate-spin" />
+                      <Loader2 className="w-4 h-4 text-success animate-spin" />
                     )}
                     {toLocation && !isListening && (
                       <button
@@ -481,10 +460,10 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           setDestinationCoords(null);
                           toGeocoding.clearResults();
                         }}
-                        className="w-9 h-9 rounded-lg bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
+                        className="w-7 h-7 rounded-md bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
                         aria-label="Clear"
                       >
-                        <X className="w-4 h-4 text-destructive" />
+                        <X className="w-3.5 h-3.5 text-destructive" />
                       </button>
                     )}
                     {isSupported && (
@@ -493,32 +472,32 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           e.stopPropagation();
                           handleVoiceInput("to");
                         }}
-                        className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all ${
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
                           isListening && voiceTargetField === "to"
-                            ? "bg-success text-success-foreground animate-pulse shadow-lg shadow-success/30"
+                            ? "bg-success text-success-foreground animate-pulse shadow-md shadow-success/30"
                             : "bg-primary/20 hover:bg-primary/30 text-primary"
                         }`}
                         aria-label={isListening && voiceTargetField === "to" ? "Stop listening" : "Voice input"}
                       >
                         {isListening && voiceTargetField === "to" ? (
-                          <MicOff className="w-5 h-5 sm:w-6 sm:h-6" />
+                          <MicOff className="w-4 h-4" />
                         ) : (
-                          <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
+                          <Mic className="w-4 h-4" />
                         )}
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Swap button - Enhanced */}
+                {/* Swap button */}
                 <motion.button
                   onClick={handleSwapLocations}
                   whileTap={{ scale: 0.9, rotate: 180 }}
                   whileHover={{ scale: 1.1 }}
-                  className="self-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-secondary hover:bg-primary/20 border-2 border-border hover:border-primary/50 flex items-center justify-center transition-colors shadow-lg"
+                  className="self-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-secondary hover:bg-primary/20 border border-border hover:border-primary/50 flex items-center justify-center transition-colors shadow-md"
                   aria-label="Swap locations"
                 >
-                  <ArrowDownUp className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
+                  <ArrowDownUp className="w-4 h-4 text-foreground" />
                 </motion.button>
               </div>
             </div>
@@ -530,52 +509,43 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="border-t border-border/50 max-h-[50vh] overflow-y-auto"
+                  className="border-t border-border/50 max-h-[40vh] overflow-y-auto"
                 >
-                  {/* Current location option for "from" field - Enhanced */}
+                  {/* Current location option */}
                   {activeField === "from" && (
                     <motion.button
                       onClick={handleUseCurrentLocation}
                       disabled={isGettingLocation}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full flex items-center gap-4 px-5 py-5 hover:bg-info/10 active:bg-info/15 transition-colors text-left border-b border-border/30 disabled:opacity-50"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-info/10 active:bg-info/15 transition-colors text-left border-b border-border/30 disabled:opacity-50"
                     >
-                      <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-info/30 to-info/10 flex items-center justify-center border-2 border-info/30">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-info/30 to-info/10 flex items-center justify-center border border-info/30">
                         {isGettingLocation ? (
-                          <Loader2 className="w-7 h-7 text-info animate-spin" />
+                          <Loader2 className="w-4 h-4 text-info animate-spin" />
                         ) : (
-                          <Navigation className="w-7 h-7 text-info" />
-                        )}
-                        {!isGettingLocation && (
-                          <motion.div 
-                            className="absolute inset-0 rounded-2xl border-2 border-info/50"
-                            animate={{ scale: [1, 1.2], opacity: [0.6, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                          />
+                          <Navigation className="w-4 h-4 text-info" />
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-lg font-bold text-foreground">
+                        <p className="text-sm font-bold text-foreground">
                           {isGettingLocation ? "Finding you..." : "Use My Location"}
                         </p>
-                        <p className="text-sm text-info flex items-center gap-2 mt-0.5">
-                          <span className="w-2 h-2 rounded-full bg-info animate-pulse" />
-                          GPS location
+                        <p className="text-xs text-info flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-info animate-pulse" />
+                          GPS
                         </p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-info/20 flex items-center justify-center">
-                        <Locate className="w-6 h-6 text-info" />
-                      </div>
+                      <Locate className="w-4 h-4 text-info" />
                     </motion.button>
                   )}
 
                   {/* Live Search Results - Enhanced */}
                   {currentResults.length > 0 && (
                     <>
-                      <div className="px-5 py-3 bg-gradient-to-r from-primary/10 to-transparent">
-                        <p className="text-sm font-semibold text-primary flex items-center gap-2">
-                          <Globe className="w-4 h-4" />
-                          Found {currentResults.length} places
+                      <div className="px-4 py-2 bg-gradient-to-r from-primary/10 to-transparent">
+                        <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                          <Globe className="w-3.5 h-3.5" />
+                          {currentResults.length} places
                         </p>
                       </div>
                       {currentResults.map((result, index) => {
@@ -588,61 +558,48 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                             transition={{ delay: index * 0.05 }}
                             onClick={() => handleSelectGeocodingResult(result, activeField)}
                             whileTap={{ scale: 0.98 }}
-                            className="w-full flex items-center gap-4 px-5 py-4 hover:bg-primary/10 active:bg-primary/20 transition-colors text-left border-b border-border/20"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-primary/10 active:bg-primary/20 transition-colors text-left border-b border-border/20"
                           >
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 border border-primary/20">
-                              <ResultIcon className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 border border-primary/20">
+                              <ResultIcon className="w-4 h-4 text-primary" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-base sm:text-lg text-foreground font-semibold truncate">
+                              <p className="text-sm text-foreground font-semibold truncate">
                                 {result.shortName}
                               </p>
-                              <p className="text-sm text-muted-foreground truncate mt-0.5">
+                              <p className="text-xs text-muted-foreground truncate">
                                 {result.displayName}
                               </p>
                             </div>
-                            <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center flex-shrink-0">
-                              <MapPin className="w-5 h-5 text-success" />
-                            </div>
+                            <MapPin className="w-4 h-4 text-success flex-shrink-0" />
                           </motion.button>
                         );
                       })}
                     </>
                   )}
 
-                  {/* Loading State - Enhanced */}
                   {isSearching && currentQuery && currentQuery !== "Current Location" && currentQuery.length >= 2 && (
-                    <div className="px-5 py-10 flex flex-col items-center gap-3">
-                      <div className="relative">
-                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                        <motion.div 
-                          className="absolute inset-0 rounded-full border-4 border-primary/20"
-                          animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
-                          transition={{ duration: 1, repeat: Infinity }}
-                        />
-                      </div>
-                      <p className="text-base text-muted-foreground font-medium">Searching...</p>
+                    <div className="px-4 py-6 flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                      <p className="text-sm text-muted-foreground">Searching...</p>
                     </div>
                   )}
 
-                  {/* No Results - Enhanced */}
                   {!isSearching && currentResults.length === 0 && currentQuery && currentQuery !== "Current Location" && currentQuery.length >= 2 && (
-                    <div className="px-5 py-10 text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                        <MapPin className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <p className="text-base text-foreground font-medium">No places found</p>
-                      <p className="text-sm text-muted-foreground mt-1">Try different words</p>
+                    <div className="px-4 py-6 text-center">
+                      <MapPin className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-foreground font-medium">No places found</p>
+                      <p className="text-xs text-muted-foreground">Try different words</p>
                     </div>
                   )}
 
                   {/* Saved Suggestions - Enhanced */}
                   {(!currentQuery || currentQuery === "Current Location" || currentResults.length === 0) && filteredSuggestions.length > 0 && (
                     <>
-                      <div className="px-5 py-3 bg-gradient-to-r from-warning/10 to-transparent">
-                        <p className="text-sm font-semibold text-warning flex items-center gap-2">
-                          <Star className="w-4 h-4" />
-                          {activeField === "to" ? "Popular Places" : "Your Places"}
+                      <div className="px-4 py-2 bg-gradient-to-r from-warning/10 to-transparent">
+                        <p className="text-xs font-semibold text-warning flex items-center gap-1.5">
+                          <Star className="w-3.5 h-3.5" />
+                          {activeField === "to" ? "Popular" : "Your Places"}
                         </p>
                       </div>
                       {filteredSuggestions.map((suggestion, index) => (
@@ -650,16 +607,16 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           key={index}
                           onClick={() => handleSelectSuggestion(suggestion, activeField)}
                           whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center gap-4 px-5 py-4 hover:bg-secondary/50 active:bg-secondary transition-colors text-left border-b border-border/20"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary/50 active:bg-secondary transition-colors text-left border-b border-border/20"
                         >
-                          <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center border-2 ${
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center border ${
                             suggestion.type === "favorite" 
                               ? "bg-gradient-to-br from-warning/20 to-warning/5 border-warning/30" 
                               : suggestion.type === "recent"
                               ? "bg-gradient-to-br from-muted to-muted/50 border-border"
                               : "bg-gradient-to-br from-success/20 to-success/5 border-success/30"
                           }`}>
-                            <suggestion.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${
+                            <suggestion.icon className={`w-4 h-4 ${
                               suggestion.type === "favorite" 
                                 ? "text-warning" 
                                 : suggestion.type === "recent"
@@ -668,8 +625,8 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                             }`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-base sm:text-lg text-foreground font-medium truncate">{suggestion.text}</p>
-                            <p className={`text-sm capitalize mt-0.5 ${
+                            <p className="text-sm text-foreground font-medium truncate">{suggestion.text}</p>
+                            <p className={`text-xs capitalize ${
                               suggestion.type === "favorite" ? "text-warning" : 
                               suggestion.type === "recent" ? "text-muted-foreground" : "text-success"
                             }`}>
@@ -690,24 +647,18 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 sm:p-5 border-t border-border/50 bg-gradient-to-t from-success/5 to-transparent"
+                className="p-3 sm:p-4 border-t border-border/50 bg-gradient-to-t from-success/5 to-transparent"
               >
-                {/* Route summary before button */}
-                <div className="flex items-center justify-center gap-4 mb-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-info" />
-                    <span className="text-muted-foreground truncate max-w-[100px]">{fromLocation}</span>
+                {/* Compact route summary */}
+                <div className="flex items-center justify-center gap-3 mb-3 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-info" />
+                    <span className="text-muted-foreground truncate max-w-[80px]">{fromLocation}</span>
                   </div>
-                  <motion.div 
-                    className="flex items-center gap-1 text-primary"
-                    animate={{ x: [0, 4, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    <span>→</span>
-                  </motion.div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-success" />
-                    <span className="text-foreground font-medium truncate max-w-[100px]">{toLocation}</span>
+                  <span className="text-primary">→</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-success" />
+                    <span className="text-foreground font-medium truncate max-w-[80px]">{toLocation}</span>
                   </div>
                 </div>
                 
@@ -716,72 +667,24 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                   disabled={isGettingLocation}
                   whileTap={{ scale: 0.96 }}
                   whileHover={{ scale: 1.01 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 400, 
-                    damping: 17,
-                    mass: 0.8
-                  }}
-                  className="relative w-full py-5 sm:py-6 rounded-2xl bg-gradient-to-r from-primary via-primary to-warning/80 overflow-hidden shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 disabled:opacity-50 disabled:shadow-none group"
+                  transition={{ type: "spring", stiffness: 400, damping: 17, mass: 0.8 }}
+                  className="relative w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-primary via-primary to-warning/80 overflow-hidden shadow-lg shadow-primary/30 disabled:opacity-50 disabled:shadow-none"
                 >
-                  {/* Animated background shimmer */}
                   <motion.span
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                     animate={{ x: ["-100%", "100%"] }}
                     transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
                   />
-                  
-                  {/* Ripple/Glow Effect on Tap */}
-                  <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-primary-foreground/0 via-primary-foreground/20 to-primary-foreground/0"
-                    initial={{ x: "-100%", opacity: 0 }}
-                    whileTap={{ 
-                      x: "100%", 
-                      opacity: 1,
-                      transition: { duration: 0.4, ease: "easeOut" }
-                    }}
-                  />
-                  
-                  {/* Pulse Ring Effect */}
-                  <motion.span 
-                    className="absolute inset-0 rounded-2xl border-4 border-primary-foreground/30"
-                    animate={{ scale: [1, 1.02, 1], opacity: [0.3, 0.1, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  
-                  {/* Button Content */}
-                  <span className="relative flex items-center justify-center gap-3 sm:gap-4">
+                  <span className="relative flex items-center justify-center gap-2">
                     {isGettingLocation ? (
                       <>
-                        <Loader2 className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground animate-spin" />
-                        <span className="text-lg sm:text-xl font-bold text-primary-foreground">
-                          Finding you...
-                        </span>
+                        <Loader2 className="w-5 h-5 text-primary-foreground animate-spin" />
+                        <span className="text-sm font-bold text-primary-foreground">Finding you...</span>
                       </>
                     ) : (
                       <>
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
-                          <motion.div
-                            animate={{ 
-                              rotate: [0, -10, 10, -5, 0],
-                            }}
-                            transition={{ 
-                              duration: 0.5,
-                              repeat: Infinity,
-                              repeatDelay: 3
-                            }}
-                          >
-                            <Navigation className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground" />
-                          </motion.div>
-                        </div>
-                        <div className="text-left">
-                          <span className="block text-lg sm:text-xl font-bold text-primary-foreground">
-                            GO NOW
-                          </span>
-                          <span className="block text-xs sm:text-sm text-primary-foreground/80 font-medium">
-                            Start Navigation
-                          </span>
-                        </div>
+                        <Navigation className="w-5 h-5 text-primary-foreground" />
+                        <span className="text-base font-bold text-primary-foreground">GO NOW</span>
                       </>
                     )}
                   </span>
@@ -794,18 +697,11 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-5 border-t border-border/50 text-center bg-warning/5"
+                className="p-3 border-t border-border/50 text-center bg-warning/5"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <motion.div
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    <MapPin className="w-6 h-6 text-warning" />
-                  </motion.div>
-                  <p className="text-base text-foreground font-medium">
-                    Tap destination to select
-                  </p>
+                <div className="flex items-center justify-center gap-2">
+                  <MapPin className="w-4 h-4 text-warning" />
+                  <p className="text-sm text-foreground font-medium">Tap destination to select</p>
                 </div>
               </motion.div>
             )}
