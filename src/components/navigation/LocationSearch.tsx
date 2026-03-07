@@ -497,7 +497,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                   className="self-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-secondary hover:bg-primary/20 border border-border hover:border-primary/50 flex items-center justify-center transition-colors shadow-md"
                   aria-label="Swap locations"
                 >
-                  <ArrowDownUp className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
+                  <ArrowDownUp className="w-4 h-4 text-foreground" />
                 </motion.button>
               </div>
             </div>
