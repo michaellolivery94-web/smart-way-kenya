@@ -299,14 +299,14 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
             className="nav-card overflow-hidden"
           >
             {/* Header - Enhanced with visual guide */}
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Navigation className="w-5 h-5 text-primary" />
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Navigation className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-foreground">Plan Your Trip</h3>
-                  <p className="text-xs text-muted-foreground">Set start & destination</p>
+                  <h3 className="text-sm sm:text-base font-bold text-foreground">Plan Your Trip</h3>
+                  <p className="text-[10px] text-muted-foreground">Set start & destination</p>
                 </div>
               </div>
               <button
