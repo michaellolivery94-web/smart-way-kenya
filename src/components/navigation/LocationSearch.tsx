@@ -647,24 +647,18 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 sm:p-5 border-t border-border/50 bg-gradient-to-t from-success/5 to-transparent"
+                className="p-3 sm:p-4 border-t border-border/50 bg-gradient-to-t from-success/5 to-transparent"
               >
-                {/* Route summary before button */}
-                <div className="flex items-center justify-center gap-4 mb-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-info" />
-                    <span className="text-muted-foreground truncate max-w-[100px]">{fromLocation}</span>
+                {/* Compact route summary */}
+                <div className="flex items-center justify-center gap-3 mb-3 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-info" />
+                    <span className="text-muted-foreground truncate max-w-[80px]">{fromLocation}</span>
                   </div>
-                  <motion.div 
-                    className="flex items-center gap-1 text-primary"
-                    animate={{ x: [0, 4, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    <span>→</span>
-                  </motion.div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-success" />
-                    <span className="text-foreground font-medium truncate max-w-[100px]">{toLocation}</span>
+                  <span className="text-primary">→</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-success" />
+                    <span className="text-foreground font-medium truncate max-w-[80px]">{toLocation}</span>
                   </div>
                 </div>
                 
@@ -673,72 +667,24 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                   disabled={isGettingLocation}
                   whileTap={{ scale: 0.96 }}
                   whileHover={{ scale: 1.01 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 400, 
-                    damping: 17,
-                    mass: 0.8
-                  }}
-                  className="relative w-full py-5 sm:py-6 rounded-2xl bg-gradient-to-r from-primary via-primary to-warning/80 overflow-hidden shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 disabled:opacity-50 disabled:shadow-none group"
+                  transition={{ type: "spring", stiffness: 400, damping: 17, mass: 0.8 }}
+                  className="relative w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-primary via-primary to-warning/80 overflow-hidden shadow-lg shadow-primary/30 disabled:opacity-50 disabled:shadow-none"
                 >
-                  {/* Animated background shimmer */}
                   <motion.span
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                     animate={{ x: ["-100%", "100%"] }}
                     transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
                   />
-                  
-                  {/* Ripple/Glow Effect on Tap */}
-                  <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-primary-foreground/0 via-primary-foreground/20 to-primary-foreground/0"
-                    initial={{ x: "-100%", opacity: 0 }}
-                    whileTap={{ 
-                      x: "100%", 
-                      opacity: 1,
-                      transition: { duration: 0.4, ease: "easeOut" }
-                    }}
-                  />
-                  
-                  {/* Pulse Ring Effect */}
-                  <motion.span 
-                    className="absolute inset-0 rounded-2xl border-4 border-primary-foreground/30"
-                    animate={{ scale: [1, 1.02, 1], opacity: [0.3, 0.1, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  
-                  {/* Button Content */}
-                  <span className="relative flex items-center justify-center gap-3 sm:gap-4">
+                  <span className="relative flex items-center justify-center gap-2">
                     {isGettingLocation ? (
                       <>
-                        <Loader2 className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground animate-spin" />
-                        <span className="text-lg sm:text-xl font-bold text-primary-foreground">
-                          Finding you...
-                        </span>
+                        <Loader2 className="w-5 h-5 text-primary-foreground animate-spin" />
+                        <span className="text-sm font-bold text-primary-foreground">Finding you...</span>
                       </>
                     ) : (
                       <>
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
-                          <motion.div
-                            animate={{ 
-                              rotate: [0, -10, 10, -5, 0],
-                            }}
-                            transition={{ 
-                              duration: 0.5,
-                              repeat: Infinity,
-                              repeatDelay: 3
-                            }}
-                          >
-                            <Navigation className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground" />
-                          </motion.div>
-                        </div>
-                        <div className="text-left">
-                          <span className="block text-lg sm:text-xl font-bold text-primary-foreground">
-                            GO NOW
-                          </span>
-                          <span className="block text-xs sm:text-sm text-primary-foreground/80 font-medium">
-                            Start Navigation
-                          </span>
-                        </div>
+                        <Navigation className="w-5 h-5 text-primary-foreground" />
+                        <span className="text-base font-bold text-primary-foreground">GO NOW</span>
                       </>
                     )}
                   </span>
