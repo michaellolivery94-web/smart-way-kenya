@@ -265,32 +265,25 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
             onClick={handleExpand}
             whileTap={{ scale: 0.97 }}
             whileHover={{ scale: 1.01 }}
-            className="w-full nav-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 text-left shadow-lg"
+            className="w-full nav-card p-3 sm:p-4 flex items-center gap-3 text-left shadow-md"
           >
-            {/* Large, color-coded search icon */}
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center flex-shrink-0 border-2 border-primary/40">
-              <Search className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
-              {/* Pulsing indicator */}
-              <motion.div
-                className="absolute inset-0 rounded-2xl border-2 border-primary/50"
-                animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
+            {/* Compact search icon */}
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center flex-shrink-0 border border-primary/40">
+              <Search className="w-5 h-5 sm:w-5 sm:h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-lg sm:text-xl font-bold text-foreground">Where to?</p>
-              <p className="text-sm sm:text-base text-muted-foreground truncate flex items-center gap-2 mt-1">
-                <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <p className="text-base sm:text-lg font-bold text-foreground">Where to?</p>
+              <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 Tap to search
               </p>
             </div>
-            {/* Visual arrow indicator */}
             <motion.div 
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary flex items-center justify-center flex-shrink-0"
-              animate={{ x: [0, 4, 0] }}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0"
+              animate={{ x: [0, 3, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              <MapPin className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </motion.div>
           </motion.button>
         )}
