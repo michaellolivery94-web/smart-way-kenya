@@ -376,7 +376,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                       />
                     </div>
                     {fromGeocoding.isLoading && (
-                      <Loader2 className="w-5 h-5 text-info animate-spin" />
+                      <Loader2 className="w-4 h-4 text-info animate-spin" />
                     )}
                     {fromLocation && fromLocation !== "Current Location" && !isListening && (
                       <button
