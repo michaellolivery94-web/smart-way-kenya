@@ -697,18 +697,11 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-5 border-t border-border/50 text-center bg-warning/5"
+                className="p-3 border-t border-border/50 text-center bg-warning/5"
               >
-                <div className="flex items-center justify-center gap-3">
-                  <motion.div
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    <MapPin className="w-6 h-6 text-warning" />
-                  </motion.div>
-                  <p className="text-base text-foreground font-medium">
-                    Tap destination to select
-                  </p>
+                <div className="flex items-center justify-center gap-2">
+                  <MapPin className="w-4 h-4 text-warning" />
+                  <p className="text-sm text-foreground font-medium">Tap destination to select</p>
                 </div>
               </motion.div>
             )}
