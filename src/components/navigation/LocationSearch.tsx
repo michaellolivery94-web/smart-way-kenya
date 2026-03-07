@@ -354,13 +354,13 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                     }}
                   >
                     {/* Visual icon indicator */}
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                       originCoords ? "bg-info" : "bg-info/20"
                     }`}>
                       {originCoords ? (
-                        <div className="w-3 h-3 rounded-full bg-white shadow-lg" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-white shadow" />
                       ) : (
-                        <Locate className="w-5 h-5 sm:w-6 sm:h-6 text-info" />
+                        <Locate className="w-4 h-4 text-info" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
