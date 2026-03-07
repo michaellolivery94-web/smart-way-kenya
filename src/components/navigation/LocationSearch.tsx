@@ -414,13 +414,13 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                     )}
                   </div>
 
-                  {/* To field - Enhanced */}
+                  {/* To field */}
                   <div
-                    className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl transition-all cursor-text border-2 ${
+                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl transition-all cursor-text border ${
                       activeField === "to" 
-                        ? "bg-success/10 border-success ring-2 ring-success/30" 
+                        ? "bg-success/10 border-success ring-1 ring-success/30" 
                         : isListening && voiceTargetField === "to"
-                        ? "bg-success/10 border-success ring-2 ring-success/30 animate-pulse"
+                        ? "bg-success/10 border-success ring-1 ring-success/30 animate-pulse"
                         : "bg-secondary/50 border-transparent hover:bg-secondary/80 hover:border-success/30"
                     }`}
                     onClick={() => {
@@ -428,18 +428,17 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                       toInputRef.current?.focus();
                     }}
                   >
-                    {/* Visual icon indicator */}
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                       destinationCoords ? "bg-success" : "bg-success/20"
                     }`}>
                       {destinationCoords ? (
-                        <div className="w-3 h-3 rounded-full bg-white shadow-lg" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-white shadow" />
                       ) : (
-                        <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
+                        <MapPin className="w-4 h-4 text-success" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-success font-semibold uppercase tracking-wide mb-1">Going To</p>
+                      <p className="text-[10px] text-success font-semibold uppercase tracking-wide">Destination</p>
                       <input
                         ref={toInputRef}
                         type="text"
@@ -447,11 +446,11 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                         value={toLocation}
                         onChange={(e) => handleToChange(e.target.value)}
                         onFocus={() => setActiveField("to")}
-                        className="w-full bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground focus:outline-none font-medium"
+                        className="w-full bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none font-medium"
                       />
                     </div>
                     {toGeocoding.isLoading && (
-                      <Loader2 className="w-5 h-5 text-success animate-spin" />
+                      <Loader2 className="w-4 h-4 text-success animate-spin" />
                     )}
                     {toLocation && !isListening && (
                       <button
@@ -461,10 +460,10 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           setDestinationCoords(null);
                           toGeocoding.clearResults();
                         }}
-                        className="w-9 h-9 rounded-lg bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
+                        className="w-7 h-7 rounded-md bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
                         aria-label="Clear"
                       >
-                        <X className="w-4 h-4 text-destructive" />
+                        <X className="w-3.5 h-3.5 text-destructive" />
                       </button>
                     )}
                     {isSupported && (
@@ -473,29 +472,29 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           e.stopPropagation();
                           handleVoiceInput("to");
                         }}
-                        className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all ${
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
                           isListening && voiceTargetField === "to"
-                            ? "bg-success text-success-foreground animate-pulse shadow-lg shadow-success/30"
+                            ? "bg-success text-success-foreground animate-pulse shadow-md shadow-success/30"
                             : "bg-primary/20 hover:bg-primary/30 text-primary"
                         }`}
                         aria-label={isListening && voiceTargetField === "to" ? "Stop listening" : "Voice input"}
                       >
                         {isListening && voiceTargetField === "to" ? (
-                          <MicOff className="w-5 h-5 sm:w-6 sm:h-6" />
+                          <MicOff className="w-4 h-4" />
                         ) : (
-                          <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
+                          <Mic className="w-4 h-4" />
                         )}
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Swap button - Enhanced */}
+                {/* Swap button */}
                 <motion.button
                   onClick={handleSwapLocations}
                   whileTap={{ scale: 0.9, rotate: 180 }}
                   whileHover={{ scale: 1.1 }}
-                  className="self-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-secondary hover:bg-primary/20 border-2 border-border hover:border-primary/50 flex items-center justify-center transition-colors shadow-lg"
+                  className="self-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-secondary hover:bg-primary/20 border border-border hover:border-primary/50 flex items-center justify-center transition-colors shadow-md"
                   aria-label="Swap locations"
                 >
                   <ArrowDownUp className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
