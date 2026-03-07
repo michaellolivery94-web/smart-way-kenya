@@ -386,10 +386,10 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           setOriginCoords(null);
                           fromGeocoding.clearResults();
                         }}
-                        className="w-9 h-9 rounded-lg bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
+                        className="w-7 h-7 rounded-md bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors"
                         aria-label="Clear"
                       >
-                        <X className="w-4 h-4 text-destructive" />
+                        <X className="w-3.5 h-3.5 text-destructive" />
                       </button>
                     )}
                     {isSupported && (
