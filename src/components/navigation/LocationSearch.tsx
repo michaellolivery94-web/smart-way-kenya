@@ -596,10 +596,10 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                   {/* Saved Suggestions - Enhanced */}
                   {(!currentQuery || currentQuery === "Current Location" || currentResults.length === 0) && filteredSuggestions.length > 0 && (
                     <>
-                      <div className="px-5 py-3 bg-gradient-to-r from-warning/10 to-transparent">
-                        <p className="text-sm font-semibold text-warning flex items-center gap-2">
-                          <Star className="w-4 h-4" />
-                          {activeField === "to" ? "Popular Places" : "Your Places"}
+                      <div className="px-4 py-2 bg-gradient-to-r from-warning/10 to-transparent">
+                        <p className="text-xs font-semibold text-warning flex items-center gap-1.5">
+                          <Star className="w-3.5 h-3.5" />
+                          {activeField === "to" ? "Popular" : "Your Places"}
                         </p>
                       </div>
                       {filteredSuggestions.map((suggestion, index) => (
@@ -607,16 +607,16 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                           key={index}
                           onClick={() => handleSelectSuggestion(suggestion, activeField)}
                           whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center gap-4 px-5 py-4 hover:bg-secondary/50 active:bg-secondary transition-colors text-left border-b border-border/20"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary/50 active:bg-secondary transition-colors text-left border-b border-border/20"
                         >
-                          <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center border-2 ${
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center border ${
                             suggestion.type === "favorite" 
                               ? "bg-gradient-to-br from-warning/20 to-warning/5 border-warning/30" 
                               : suggestion.type === "recent"
                               ? "bg-gradient-to-br from-muted to-muted/50 border-border"
                               : "bg-gradient-to-br from-success/20 to-success/5 border-success/30"
                           }`}>
-                            <suggestion.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${
+                            <suggestion.icon className={`w-4 h-4 ${
                               suggestion.type === "favorite" 
                                 ? "text-warning" 
                                 : suggestion.type === "recent"
@@ -625,8 +625,8 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                             }`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-base sm:text-lg text-foreground font-medium truncate">{suggestion.text}</p>
-                            <p className={`text-sm capitalize mt-0.5 ${
+                            <p className="text-sm text-foreground font-medium truncate">{suggestion.text}</p>
+                            <p className={`text-xs capitalize ${
                               suggestion.type === "favorite" ? "text-warning" : 
                               suggestion.type === "recent" ? "text-muted-foreground" : "text-success"
                             }`}>
