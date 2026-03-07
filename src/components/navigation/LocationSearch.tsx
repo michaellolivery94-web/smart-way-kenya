@@ -509,42 +509,33 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="border-t border-border/50 max-h-[50vh] overflow-y-auto"
+                  className="border-t border-border/50 max-h-[40vh] overflow-y-auto"
                 >
-                  {/* Current location option for "from" field - Enhanced */}
+                  {/* Current location option */}
                   {activeField === "from" && (
                     <motion.button
                       onClick={handleUseCurrentLocation}
                       disabled={isGettingLocation}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full flex items-center gap-4 px-5 py-5 hover:bg-info/10 active:bg-info/15 transition-colors text-left border-b border-border/30 disabled:opacity-50"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-info/10 active:bg-info/15 transition-colors text-left border-b border-border/30 disabled:opacity-50"
                     >
-                      <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-info/30 to-info/10 flex items-center justify-center border-2 border-info/30">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-info/30 to-info/10 flex items-center justify-center border border-info/30">
                         {isGettingLocation ? (
-                          <Loader2 className="w-7 h-7 text-info animate-spin" />
+                          <Loader2 className="w-4 h-4 text-info animate-spin" />
                         ) : (
-                          <Navigation className="w-7 h-7 text-info" />
-                        )}
-                        {!isGettingLocation && (
-                          <motion.div 
-                            className="absolute inset-0 rounded-2xl border-2 border-info/50"
-                            animate={{ scale: [1, 1.2], opacity: [0.6, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                          />
+                          <Navigation className="w-4 h-4 text-info" />
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="text-lg font-bold text-foreground">
+                        <p className="text-sm font-bold text-foreground">
                           {isGettingLocation ? "Finding you..." : "Use My Location"}
                         </p>
-                        <p className="text-sm text-info flex items-center gap-2 mt-0.5">
-                          <span className="w-2 h-2 rounded-full bg-info animate-pulse" />
-                          GPS location
+                        <p className="text-xs text-info flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-info animate-pulse" />
+                          GPS
                         </p>
                       </div>
-                      <div className="w-12 h-12 rounded-xl bg-info/20 flex items-center justify-center">
-                        <Locate className="w-6 h-6 text-info" />
-                      </div>
+                      <Locate className="w-4 h-4 text-info" />
                     </motion.button>
                   )}
 
