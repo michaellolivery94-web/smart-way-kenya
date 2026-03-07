@@ -339,13 +339,13 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
 
                 {/* Input fields - Enhanced with larger touch targets */}
                 <div className="flex-1 flex flex-col gap-3">
-                  {/* From field - Enhanced */}
+                  {/* From field */}
                   <div
-                    className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl transition-all cursor-text border-2 ${
+                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl transition-all cursor-text border ${
                       activeField === "from" 
-                        ? "bg-info/10 border-info ring-2 ring-info/30" 
+                        ? "bg-info/10 border-info ring-1 ring-info/30" 
                         : isListening && voiceTargetField === "from"
-                        ? "bg-success/10 border-success ring-2 ring-success/30 animate-pulse"
+                        ? "bg-success/10 border-success ring-1 ring-success/30 animate-pulse"
                         : "bg-secondary/50 border-transparent hover:bg-secondary/80 hover:border-info/30"
                     }`}
                     onClick={() => {
