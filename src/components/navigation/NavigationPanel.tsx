@@ -11,7 +11,7 @@ import {
   Download
 } from "lucide-react";
 import { useState } from "react";
-import { DirectionCard } from "./DirectionCard";
+import { DirectionCard, type DirectionCardProps } from "./DirectionCard";
 import { LaneGuidance } from "./LaneGuidance";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 
