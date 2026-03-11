@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { 
+import {
   Clock, 
   MapPin, 
   Fuel, 
