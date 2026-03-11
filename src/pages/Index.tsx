@@ -28,6 +28,7 @@ const Index = () => {
   const [origin, setOrigin] = useState<string>("Current Location");
   const [showOfflineMaps, setShowOfflineMaps] = useState(false);
   const [showRoadConditions, setShowRoadConditions] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
