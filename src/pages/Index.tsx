@@ -9,6 +9,7 @@ import { OfflineMapsManager } from "@/components/navigation/OfflineMapsManager";
 import { RoadConditionAlert } from "@/components/navigation/RoadConditionAlert";
 import { SpeedCameraAlert } from "@/components/navigation/SpeedCameraAlert";
 import { RoadConditionsList } from "@/components/navigation/RoadConditionsList";
+import { FullscreenToggle } from "@/components/navigation/FullscreenToggle";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -27,6 +28,7 @@ const Index = () => {
   const [origin, setOrigin] = useState<string>("Current Location");
   const [showOfflineMaps, setShowOfflineMaps] = useState(false);
   const [showRoadConditions, setShowRoadConditions] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
@@ -136,85 +138,103 @@ const Index = () => {
         </Suspense>
       </ErrorBoundary>
 
-      {/* Road Condition Alert */}
-      <RoadConditionAlert />
-      
-      {/* Speed Camera Alert */}
-      <SpeedCameraAlert />
-
-      {/* Header */}
-      <Header 
-        mode={mode} 
-        onModeChange={handleModeChange} 
-        isNavigating={isNavigating}
-        onOpenOfflineMaps={() => setShowOfflineMaps(true)}
-        onOpenRoadConditions={() => setShowRoadConditions(true)}
+      {/* Fullscreen Toggle - always visible */}
+      <FullscreenToggle 
+        isFullscreen={isFullscreen} 
+        onToggle={() => setIsFullscreen(prev => !prev)} 
       />
 
-      {/* Location Search - Only show when not navigating */}
+      {/* All overlays hidden when fullscreen */}
       <AnimatePresence>
-        {!isNavigating && (
+        {!isFullscreen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-14 sm:top-16 left-2 right-2 sm:left-3 sm:right-3 z-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
           >
-            <LocationSearch 
-              onStartNavigation={handleStartNavigation}
-              onLocationSelect={handleLocationSelect}
+            {/* Road Condition Alert */}
+            <RoadConditionAlert />
+            
+            {/* Speed Camera Alert */}
+            <SpeedCameraAlert />
+
+            {/* Header */}
+            <Header 
+              mode={mode} 
+              onModeChange={handleModeChange} 
+              isNavigating={isNavigating}
+              onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+              onOpenRoadConditions={() => setShowRoadConditions(true)}
             />
+
+            {/* Location Search - Only show when not navigating */}
+            <AnimatePresence>
+              {!isNavigating && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="absolute top-14 sm:top-16 left-2 right-2 sm:left-3 sm:right-3 z-20"
+                >
+                  <LocationSearch 
+                    onStartNavigation={handleStartNavigation}
+                    onLocationSelect={handleLocationSelect}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Active Navigation Header */}
+            <AnimatePresence>
+              {isNavigating && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="absolute top-0 left-0 right-0 z-30"
+                >
+                  <div className="bg-card/95 backdrop-blur-sm border-b border-border p-4">
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={handleEndNavigation}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        ✕ End
+                      </button>
+                      <div className="text-center">
+                        <h1 className="font-display font-semibold text-foreground">{destination}</h1>
+                        <p className="text-xs text-muted-foreground">via fastest route</p>
+                      </div>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleModeChange(mode === "pro" ? "commuter" : "pro")}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                          mode === "pro" 
+                            ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white" 
+                            : "bg-secondary text-secondary-foreground"
+                        }`}
+                      >
+                        {mode === "pro" ? "PRO" : "STD"}
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Navigation Panel */}
+            <NavigationPanel 
+              isNavigating={isNavigating} 
+              isPro={mode === "pro"}
+              onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+            />
+
+            {/* Report FAB */}
+            <ReportButton onReport={handleReport} />
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Active Navigation Header */}
-      <AnimatePresence>
-        {isNavigating && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-0 left-0 right-0 z-30"
-          >
-            <div className="bg-card/95 backdrop-blur-sm border-b border-border p-4">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={handleEndNavigation}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  ✕ End
-                </button>
-                <div className="text-center">
-                  <h1 className="font-display font-semibold text-foreground">{destination}</h1>
-                  <p className="text-xs text-muted-foreground">via fastest route</p>
-                </div>
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleModeChange(mode === "pro" ? "commuter" : "pro")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    mode === "pro" 
-                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white" 
-                      : "bg-secondary text-secondary-foreground"
-                  }`}
-                >
-                  {mode === "pro" ? "PRO" : "STD"}
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Navigation Panel */}
-      <NavigationPanel 
-        isNavigating={isNavigating} 
-        isPro={mode === "pro"}
-        onOpenOfflineMaps={() => setShowOfflineMaps(true)}
-      />
-
-      {/* Report FAB */}
-      <ReportButton onReport={handleReport} />
 
       {/* Offline Maps Manager */}
       <OfflineMapsManager 
