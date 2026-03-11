@@ -1,1 +1,1 @@
-{\n  "name": "smart-way-kenya",\n  "version": "1.0.0",\n  "dependencies": {\n    "react": "^18.0.0",\n    "react-dom": "^18.0.0",\n    "react-leaflet": "^4",\n    // other dependencies\n  },\n  // other fields\n}
+{\n  "name": "smart-way-kenya",\n  "version": "1.0.0",\n  "description": "A smart way to manage projects and tasks.",\n  "main": "index.js",\n  "scripts": {\n    "test": "echo 'Error: no test specified' && exit 1"\n  },\n  "keywords": [],\n  "author": "michaellolivery94-web",\n  "license": "ISC"\n}
