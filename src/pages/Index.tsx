@@ -9,6 +9,7 @@ import { OfflineMapsManager } from "@/components/navigation/OfflineMapsManager";
 import { RoadConditionAlert } from "@/components/navigation/RoadConditionAlert";
 import { SpeedCameraAlert } from "@/components/navigation/SpeedCameraAlert";
 import { RoadConditionsList } from "@/components/navigation/RoadConditionsList";
+import { FullscreenToggle } from "@/components/navigation/FullscreenToggle";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
