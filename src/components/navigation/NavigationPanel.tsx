@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { 
+import {
   Clock, 
   MapPin, 
   Fuel, 
@@ -11,7 +11,7 @@ import {
   Download
 } from "lucide-react";
 import { useState } from "react";
-import { DirectionCard } from "./DirectionCard";
+import { DirectionCard, type DirectionCardProps } from "./DirectionCard";
 import { LaneGuidance } from "./LaneGuidance";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 
@@ -25,23 +25,39 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOff
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOnline, downloadedRegions } = useOfflineMaps();
 
-  const upcomingTurns = [
+  const upcomingTurns: Omit<DirectionCardProps, 'isNext'>[] = [
     {
       direction: "slight-right" as const,
       distance: "250m",
-      instruction: "Keep right at the fork onto Ring Road",
+      instruction: "Keep right at the fork — you're merging onto Ring Road Parklands.",
+      detailedGuide: "You'll see the road split into two ahead. Don't worry — just gently steer to the RIGHT side. The left fork goes to Westlands CBD, but you want the right one that curves along Ring Road. There will be a green road sign overhead saying 'Ring Road'.",
+      laneHint: "Stay in the 2nd lane from the right. Move over now if you're in the far left.",
+      tip: "Slow down before the fork — many cars merge here. Keep a safe gap from the car in front.",
+      warning: "Matatus often cut across lanes suddenly at this junction. Watch your mirrors!",
+      roadName: "Ring Road Parklands",
+      estimatedTime: "30 sec",
       landmark: { name: "Sarit Centre", type: "mall" as const, position: "left" as const },
     },
     {
       direction: "straight" as const,
       distance: "1.2km",
-      instruction: "Continue on Ring Road Parklands",
+      instruction: "Continue straight on Ring Road Parklands — do not take any turns.",
+      detailedGuide: "This is a long, straight stretch. Just keep driving forward. You'll pass some shops and apartments on both sides. The road has two lanes going your direction. Stay in your lane and keep a steady speed. You'll see a traffic light ahead at the end of this stretch.",
+      tip: "Use this straight section to check your mirrors and settle into a comfortable speed. The speed limit here is 50 km/h.",
+      roadName: "Ring Road Parklands",
+      estimatedTime: "2 min",
     },
     {
       direction: "left" as const,
       distance: "500m",
-      instruction: "Turn left onto Waiyaki Way",
-      landmark: { name: "Total Petrol", type: "fuel" as const, position: "right" as const },
+      instruction: "Turn LEFT onto Waiyaki Way at the traffic lights.",
+      detailedGuide: "When you reach the traffic lights, you need to turn LEFT. Start moving to the left lane BEFORE you reach the lights — don't wait until the last moment. When the light is green, check for oncoming traffic from your right, then make a smooth left turn. The new road (Waiyaki Way) is a wide dual carriageway.",
+      laneHint: "Move to the LEFT lane now. Use your indicator/signal light so other drivers know you're turning.",
+      tip: "If the light turns yellow while you're close, it's safer to stop than to rush through. There are traffic cameras here.",
+      warning: "Pedestrians often cross at this junction — look carefully before turning. Also watch for boda-bodas on your left.",
+      roadName: "Waiyaki Way",
+      estimatedTime: "1 min",
+      landmark: { name: "Total Petrol Station", type: "fuel" as const, position: "right" as const },
     },
   ];
 
@@ -191,19 +207,22 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOff
           </span>
         </button>
 
-        <div className="p-4 space-y-3 max-h-64 overflow-y-auto">
+        <div className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
           <AnimatePresence>
             {(isExpanded ? upcomingTurns : upcomingTurns.slice(0, 1)).map((turn, index) => (
               <DirectionCard
                 key={index}
-                direction={turn.direction}
-                distance={turn.distance}
-                instruction={turn.instruction}
-                landmark={turn.landmark}
+                {...turn}
                 isNext={index === 0}
               />
             ))}
           </AnimatePresence>
+
+          {!isExpanded && upcomingTurns.length > 1 && (
+            <p className="text-center text-xs text-muted-foreground pt-1">
+              +{upcomingTurns.length - 1} more steps — tap "Show all" above
+            </p>
+          )}
         </div>
 
         {/* Quick Actions - Enhanced with better touch targets */}
