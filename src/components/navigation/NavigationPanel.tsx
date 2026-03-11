@@ -207,19 +207,22 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOff
           </span>
         </button>
 
-        <div className="p-4 space-y-3 max-h-64 overflow-y-auto">
+        <div className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
           <AnimatePresence>
             {(isExpanded ? upcomingTurns : upcomingTurns.slice(0, 1)).map((turn, index) => (
               <DirectionCard
                 key={index}
-                direction={turn.direction}
-                distance={turn.distance}
-                instruction={turn.instruction}
-                landmark={turn.landmark}
+                {...turn}
                 isNext={index === 0}
               />
             ))}
           </AnimatePresence>
+
+          {!isExpanded && upcomingTurns.length > 1 && (
+            <p className="text-center text-xs text-muted-foreground pt-1">
+              +{upcomingTurns.length - 1} more steps — tap "Show all" above
+            </p>
+          )}
         </div>
 
         {/* Quick Actions - Enhanced with better touch targets */}
