@@ -11,10 +11,11 @@ import { SpeedCameraAlert } from "@/components/navigation/SpeedCameraAlert";
 import { RoadConditionsList } from "@/components/navigation/RoadConditionsList";
 import { FullscreenToggle } from "@/components/navigation/FullscreenToggle";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
+import { useAIDirections } from "@/hooks/useAIDirections";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
-import { WifiOff, Construction } from "lucide-react";
+import { WifiOff } from "lucide-react";
 
 interface Coordinates {
   lat: number;
@@ -29,15 +30,17 @@ const Index = () => {
   const [showOfflineMaps, setShowOfflineMaps] = useState(false);
   const [showRoadConditions, setShowRoadConditions] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
   const [previewLocation, setPreviewLocation] = useState<Coordinates | null>(null);
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
+  const { directions, summary, isLoading: isLoadingDirections, error: directionsError, fetchDirections, clearDirections } = useAIDirections();
   
-  // Ref to access map methods
   const mapRef = useRef<MapViewHandle>(null);
+
+  // Store nav params for retry
+  const lastNavParams = useRef<{ from: string; to: string; coords: { origin: Coordinates | null; destination: Coordinates } } | null>(null);
 
   const handleModeChange = (newMode: "commuter" | "pro") => {
     setMode(newMode);
@@ -59,13 +62,32 @@ const Index = () => {
     setDestinationCoords(coords.destination);
     setPreviewLocation(null);
     setIsNavigating(true);
+
+    lastNavParams.current = { from, to, coords };
+
+    // Fetch AI-powered directions
+    if (coords.origin) {
+      fetchDirections(coords.origin, coords.destination, from, to);
+    } else {
+      // Use Nairobi CBD as fallback origin
+      const fallbackOrigin = { lat: -1.2921, lng: 36.8219 };
+      fetchDirections(fallbackOrigin, coords.destination, from, to);
+    }
+
     toast.success(`Navigating to ${to}`, {
       description: `From: ${from}`,
     });
   };
 
+  const handleRetryDirections = () => {
+    const params = lastNavParams.current;
+    if (params) {
+      const originPt = params.coords.origin || { lat: -1.2921, lng: 36.8219 };
+      fetchDirections(originPt, params.coords.destination, params.from, params.to);
+    }
+  };
+
   const handleLocationSelect = useCallback((location: { lat: number; lng: number; name: string }) => {
-    // Preview the selected location on map
     setPreviewLocation({ lat: location.lat, lng: location.lng });
     mapRef.current?.flyTo(location.lat, location.lng, 15);
   }, []);
@@ -76,6 +98,7 @@ const Index = () => {
     setDestinationCoords(null);
     setOriginCoords(null);
     setPreviewLocation(null);
+    clearDirections();
   };
 
   const handleReport = (type: string) => {
@@ -106,7 +129,7 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Map Layer with Error Boundary */}
+      {/* Map Layer */}
       <ErrorBoundary
         fallback={
           <div className="absolute inset-0 flex items-center justify-center bg-background">
@@ -138,13 +161,13 @@ const Index = () => {
         </Suspense>
       </ErrorBoundary>
 
-      {/* Fullscreen Toggle - always visible */}
+      {/* Fullscreen Toggle */}
       <FullscreenToggle 
         isFullscreen={isFullscreen} 
         onToggle={() => setIsFullscreen(prev => !prev)} 
       />
 
-      {/* All overlays hidden when fullscreen */}
+      {/* Overlays */}
       <AnimatePresence>
         {!isFullscreen && (
           <motion.div
@@ -153,13 +176,9 @@ const Index = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
           >
-            {/* Road Condition Alert */}
             <RoadConditionAlert />
-            
-            {/* Speed Camera Alert */}
             <SpeedCameraAlert />
 
-            {/* Header */}
             <Header 
               mode={mode} 
               onModeChange={handleModeChange} 
@@ -168,7 +187,6 @@ const Index = () => {
               onOpenRoadConditions={() => setShowRoadConditions(true)}
             />
 
-            {/* Location Search - Only show when not navigating */}
             <AnimatePresence>
               {!isNavigating && (
                 <motion.div
@@ -185,7 +203,6 @@ const Index = () => {
               )}
             </AnimatePresence>
 
-            {/* Active Navigation Header */}
             <AnimatePresence>
               {isNavigating && (
                 <motion.div
@@ -223,26 +240,28 @@ const Index = () => {
               )}
             </AnimatePresence>
 
-            {/* Navigation Panel */}
+            {/* Navigation Panel with AI directions */}
             <NavigationPanel 
               isNavigating={isNavigating} 
               isPro={mode === "pro"}
               onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+              aiDirections={directions}
+              aiSummary={summary}
+              isLoadingDirections={isLoadingDirections}
+              directionsError={directionsError}
+              onRetryDirections={handleRetryDirections}
             />
 
-            {/* Report FAB */}
             <ReportButton onReport={handleReport} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Offline Maps Manager */}
       <OfflineMapsManager 
         isOpen={showOfflineMaps} 
         onClose={() => setShowOfflineMaps(false)} 
       />
 
-      {/* Road Conditions List */}
       <RoadConditionsList
         isOpen={showRoadConditions}
         onClose={() => setShowRoadConditions(false)}
