@@ -1182,9 +1182,40 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
         </Tooltip>
       </TooltipProvider>
 
-      {/* Pro Mode Traffic Overlay */}
+      {/* Traffic Legend - shows during navigation */}
       <AnimatePresence>
-        {isPro && (
+        {isNavigating && (
+          <motion.div 
+            className="absolute left-2 sm:left-4 top-16 sm:top-20 z-10"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <div className="nav-card px-3 py-2.5 shadow-lg space-y-1.5">
+              <div className="flex items-center gap-2 mb-1">
+                <TrafficCone className="w-3.5 h-3.5 text-warning" />
+                <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">Traffic</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-1.5 rounded-full bg-success" />
+                <span className="text-[10px] text-muted-foreground">Clear</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-1.5 rounded-full bg-warning" />
+                <span className="text-[10px] text-muted-foreground">Moderate</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-1.5 rounded-full bg-destructive" />
+                <span className="text-[10px] text-muted-foreground">Heavy</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Pro Mode Area Traffic */}
+      <AnimatePresence>
+        {isPro && !isNavigating && (
           <motion.div 
             className="absolute left-2 sm:left-4 top-2 sm:top-4 flex flex-col gap-1.5 sm:gap-2 z-10"
             initial={{ opacity: 0, x: -20 }}
