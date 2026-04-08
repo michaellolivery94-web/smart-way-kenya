@@ -10,12 +10,14 @@ import { RoadConditionAlert } from "@/components/navigation/RoadConditionAlert";
 import { SpeedCameraAlert } from "@/components/navigation/SpeedCameraAlert";
 import { RoadConditionsList } from "@/components/navigation/RoadConditionsList";
 import { FullscreenToggle } from "@/components/navigation/FullscreenToggle";
+import { QuickCategories } from "@/components/navigation/QuickCategories";
+import { AlternativeRoutes, RouteOption } from "@/components/navigation/AlternativeRoutes";
+import { ShareETA } from "@/components/navigation/ShareETA";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
-import { useAIDirections } from "@/hooks/useAIDirections";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
-import { WifiOff } from "lucide-react";
+import { WifiOff, Construction } from "lucide-react";
 
 interface Coordinates {
   lat: number;
@@ -30,17 +32,18 @@ const Index = () => {
   const [showOfflineMaps, setShowOfflineMaps] = useState(false);
   const [showRoadConditions, setShowRoadConditions] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showAlternativeRoutes, setShowAlternativeRoutes] = useState(false);
+  // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
   const [previewLocation, setPreviewLocation] = useState<Coordinates | null>(null);
+  const [routeETA, setRouteETA] = useState<string>("18 min");
+  const [routeDistance, setRouteDistance] = useState<string>("7.2 km");
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
-  const { directions, summary, isLoading: isLoadingDirections, error: directionsError, fetchDirections, clearDirections } = useAIDirections();
   
+  // Ref to access map methods
   const mapRef = useRef<MapViewHandle>(null);
-
-  // Store nav params for retry
-  const lastNavParams = useRef<{ from: string; to: string; coords: { origin: Coordinates | null; destination: Coordinates } } | null>(null);
 
   const handleModeChange = (newMode: "commuter" | "pro") => {
     setMode(newMode);
@@ -61,33 +64,24 @@ const Index = () => {
     setOriginCoords(coords.origin);
     setDestinationCoords(coords.destination);
     setPreviewLocation(null);
+    // Show alternative routes first (Google Maps style)
+    setShowAlternativeRoutes(true);
+  };
+
+  const handleSelectRoute = (route: RouteOption) => {
+    setShowAlternativeRoutes(false);
     setIsNavigating(true);
-
-    lastNavParams.current = { from, to, coords };
-
-    // Fetch AI-powered directions
-    if (coords.origin) {
-      fetchDirections(coords.origin, coords.destination, from, to);
-    } else {
-      // Use Nairobi CBD as fallback origin
-      const fallbackOrigin = { lat: -1.2921, lng: 36.8219 };
-      fetchDirections(fallbackOrigin, coords.destination, from, to);
-    }
-
-    toast.success(`Navigating to ${to}`, {
-      description: `From: ${from}`,
+    const duration = Math.round(route.duration / 60);
+    const distance = (route.distance / 1000).toFixed(1);
+    setRouteETA(`${duration} min`);
+    setRouteDistance(`${distance} km`);
+    toast.success(`Navigating to ${destination}`, {
+      description: `${duration} min • ${distance} km • Arrive ${new Date(Date.now() + route.duration * 1000).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}`,
     });
   };
 
-  const handleRetryDirections = () => {
-    const params = lastNavParams.current;
-    if (params) {
-      const originPt = params.coords.origin || { lat: -1.2921, lng: 36.8219 };
-      fetchDirections(originPt, params.coords.destination, params.from, params.to);
-    }
-  };
-
   const handleLocationSelect = useCallback((location: { lat: number; lng: number; name: string }) => {
+    // Preview the selected location on map
     setPreviewLocation({ lat: location.lat, lng: location.lng });
     mapRef.current?.flyTo(location.lat, location.lng, 15);
   }, []);
@@ -98,7 +92,6 @@ const Index = () => {
     setDestinationCoords(null);
     setOriginCoords(null);
     setPreviewLocation(null);
-    clearDirections();
   };
 
   const handleReport = (type: string) => {
@@ -129,7 +122,7 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Map Layer */}
+      {/* Map Layer with Error Boundary */}
       <ErrorBoundary
         fallback={
           <div className="absolute inset-0 flex items-center justify-center bg-background">
@@ -161,13 +154,13 @@ const Index = () => {
         </Suspense>
       </ErrorBoundary>
 
-      {/* Fullscreen Toggle */}
+      {/* Fullscreen Toggle - always visible */}
       <FullscreenToggle 
         isFullscreen={isFullscreen} 
         onToggle={() => setIsFullscreen(prev => !prev)} 
       />
 
-      {/* Overlays */}
+      {/* All overlays hidden when fullscreen */}
       <AnimatePresence>
         {!isFullscreen && (
           <motion.div
@@ -176,9 +169,13 @@ const Index = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
           >
+            {/* Road Condition Alert */}
             <RoadConditionAlert />
+            
+            {/* Speed Camera Alert */}
             <SpeedCameraAlert />
 
+            {/* Header */}
             <Header 
               mode={mode} 
               onModeChange={handleModeChange} 
@@ -187,22 +184,26 @@ const Index = () => {
               onOpenRoadConditions={() => setShowRoadConditions(true)}
             />
 
+            {/* Location Search & Quick Categories - Only show when not navigating */}
             <AnimatePresence>
-              {!isNavigating && (
+              {!isNavigating && !showAlternativeRoutes && (
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="absolute top-14 sm:top-16 left-2 right-2 sm:left-3 sm:right-3 z-20"
+                  className="absolute top-14 sm:top-16 left-2 right-2 sm:left-3 sm:right-3 z-20 space-y-2"
                 >
                   <LocationSearch 
                     onStartNavigation={handleStartNavigation}
                     onLocationSelect={handleLocationSelect}
                   />
+                  {/* Quick Category Chips - Google Maps style */}
+                  <QuickCategories onLocationSelect={handleLocationSelect} />
                 </motion.div>
               )}
             </AnimatePresence>
 
+            {/* Active Navigation Header - Enhanced with arrival time */}
             <AnimatePresence>
               {isNavigating && (
                 <motion.div
@@ -211,17 +212,23 @@ const Index = () => {
                   exit={{ opacity: 0, y: -20 }}
                   className="absolute top-0 left-0 right-0 z-30"
                 >
-                  <div className="bg-card/95 backdrop-blur-sm border-b border-border p-4">
+                  <div className="bg-card/95 backdrop-blur-sm border-b border-border p-3 sm:p-4">
                     <div className="flex items-center justify-between">
                       <button
                         onClick={handleEndNavigation}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/20 transition-colors"
                       >
                         ✕ End
                       </button>
-                      <div className="text-center">
-                        <h1 className="font-display font-semibold text-foreground">{destination}</h1>
-                        <p className="text-xs text-muted-foreground">via fastest route</p>
+                      <div className="text-center flex-1 mx-3">
+                        <h1 className="font-display font-semibold text-foreground text-sm sm:text-base truncate">{destination}</h1>
+                        <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
+                          <span className="font-bold text-success">{routeETA}</span>
+                          <span>•</span>
+                          <span>{routeDistance}</span>
+                          <span>•</span>
+                          <span>Arrive {new Date(Date.now() + parseInt(routeETA) * 60 * 1000).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
                       </div>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
@@ -240,28 +247,47 @@ const Index = () => {
               )}
             </AnimatePresence>
 
-            {/* Navigation Panel with AI directions */}
+            {/* Navigation Panel */}
             <NavigationPanel 
               isNavigating={isNavigating} 
               isPro={mode === "pro"}
               onOpenOfflineMaps={() => setShowOfflineMaps(true)}
-              aiDirections={directions}
-              aiSummary={summary}
-              isLoadingDirections={isLoadingDirections}
-              directionsError={directionsError}
-              onRetryDirections={handleRetryDirections}
             />
 
+            {/* Share ETA - During navigation */}
+            <ShareETA 
+              destination={destination}
+              eta={routeETA}
+              distance={routeDistance}
+              isNavigating={isNavigating}
+            />
+
+            {/* Report FAB */}
             <ReportButton onReport={handleReport} />
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Alternative Routes Overlay */}
+      <AlternativeRoutes
+        origin={originCoords}
+        destination={destinationCoords}
+        isVisible={showAlternativeRoutes}
+        onSelectRoute={handleSelectRoute}
+        onClose={() => {
+          setShowAlternativeRoutes(false);
+          setDestinationCoords(null);
+          setDestination(null);
+        }}
+      />
+
+      {/* Offline Maps Manager */}
       <OfflineMapsManager 
         isOpen={showOfflineMaps} 
         onClose={() => setShowOfflineMaps(false)} 
       />
 
+      {/* Road Conditions List */}
       <RoadConditionsList
         isOpen={showRoadConditions}
         onClose={() => setShowRoadConditions(false)}

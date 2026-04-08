@@ -8,10 +8,7 @@ import {
   Wifi,
   WifiOff,
   Zap,
-  Download,
-  Loader2,
-  AlertCircle,
-  RefreshCw
+  Download
 } from "lucide-react";
 import { useState } from "react";
 import { DirectionCard, type DirectionCardProps } from "./DirectionCard";
@@ -22,26 +19,47 @@ interface NavigationPanelProps {
   isNavigating?: boolean;
   isPro?: boolean;
   onOpenOfflineMaps?: () => void;
-  // AI directions props
-  aiDirections?: Omit<DirectionCardProps, 'isNext'>[];
-  aiSummary?: { totalDistance: string; totalDuration: string; arrivalTime: string } | null;
-  isLoadingDirections?: boolean;
-  directionsError?: string | null;
-  onRetryDirections?: () => void;
 }
 
-export const NavigationPanel = ({ 
-  isNavigating = false, 
-  isPro = false, 
-  onOpenOfflineMaps,
-  aiDirections = [],
-  aiSummary,
-  isLoadingDirections = false,
-  directionsError,
-  onRetryDirections,
-}: NavigationPanelProps) => {
+export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOfflineMaps }: NavigationPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOnline, downloadedRegions } = useOfflineMaps();
+
+  const upcomingTurns: Omit<DirectionCardProps, 'isNext'>[] = [
+    {
+      direction: "slight-right" as const,
+      distance: "250m",
+      instruction: "Keep right at the fork — you're merging onto Ring Road Parklands.",
+      detailedGuide: "You'll see the road split into two ahead. Don't worry — just gently steer to the RIGHT side. The left fork goes to Westlands CBD, but you want the right one that curves along Ring Road. There will be a green road sign overhead saying 'Ring Road'.",
+      laneHint: "Stay in the 2nd lane from the right. Move over now if you're in the far left.",
+      tip: "Slow down before the fork — many cars merge here. Keep a safe gap from the car in front.",
+      warning: "Matatus often cut across lanes suddenly at this junction. Watch your mirrors!",
+      roadName: "Ring Road Parklands",
+      estimatedTime: "30 sec",
+      landmark: { name: "Sarit Centre", type: "mall" as const, position: "left" as const },
+    },
+    {
+      direction: "straight" as const,
+      distance: "1.2km",
+      instruction: "Continue straight on Ring Road Parklands — do not take any turns.",
+      detailedGuide: "This is a long, straight stretch. Just keep driving forward. You'll pass some shops and apartments on both sides. The road has two lanes going your direction. Stay in your lane and keep a steady speed. You'll see a traffic light ahead at the end of this stretch.",
+      tip: "Use this straight section to check your mirrors and settle into a comfortable speed. The speed limit here is 50 km/h.",
+      roadName: "Ring Road Parklands",
+      estimatedTime: "2 min",
+    },
+    {
+      direction: "left" as const,
+      distance: "500m",
+      instruction: "Turn LEFT onto Waiyaki Way at the traffic lights.",
+      detailedGuide: "When you reach the traffic lights, you need to turn LEFT. Start moving to the left lane BEFORE you reach the lights — don't wait until the last moment. When the light is green, check for oncoming traffic from your right, then make a smooth left turn. The new road (Waiyaki Way) is a wide dual carriageway.",
+      laneHint: "Move to the LEFT lane now. Use your indicator/signal light so other drivers know you're turning.",
+      tip: "If the light turns yellow while you're close, it's safer to stop than to rush through. There are traffic cameras here.",
+      warning: "Pedestrians often cross at this junction — look carefully before turning. Also watch for boda-bodas on your left.",
+      roadName: "Waiyaki Way",
+      estimatedTime: "1 min",
+      landmark: { name: "Total Petrol Station", type: "fuel" as const, position: "right" as const },
+    },
+  ];
 
   const lanes = [
     { id: 1, active: false, direction: "left" as const },
@@ -49,11 +67,6 @@ export const NavigationPanel = ({
     { id: 3, active: true, direction: "straight" as const },
     { id: 4, active: false, direction: "right" as const, isExit: true },
   ];
-
-  const totalDistance = aiSummary?.totalDistance || "—";
-  const totalDuration = aiSummary?.totalDuration || "—";
-  const arrivalTime = aiSummary?.arrivalTime || "—";
-  const fuelEstimate = aiSummary ? `Ksh ${Math.round(parseFloat(aiSummary.totalDistance) * 18) || "—"}` : "—";
 
   if (!isNavigating) {
     return (
@@ -64,6 +77,7 @@ export const NavigationPanel = ({
         className="absolute bottom-0 left-0 right-0 p-2 sm:p-3"
       >
         <div className="nav-card p-3 sm:p-4">
+          {/* Status Bar */}
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/30">
             <div className="flex items-center gap-1.5">
               <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-success' : 'bg-warning'} ${isOnline ? '' : 'animate-pulse'}`} />
@@ -89,6 +103,7 @@ export const NavigationPanel = ({
             </div>
           </div>
           
+          {/* Start Button */}
           <motion.button 
             whileTap={{ scale: 0.98 }}
             whileHover={{ scale: 1.01 }}
@@ -97,26 +112,33 @@ export const NavigationPanel = ({
             <span>Start Navigation</span>
           </motion.button>
 
+          {/* Trip Summary */}
           <div className="flex items-center justify-center gap-3 sm:gap-6 mt-3 pt-2 border-t border-border/30">
             <div className="flex items-center gap-1.5 text-foreground">
               <div className="w-6 h-6 rounded-md bg-info/15 flex items-center justify-center">
                 <Clock className="w-3 h-3 text-info" />
               </div>
-              <span className="font-bold text-sm">18 min</span>
+              <div>
+                <span className="font-bold text-sm">18 min</span>
+              </div>
             </div>
             <div className="w-px h-6 bg-border/50" />
             <div className="flex items-center gap-1.5 text-foreground">
               <div className="w-6 h-6 rounded-md bg-success/15 flex items-center justify-center">
                 <MapPin className="w-3 h-3 text-success" />
               </div>
-              <span className="font-bold text-sm">7.2 km</span>
+              <div>
+                <span className="font-bold text-sm">7.2 km</span>
+              </div>
             </div>
             <div className="w-px h-6 bg-border/50" />
             <div className="flex items-center gap-1.5 text-foreground">
               <div className="w-6 h-6 rounded-md bg-warning/15 flex items-center justify-center">
                 <Fuel className="w-3 h-3 text-warning" />
               </div>
-              <span className="font-bold text-sm">Ksh 120</span>
+              <div>
+                <span className="font-bold text-sm">Ksh 120</span>
+              </div>
             </div>
           </div>
         </div>
@@ -131,15 +153,13 @@ export const NavigationPanel = ({
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="absolute bottom-0 left-0 right-0"
     >
-      {/* ETA Bar */}
+      {/* ETA Bar - Enhanced */}
       <div className="bg-gradient-to-r from-primary to-primary/90 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-4 sm:gap-6">
           <div>
-            <div className="text-2xl sm:text-3xl font-bold text-primary-foreground">
-              {isLoadingDirections ? "..." : totalDuration}
-            </div>
+            <div className="text-2xl sm:text-3xl font-bold text-primary-foreground">18 min</div>
             <div className="text-xs sm:text-sm text-primary-foreground/80">
-              {isLoadingDirections ? "Calculating route..." : `${totalDistance} • ${arrivalTime} arrival`}
+              7.2 km • {new Date(Date.now() + 18 * 60 * 1000).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })} arrival
             </div>
           </div>
         </div>
@@ -169,90 +189,45 @@ export const NavigationPanel = ({
       </div>
 
       {/* Lane Guidance */}
-      {aiDirections.length > 0 && (
-        <div className="bg-card border-b border-border p-4">
-          <LaneGuidance lanes={lanes} currentLane={2} />
-        </div>
-      )}
+      <div className="bg-card border-b border-border p-4">
+        <LaneGuidance lanes={lanes} currentLane={2} />
+      </div>
 
-      {/* Directions Panel */}
+      {/* Expandable Directions Panel */}
       <div className="nav-card rounded-t-none border-t-0">
-        {/* Loading State */}
-        {isLoadingDirections && (
-          <div className="p-6 flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-sm font-medium text-foreground">Generating smart directions...</p>
-            <p className="text-xs text-muted-foreground text-center">
-              AI is analyzing your route and creating beginner-friendly instructions
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full p-3 flex items-center justify-center gap-2 border-b border-border/50"
+        >
+          {isExpanded ? (
+            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+          ) : (
+            <ChevronUp className="w-5 h-5 text-muted-foreground" />
+          )}
+          <span className="text-sm text-muted-foreground">
+            {isExpanded ? "Hide directions" : "Show all directions"}
+          </span>
+        </button>
+
+        <div className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
+          <AnimatePresence>
+            {(isExpanded ? upcomingTurns : upcomingTurns.slice(0, 1)).map((turn, index) => (
+              <DirectionCard
+                key={index}
+                {...turn}
+                isNext={index === 0}
+              />
+            ))}
+          </AnimatePresence>
+
+          {!isExpanded && upcomingTurns.length > 1 && (
+            <p className="text-center text-xs text-muted-foreground pt-1">
+              +{upcomingTurns.length - 1} more steps — tap "Show all" above
             </p>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Error State */}
-        {directionsError && !isLoadingDirections && (
-          <div className="p-4 flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-destructive" />
-            </div>
-            <p className="text-sm font-medium text-foreground text-center">{directionsError}</p>
-            {onRetryDirections && (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={onRetryDirections}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Try Again
-              </motion.button>
-            )}
-          </div>
-        )}
-
-        {/* Directions List */}
-        {!isLoadingDirections && !directionsError && aiDirections.length > 0 && (
-          <>
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="w-full p-3 flex items-center justify-center gap-2 border-b border-border/50"
-            >
-              {isExpanded ? (
-                <ChevronDown className="w-5 h-5 text-muted-foreground" />
-              ) : (
-                <ChevronUp className="w-5 h-5 text-muted-foreground" />
-              )}
-              <span className="text-sm text-muted-foreground">
-                {isExpanded ? "Hide directions" : `Show all ${aiDirections.length} directions`}
-              </span>
-            </button>
-
-            <div className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
-              <AnimatePresence>
-                {(isExpanded ? aiDirections : aiDirections.slice(0, 1)).map((turn, index) => (
-                  <DirectionCard
-                    key={index}
-                    {...turn}
-                    isNext={index === 0}
-                  />
-                ))}
-              </AnimatePresence>
-
-              {!isExpanded && aiDirections.length > 1 && (
-                <p className="text-center text-xs text-muted-foreground pt-1">
-                  +{aiDirections.length - 1} more steps — tap "Show all" above
-                </p>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* No directions yet */}
-        {!isLoadingDirections && !directionsError && aiDirections.length === 0 && (
-          <div className="p-6 text-center">
-            <p className="text-sm text-muted-foreground">No directions available</p>
-          </div>
-        )}
-
-        {/* Quick Actions */}
+        {/* Quick Actions - Enhanced with better touch targets */}
         <div className="p-4 border-t border-border/50 flex items-center justify-around">
           <motion.button 
             whileTap={{ scale: 0.9 }}
