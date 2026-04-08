@@ -254,11 +254,32 @@ const Index = () => {
               onOpenOfflineMaps={() => setShowOfflineMaps(true)}
             />
 
+            {/* Share ETA - During navigation */}
+            <ShareETA 
+              destination={destination}
+              eta={routeETA}
+              distance={routeDistance}
+              isNavigating={isNavigating}
+            />
+
             {/* Report FAB */}
             <ReportButton onReport={handleReport} />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Alternative Routes Overlay */}
+      <AlternativeRoutes
+        origin={originCoords}
+        destination={destinationCoords}
+        isVisible={showAlternativeRoutes}
+        onSelectRoute={handleSelectRoute}
+        onClose={() => {
+          setShowAlternativeRoutes(false);
+          setDestinationCoords(null);
+          setDestination(null);
+        }}
+      />
 
       {/* Offline Maps Manager */}
       <OfflineMapsManager 
