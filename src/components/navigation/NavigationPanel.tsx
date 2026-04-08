@@ -158,7 +158,9 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOff
         <div className="flex items-center gap-4 sm:gap-6">
           <div>
             <div className="text-2xl sm:text-3xl font-bold text-primary-foreground">18 min</div>
-            <div className="text-xs sm:text-sm text-primary-foreground/80">7.2 km • 2:45 PM arrival</div>
+            <div className="text-xs sm:text-sm text-primary-foreground/80">
+              7.2 km • {new Date(Date.now() + 18 * 60 * 1000).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })} arrival
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
