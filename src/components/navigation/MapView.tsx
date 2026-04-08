@@ -374,11 +374,48 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     return () => clearInterval(interval);
   }, [isPro, isNavigating]);
 
+  // Known Nairobi congestion hotspots - coordinates that tend to be slow
+  const CONGESTION_ZONES: { lat: number; lng: number; radius: number; severity: 'heavy' | 'moderate' }[] = [
+    { lat: -1.2860, lng: 36.8220, radius: 0.008, severity: 'heavy' },   // CBD
+    { lat: -1.2920, lng: 36.8300, radius: 0.006, severity: 'heavy' },   // Railways
+    { lat: -1.2660, lng: 36.8030, radius: 0.007, severity: 'moderate' }, // Westlands
+    { lat: -1.3050, lng: 36.8350, radius: 0.010, severity: 'heavy' },   // Mombasa Road
+    { lat: -1.2730, lng: 36.8150, radius: 0.005, severity: 'moderate' }, // Museum Hill
+    { lat: -1.2200, lng: 36.8800, radius: 0.008, severity: 'moderate' }, // Thika Road
+    { lat: -1.2950, lng: 36.8050, radius: 0.005, severity: 'moderate' }, // Ngong Road
+    { lat: -1.3059, lng: 36.8278, radius: 0.005, severity: 'heavy' },   // Nyayo Stadium
+    { lat: -1.2890, lng: 36.8250, radius: 0.006, severity: 'heavy' },   // Haile Selassie
+  ];
+
+  // Determine traffic level for a coordinate
+  const getTrafficLevel = useCallback((lat: number, lng: number, stepSpeed: number): 'free' | 'moderate' | 'heavy' => {
+    // Check congestion zones
+    for (const zone of CONGESTION_ZONES) {
+      const dist = Math.sqrt(Math.pow(lat - zone.lat, 2) + Math.pow(lng - zone.lng, 2));
+      if (dist < zone.radius) {
+        // Time-of-day factor (rush hours are worse)
+        const hour = new Date().getHours();
+        const isRushHour = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
+        if (zone.severity === 'heavy' || isRushHour) return 'heavy';
+        return 'moderate';
+      }
+    }
+    // Use step speed as fallback (speed in m/s)
+    if (stepSpeed < 5) return 'heavy';      // < 18 km/h
+    if (stepSpeed < 11) return 'moderate';   // < 40 km/h
+    return 'free';
+  }, []);
+
+  const TRAFFIC_COLORS = {
+    free: '#10B981',      // Green
+    moderate: '#F59E0B',  // Amber
+    heavy: '#EF4444',     // Red
+  };
+
   const fetchRoute = async (start: [number, number], end: [number, number]) => {
     try {
-      // Request with steps for turn-by-turn navigation
       const response = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true`
+        `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson&steps=true&annotations=speed,duration,distance`
       );
       const data = await response.json();
 
@@ -388,7 +425,6 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
           (coord: [number, number]) => [coord[1], coord[0]] as [number, number]
         );
 
-        // Store route coordinates for position simulation
         routeCoordinatesRef.current = coordinates;
         currentPositionIndexRef.current = 0;
 
@@ -398,28 +434,52 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
           voiceNav.setInstructions(instructions);
         }
 
-        // Add route polyline with gradient effect
-        const routeLine = L.polyline(coordinates, {
-          color: '#10B981',
-          weight: 6,
-          opacity: 0.9,
-          lineCap: 'round',
-          lineJoin: 'round',
+        // Build traffic-colored segments from OSRM steps
+        const steps = route.legs?.[0]?.steps || [];
+        let coordIndex = 0;
+
+        steps.forEach((step: any) => {
+          if (!step.geometry?.coordinates || step.geometry.coordinates.length < 2) return;
+          
+          const stepCoords: [number, number][] = step.geometry.coordinates.map(
+            (c: [number, number]) => [c[1], c[0]] as [number, number]
+          );
+          
+          const stepSpeed = step.distance / Math.max(step.duration, 1); // m/s
+          const midPoint = stepCoords[Math.floor(stepCoords.length / 2)];
+          const level = getTrafficLevel(midPoint[0], midPoint[1], stepSpeed);
+          const color = TRAFFIC_COLORS[level];
+
+          // Glow layer
+          const glowSegment = L.polyline(stepCoords, {
+            color,
+            weight: 14,
+            opacity: 0.2,
+            lineCap: 'round',
+            lineJoin: 'round',
+          });
+          routeLayerRef.current!.addLayer(glowSegment);
+
+          // Main colored segment
+          const segment = L.polyline(stepCoords, {
+            color,
+            weight: 6,
+            opacity: 0.9,
+            lineCap: 'round',
+            lineJoin: 'round',
+          });
+          routeLayerRef.current!.addLayer(segment);
         });
 
-        // Add glow effect
-        const glowLine = L.polyline(coordinates, {
-          color: '#10B981',
-          weight: 14,
-          opacity: 0.3,
-          lineCap: 'round',
-          lineJoin: 'round',
-        });
+        // Fallback: if no steps, draw full route in green
+        if (steps.length === 0) {
+          const glowLine = L.polyline(coordinates, { color: '#10B981', weight: 14, opacity: 0.3, lineCap: 'round', lineJoin: 'round' });
+          const routeLine = L.polyline(coordinates, { color: '#10B981', weight: 6, opacity: 0.9, lineCap: 'round', lineJoin: 'round' });
+          routeLayerRef.current.addLayer(glowLine);
+          routeLayerRef.current.addLayer(routeLine);
+        }
 
-        routeLayerRef.current.addLayer(glowLine);
-        routeLayerRef.current.addLayer(routeLine);
-
-        // Add destination marker
+        // Destination marker
         const destIcon = L.divIcon({
           html: `<div class="relative">
             <div class="w-10 h-10 bg-success rounded-full flex items-center justify-center shadow-lg animate-pulse">
@@ -436,7 +496,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
         L.marker(coordinates[coordinates.length - 1], { icon: destIcon })
           .addTo(routeLayerRef.current);
 
-        // Calculate and set route info
+        // Route info
         const distanceKm = (route.distance / 1000).toFixed(1);
         const durationMins = Math.round(route.duration / 60);
         setRouteInfo({
@@ -444,20 +504,19 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
           duration: `${durationMins} min`
         });
 
-        // Fit map to route bounds
+        // Fit bounds
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.fitBounds(routeLine.getBounds(), { 
+          const allCoords = L.polyline(coordinates);
+          mapInstanceRef.current.fitBounds(allCoords.getBounds(), { 
             padding: [50, 50],
             maxZoom: 15
           });
         }
 
-        // Start simulated position tracking for demo
         startPositionSimulation(coordinates);
       }
     } catch (error) {
       console.error('Failed to fetch route:', error);
-      // Fallback: draw straight line
       if (routeLayerRef.current) {
         const fallbackLine = L.polyline([start, end], {
           color: '#10B981',
