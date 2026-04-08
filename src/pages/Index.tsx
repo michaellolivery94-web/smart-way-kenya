@@ -203,7 +203,7 @@ const Index = () => {
               )}
             </AnimatePresence>
 
-            {/* Active Navigation Header */}
+            {/* Active Navigation Header - Enhanced with arrival time */}
             <AnimatePresence>
               {isNavigating && (
                 <motion.div
@@ -212,17 +212,23 @@ const Index = () => {
                   exit={{ opacity: 0, y: -20 }}
                   className="absolute top-0 left-0 right-0 z-30"
                 >
-                  <div className="bg-card/95 backdrop-blur-sm border-b border-border p-4">
+                  <div className="bg-card/95 backdrop-blur-sm border-b border-border p-3 sm:p-4">
                     <div className="flex items-center justify-between">
                       <button
                         onClick={handleEndNavigation}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/20 transition-colors"
                       >
                         ✕ End
                       </button>
-                      <div className="text-center">
-                        <h1 className="font-display font-semibold text-foreground">{destination}</h1>
-                        <p className="text-xs text-muted-foreground">via fastest route</p>
+                      <div className="text-center flex-1 mx-3">
+                        <h1 className="font-display font-semibold text-foreground text-sm sm:text-base truncate">{destination}</h1>
+                        <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
+                          <span className="font-bold text-success">{routeETA}</span>
+                          <span>•</span>
+                          <span>{routeDistance}</span>
+                          <span>•</span>
+                          <span>Arrive {new Date(Date.now() + parseInt(routeETA) * 60 * 1000).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
                       </div>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
