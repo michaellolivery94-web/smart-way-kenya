@@ -64,9 +64,19 @@ const Index = () => {
     setOriginCoords(coords.origin);
     setDestinationCoords(coords.destination);
     setPreviewLocation(null);
+    // Show alternative routes first (Google Maps style)
+    setShowAlternativeRoutes(true);
+  };
+
+  const handleSelectRoute = (route: RouteOption) => {
+    setShowAlternativeRoutes(false);
     setIsNavigating(true);
-    toast.success(`Navigating to ${to}`, {
-      description: `From: ${from}`,
+    const duration = Math.round(route.duration / 60);
+    const distance = (route.distance / 1000).toFixed(1);
+    setRouteETA(`${duration} min`);
+    setRouteDistance(`${distance} km`);
+    toast.success(`Navigating to ${destination}`, {
+      description: `${duration} min • ${distance} km • Arrive ${new Date(Date.now() + route.duration * 1000).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}`,
     });
   };
 
