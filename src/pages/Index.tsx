@@ -184,19 +184,21 @@ const Index = () => {
               onOpenRoadConditions={() => setShowRoadConditions(true)}
             />
 
-            {/* Location Search - Only show when not navigating */}
+            {/* Location Search & Quick Categories - Only show when not navigating */}
             <AnimatePresence>
-              {!isNavigating && (
+              {!isNavigating && !showAlternativeRoutes && (
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="absolute top-14 sm:top-16 left-2 right-2 sm:left-3 sm:right-3 z-20"
+                  className="absolute top-14 sm:top-16 left-2 right-2 sm:left-3 sm:right-3 z-20 space-y-2"
                 >
                   <LocationSearch 
                     onStartNavigation={handleStartNavigation}
                     onLocationSelect={handleLocationSelect}
                   />
+                  {/* Quick Category Chips - Google Maps style */}
+                  <QuickCategories onLocationSelect={handleLocationSelect} />
                 </motion.div>
               )}
             </AnimatePresence>
