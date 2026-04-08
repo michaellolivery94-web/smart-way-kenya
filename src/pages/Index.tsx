@@ -32,10 +32,13 @@ const Index = () => {
   const [showOfflineMaps, setShowOfflineMaps] = useState(false);
   const [showRoadConditions, setShowRoadConditions] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showAlternativeRoutes, setShowAlternativeRoutes] = useState(false);
   // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
   const [previewLocation, setPreviewLocation] = useState<Coordinates | null>(null);
+  const [routeETA, setRouteETA] = useState<string>("18 min");
+  const [routeDistance, setRouteDistance] = useState<string>("7.2 km");
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
   
