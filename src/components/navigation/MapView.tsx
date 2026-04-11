@@ -542,12 +542,91 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
       clearInterval(positionIntervalRef.current);
     }
 
+  // Calculate minimum distance from a point to the route polyline (in meters)
+  const getDistanceFromRoute = useCallback((lat: number, lng: number, routeCoords: [number, number][]): number => {
+    let minDist = Infinity;
+    const point = L.latLng(lat, lng);
+    for (let i = 0; i < routeCoords.length - 1; i++) {
+      const a = L.latLng(routeCoords[i][0], routeCoords[i][1]);
+      const dist = point.distanceTo(a);
+      if (dist < minDist) minDist = dist;
+    }
+    return minDist;
+  }, []);
+
+  // Reroute from current position to destination
+  const handleReroute = useCallback(async (currentLat: number, currentLng: number) => {
+    const dest = destinationRef.current;
+    if (!dest || isRerouting) return;
+
+    // Throttle: no reroute within 10s of last one
+    const now = Date.now();
+    if (now - lastRerouteTimeRef.current < 10000) return;
+    lastRerouteTimeRef.current = now;
+    rerouteCountRef.current += 1;
+
+    setIsRerouting(true);
+    toast.info("🔄 Recalculating route...", {
+      description: "You've left the planned route. Finding a new path.",
+      duration: 3000,
+    });
+
+    try {
+      const start: [number, number] = [currentLat, currentLng];
+      const end: [number, number] = [dest.lat, dest.lng];
+      
+      // Clear old route and fetch new one
+      routeLayerRef.current?.clearLayers();
+      await fetchRoute(start, end);
+    } catch (err) {
+      console.error("Reroute failed:", err);
+      toast.error("Reroute failed", { description: "Continuing on current path." });
+    } finally {
+      setIsRerouting(false);
+    }
+  }, [isRerouting]);
+
+  // Simulate user moving along the route for demo purposes
+  const startPositionSimulation = useCallback((coordinates: [number, number][]) => {
+    if (positionIntervalRef.current) {
+      clearInterval(positionIntervalRef.current);
+    }
+
+    // Simulate occasional deviation every ~30 steps for demo
+    let deviationStep = 25 + Math.floor(Math.random() * 15);
+    let isDeviated = false;
+    let deviationCount = 0;
+
     positionIntervalRef.current = setInterval(() => {
       const idx = currentPositionIndexRef.current;
       if (idx < coordinates.length) {
-        const [lat, lng] = coordinates[idx];
+        let lat: number, lng: number;
+
+        // Simulate deviation: offset position perpendicular to route
+        if (idx > deviationStep && !isDeviated && deviationCount < 2) {
+          const offset = 0.003 + Math.random() * 0.002; // ~300-500m offset
+          lat = coordinates[idx][0] + offset;
+          lng = coordinates[idx][1] + offset;
+          isDeviated = true;
+          deviationCount++;
+        } else {
+          [lat, lng] = coordinates[idx];
+          if (isDeviated) {
+            // After reroute, reset deviation trigger further ahead
+            isDeviated = false;
+            deviationStep = idx + 30 + Math.floor(Math.random() * 20);
+          }
+        }
+
         voiceNav.updateUserPosition(lat, lng);
         setUserLocation([lat, lng]);
+
+        // Check deviation from route (threshold: 150m)
+        const distFromRoute = getDistanceFromRoute(lat, lng, routeCoordinatesRef.current);
+        if (distFromRoute > 150 && destinationRef.current) {
+          handleReroute(lat, lng);
+        }
+
         currentPositionIndexRef.current = Math.min(idx + 3, coordinates.length - 1);
       } else {
         if (positionIntervalRef.current) {
@@ -555,7 +634,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
         }
       }
     }, 2000);
-  }, [voiceNav]);
+  }, [voiceNav, getDistanceFromRoute, handleReroute]);
 
   // Cleanup position simulation
   useEffect(() => {
