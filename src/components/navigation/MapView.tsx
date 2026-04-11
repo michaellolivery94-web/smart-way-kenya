@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { toast } from "sonner";
 import {
   Tooltip,
   TooltipContent,
@@ -208,6 +209,13 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   const [userLocation, setUserLocation] = useState<[number, number]>(NAIROBI_CENTER);
   const [isLocating, setIsLocating] = useState(false);
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
+  const [isRerouting, setIsRerouting] = useState(false);
+  const rerouteCountRef = useRef(0);
+  const lastRerouteTimeRef = useRef(0);
+  const destinationRef = useRef(destination);
+  
+  // Keep destination ref in sync
+  useEffect(() => { destinationRef.current = destination; }, [destination]);
   
   // Voice navigation hook
   const voiceNav = useVoiceNavigation({
@@ -529,18 +537,92 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     }
   };
 
+
+  // Calculate minimum distance from a point to the route polyline (in meters)
+  const getDistanceFromRoute = useCallback((lat: number, lng: number, routeCoords: [number, number][]): number => {
+    let minDist = Infinity;
+    const point = L.latLng(lat, lng);
+    for (let i = 0; i < routeCoords.length - 1; i++) {
+      const a = L.latLng(routeCoords[i][0], routeCoords[i][1]);
+      const dist = point.distanceTo(a);
+      if (dist < minDist) minDist = dist;
+    }
+    return minDist;
+  }, []);
+
+  // Reroute from current position to destination
+  const handleReroute = useCallback(async (currentLat: number, currentLng: number) => {
+    const dest = destinationRef.current;
+    if (!dest || isRerouting) return;
+
+    // Throttle: no reroute within 10s of last one
+    const now = Date.now();
+    if (now - lastRerouteTimeRef.current < 10000) return;
+    lastRerouteTimeRef.current = now;
+    rerouteCountRef.current += 1;
+
+    setIsRerouting(true);
+    toast.info("🔄 Recalculating route...", {
+      description: "You've left the planned route. Finding a new path.",
+      duration: 3000,
+    });
+
+    try {
+      const start: [number, number] = [currentLat, currentLng];
+      const end: [number, number] = [dest.lat, dest.lng];
+      
+      // Clear old route and fetch new one
+      routeLayerRef.current?.clearLayers();
+      await fetchRoute(start, end);
+    } catch (err) {
+      console.error("Reroute failed:", err);
+      toast.error("Reroute failed", { description: "Continuing on current path." });
+    } finally {
+      setIsRerouting(false);
+    }
+  }, [isRerouting]);
+
   // Simulate user moving along the route for demo purposes
   const startPositionSimulation = useCallback((coordinates: [number, number][]) => {
     if (positionIntervalRef.current) {
       clearInterval(positionIntervalRef.current);
     }
 
+    // Simulate occasional deviation every ~30 steps for demo
+    let deviationStep = 25 + Math.floor(Math.random() * 15);
+    let isDeviated = false;
+    let deviationCount = 0;
+
     positionIntervalRef.current = setInterval(() => {
       const idx = currentPositionIndexRef.current;
       if (idx < coordinates.length) {
-        const [lat, lng] = coordinates[idx];
+        let lat: number, lng: number;
+
+        // Simulate deviation: offset position perpendicular to route
+        if (idx > deviationStep && !isDeviated && deviationCount < 2) {
+          const offset = 0.003 + Math.random() * 0.002; // ~300-500m offset
+          lat = coordinates[idx][0] + offset;
+          lng = coordinates[idx][1] + offset;
+          isDeviated = true;
+          deviationCount++;
+        } else {
+          [lat, lng] = coordinates[idx];
+          if (isDeviated) {
+            // After reroute, reset deviation trigger further ahead
+            isDeviated = false;
+            deviationStep = idx + 30 + Math.floor(Math.random() * 20);
+          }
+        }
+
         voiceNav.updateUserPosition(lat, lng);
         setUserLocation([lat, lng]);
+
+        // Check deviation from route (threshold: 150m)
+        const distFromRoute = getDistanceFromRoute(lat, lng, routeCoordinatesRef.current);
+        if (distFromRoute > 150 && destinationRef.current) {
+          handleReroute(lat, lng);
+        }
+
         currentPositionIndexRef.current = Math.min(idx + 3, coordinates.length - 1);
       } else {
         if (positionIntervalRef.current) {
@@ -548,7 +630,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
         }
       }
     }, 2000);
-  }, [voiceNav]);
+  }, [voiceNav, getDistanceFromRoute, handleReroute]);
 
   // Cleanup position simulation
   useEffect(() => {
@@ -1270,6 +1352,28 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
             <div className="nav-card w-16 h-16 sm:w-20 sm:h-20 rounded-full flex flex-col items-center justify-center shadow-lg border-2 border-primary">
               <span className="text-xl sm:text-2xl font-bold text-foreground">{currentSpeed}</span>
               <span className="text-[8px] sm:text-[10px] text-muted-foreground">km/h</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Rerouting Indicator */}
+      <AnimatePresence>
+        {isRerouting && isNavigating && (
+          <motion.div
+            className="absolute top-20 left-1/2 -translate-x-1/2 z-30"
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+          >
+            <div className="nav-card px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-info/20 flex items-center justify-center">
+                <Route className="w-4 h-4 text-info animate-spin" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Rerouting...</p>
+                <p className="text-xs text-muted-foreground">Finding a better path</p>
+              </div>
             </div>
           </motion.div>
         )}
