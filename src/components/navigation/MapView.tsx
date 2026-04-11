@@ -1361,6 +1361,28 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
         )}
       </AnimatePresence>
 
+      {/* Rerouting Indicator */}
+      <AnimatePresence>
+        {isRerouting && isNavigating && (
+          <motion.div
+            className="absolute top-20 left-1/2 -translate-x-1/2 z-30"
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+          >
+            <div className="nav-card px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-info/20 flex items-center justify-center">
+                <Route className="w-4 h-4 text-info animate-spin" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Rerouting...</p>
+                <p className="text-xs text-muted-foreground">Finding a better path</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Navigation Arrow Overlay - appears when navigating */}
       <AnimatePresence>
         {isNavigating && (
