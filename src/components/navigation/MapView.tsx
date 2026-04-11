@@ -208,6 +208,13 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   const [userLocation, setUserLocation] = useState<[number, number]>(NAIROBI_CENTER);
   const [isLocating, setIsLocating] = useState(false);
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
+  const [isRerouting, setIsRerouting] = useState(false);
+  const rerouteCountRef = useRef(0);
+  const lastRerouteTimeRef = useRef(0);
+  const destinationRef = useRef(destination);
+  
+  // Keep destination ref in sync
+  useEffect(() => { destinationRef.current = destination; }, [destination]);
   
   // Voice navigation hook
   const voiceNav = useVoiceNavigation({
