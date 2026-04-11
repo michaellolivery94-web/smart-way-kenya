@@ -536,11 +536,6 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     }
   };
 
-  // Simulate user moving along the route for demo purposes
-  const startPositionSimulation = useCallback((coordinates: [number, number][]) => {
-    if (positionIntervalRef.current) {
-      clearInterval(positionIntervalRef.current);
-    }
 
   // Calculate minimum distance from a point to the route polyline (in meters)
   const getDistanceFromRoute = useCallback((lat: number, lng: number, routeCoords: [number, number][]): number => {
