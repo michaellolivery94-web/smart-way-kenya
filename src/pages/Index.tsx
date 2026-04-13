@@ -112,6 +112,11 @@ const Index = () => {
 
   const handleEndNavigation = () => {
     setIsNavigating(false);
+    setShowTripSummary(true); // Show trip summary instead of immediate reset
+  };
+
+  const handleCloseTripSummary = () => {
+    setShowTripSummary(false);
     setDestination(null);
     setDestinationCoords(null);
     setOriginCoords(null);
