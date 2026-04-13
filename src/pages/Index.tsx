@@ -276,11 +276,35 @@ const Index = () => {
               )}
             </AnimatePresence>
 
+            {/* ETA Progress Bar */}
+            <ETAProgressBar
+              isNavigating={isNavigating}
+              totalDuration={parseInt(routeETA) || 18}
+              totalDistance={routeDistance}
+              destination={destination}
+            />
+
+            {/* Speed Limit Indicator */}
+            <SpeedLimitIndicator
+              currentSpeed={currentSpeed}
+              speedLimit={currentSpeedLimit}
+              isNavigating={isNavigating}
+            />
+
             {/* Navigation Panel */}
             <NavigationPanel 
               isNavigating={isNavigating} 
               isPro={mode === "pro"}
               onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+            />
+
+            {/* Search Along Route */}
+            <SearchAlongRoute
+              isNavigating={isNavigating}
+              userLocation={userLocation}
+              onSelectPlace={(place) => {
+                mapRef.current?.flyTo(place.lat, place.lng, 16);
+              }}
             />
 
             {/* Share ETA - During navigation */}
