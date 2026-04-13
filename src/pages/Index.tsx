@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, Suspense } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapView, MapViewHandle } from "@/components/navigation/MapView";
 import { Header } from "@/components/navigation/Header";
@@ -13,6 +13,10 @@ import { FullscreenToggle } from "@/components/navigation/FullscreenToggle";
 import { QuickCategories } from "@/components/navigation/QuickCategories";
 import { AlternativeRoutes, RouteOption } from "@/components/navigation/AlternativeRoutes";
 import { ShareETA } from "@/components/navigation/ShareETA";
+import { SpeedLimitIndicator } from "@/components/navigation/SpeedLimitIndicator";
+import { TripSummary } from "@/components/navigation/TripSummary";
+import { SearchAlongRoute } from "@/components/navigation/SearchAlongRoute";
+import { ETAProgressBar } from "@/components/navigation/ETAProgressBar";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -33,14 +37,34 @@ const Index = () => {
   const [showRoadConditions, setShowRoadConditions] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showAlternativeRoutes, setShowAlternativeRoutes] = useState(false);
+  const [showTripSummary, setShowTripSummary] = useState(false);
+  const [currentSpeed, setCurrentSpeed] = useState(42);
+  const [currentSpeedLimit, setCurrentSpeedLimit] = useState(50);
   // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
   const [previewLocation, setPreviewLocation] = useState<Coordinates | null>(null);
   const [routeETA, setRouteETA] = useState<string>("18 min");
   const [routeDistance, setRouteDistance] = useState<string>("7.2 km");
+  const [userLocation, setUserLocation] = useState<[number, number]>([-1.2921, 36.8219]);
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
+
+  // Simulate speed changes during navigation
+  useEffect(() => {
+    if (!isNavigating) return;
+    const interval = setInterval(() => {
+      setCurrentSpeed(prev => {
+        const change = Math.floor(Math.random() * 12) - 5;
+        return Math.max(15, Math.min(85, prev + change));
+      });
+      // Occasionally change speed limit zones
+      if (Math.random() < 0.1) {
+        setCurrentSpeedLimit(prev => [30, 40, 50, 60, 80][Math.floor(Math.random() * 5)]);
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [isNavigating]);
   
   // Ref to access map methods
   const mapRef = useRef<MapViewHandle>(null);
@@ -88,6 +112,11 @@ const Index = () => {
 
   const handleEndNavigation = () => {
     setIsNavigating(false);
+    setShowTripSummary(true); // Show trip summary instead of immediate reset
+  };
+
+  const handleCloseTripSummary = () => {
+    setShowTripSummary(false);
     setDestination(null);
     setDestinationCoords(null);
     setOriginCoords(null);
@@ -247,11 +276,35 @@ const Index = () => {
               )}
             </AnimatePresence>
 
+            {/* ETA Progress Bar */}
+            <ETAProgressBar
+              isNavigating={isNavigating}
+              totalDuration={parseInt(routeETA) || 18}
+              totalDistance={routeDistance}
+              destination={destination}
+            />
+
+            {/* Speed Limit Indicator */}
+            <SpeedLimitIndicator
+              currentSpeed={currentSpeed}
+              speedLimit={currentSpeedLimit}
+              isNavigating={isNavigating}
+            />
+
             {/* Navigation Panel */}
             <NavigationPanel 
               isNavigating={isNavigating} 
               isPro={mode === "pro"}
               onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+            />
+
+            {/* Search Along Route */}
+            <SearchAlongRoute
+              isNavigating={isNavigating}
+              userLocation={userLocation}
+              onSelectPlace={(place) => {
+                mapRef.current?.flyTo(place.lat, place.lng, 16);
+              }}
             />
 
             {/* Share ETA - During navigation */}
@@ -291,6 +344,18 @@ const Index = () => {
       <RoadConditionsList
         isOpen={showRoadConditions}
         onClose={() => setShowRoadConditions(false)}
+      />
+
+      {/* Trip Summary */}
+      <TripSummary
+        isVisible={showTripSummary}
+        onClose={handleCloseTripSummary}
+        destination={destination}
+        distance={routeDistance}
+        duration={routeETA}
+        avgSpeed={Math.round(currentSpeed * 0.85)}
+        maxSpeed={currentSpeed + 15}
+        fuelCost={`Ksh ${Math.round(parseFloat(routeDistance) * 18)}`}
       />
     </div>
   );
