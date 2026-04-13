@@ -104,6 +104,17 @@ const Index = () => {
     toast.success(`Navigating to ${destination}`, {
       description: `${duration} min • ${distance} km • Arrive ${new Date(Date.now() + route.duration * 1000).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}`,
     });
+
+    // Generate AI-powered directions from the route steps
+    if (route.steps && route.steps.length > 0) {
+      generateDirections({
+        steps: route.steps,
+        origin: originCoords,
+        destination: destinationCoords,
+        originName: origin,
+        destinationName: destination || undefined,
+      });
+    }
   };
 
   const handleLocationSelect = useCallback((location: { lat: number; lng: number; name: string }) => {
