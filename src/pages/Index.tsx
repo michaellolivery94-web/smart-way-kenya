@@ -125,7 +125,8 @@ const Index = () => {
 
   const handleEndNavigation = () => {
     setIsNavigating(false);
-    setShowTripSummary(true); // Show trip summary instead of immediate reset
+    setShowTripSummary(true);
+    clearDirections();
   };
 
   const handleCloseTripSummary = () => {
@@ -309,6 +310,8 @@ const Index = () => {
               isNavigating={isNavigating} 
               isPro={mode === "pro"}
               onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+              aiDirections={aiDirections}
+              aiDirectionsLoading={aiDirectionsLoading}
             />
 
             {/* Search Along Route */}
