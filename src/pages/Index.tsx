@@ -18,6 +18,7 @@ import { TripSummary } from "@/components/navigation/TripSummary";
 import { SearchAlongRoute } from "@/components/navigation/SearchAlongRoute";
 import { ETAProgressBar } from "@/components/navigation/ETAProgressBar";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
+import { useAIDirections } from "@/hooks/useAIDirections";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
@@ -49,6 +50,7 @@ const Index = () => {
   const [userLocation, setUserLocation] = useState<[number, number]>([-1.2921, 36.8219]);
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
+  const { directions: aiDirections, isLoading: aiDirectionsLoading, generateDirections, clearDirections } = useAIDirections();
 
   // Simulate speed changes during navigation
   useEffect(() => {
@@ -102,6 +104,17 @@ const Index = () => {
     toast.success(`Navigating to ${destination}`, {
       description: `${duration} min • ${distance} km • Arrive ${new Date(Date.now() + route.duration * 1000).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}`,
     });
+
+    // Generate AI-powered directions from the route steps
+    if (route.steps && route.steps.length > 0) {
+      generateDirections({
+        steps: route.steps,
+        origin: originCoords,
+        destination: destinationCoords,
+        originName: origin,
+        destinationName: destination || undefined,
+      });
+    }
   };
 
   const handleLocationSelect = useCallback((location: { lat: number; lng: number; name: string }) => {
@@ -112,7 +125,8 @@ const Index = () => {
 
   const handleEndNavigation = () => {
     setIsNavigating(false);
-    setShowTripSummary(true); // Show trip summary instead of immediate reset
+    setShowTripSummary(true);
+    clearDirections();
   };
 
   const handleCloseTripSummary = () => {
@@ -296,6 +310,8 @@ const Index = () => {
               isNavigating={isNavigating} 
               isPro={mode === "pro"}
               onOpenOfflineMaps={() => setShowOfflineMaps(true)}
+              aiDirections={aiDirections}
+              aiDirectionsLoading={aiDirectionsLoading}
             />
 
             {/* Search Along Route */}

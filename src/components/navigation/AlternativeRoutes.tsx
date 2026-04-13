@@ -9,6 +9,7 @@ export interface RouteOption {
   summary: string;
   geometry: any;
   coordinates: [number, number][];
+  steps: any[]; // OSRM route steps for AI directions
 }
 
 interface AlternativeRoutesProps {
@@ -47,6 +48,7 @@ export const AlternativeRoutes = ({
             coordinates: r.geometry.coordinates.map(
               (c: [number, number]) => [c[1], c[0]] as [number, number]
             ),
+            steps: r.legs?.[0]?.steps || [],
           }));
           setRoutes(parsed);
           setSelectedIndex(0);

@@ -8,58 +8,49 @@ import {
   Wifi,
   WifiOff,
   Zap,
-  Download
+  Download,
+  Brain,
+  Loader2
 } from "lucide-react";
 import { useState } from "react";
 import { DirectionCard, type DirectionCardProps } from "./DirectionCard";
 import { LaneGuidance } from "./LaneGuidance";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
+import type { AIDirection } from "@/hooks/useAIDirections";
 
 interface NavigationPanelProps {
   isNavigating?: boolean;
   isPro?: boolean;
   onOpenOfflineMaps?: () => void;
+  aiDirections?: AIDirection[];
+  aiDirectionsLoading?: boolean;
 }
 
-export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOfflineMaps }: NavigationPanelProps) => {
+export const NavigationPanel = ({ 
+  isNavigating = false, 
+  isPro = false, 
+  onOpenOfflineMaps,
+  aiDirections = [],
+  aiDirectionsLoading = false,
+}: NavigationPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOnline, downloadedRegions } = useOfflineMaps();
 
-  const upcomingTurns: Omit<DirectionCardProps, 'isNext'>[] = [
-    {
-      direction: "slight-right" as const,
-      distance: "250m",
-      instruction: "Keep right at the fork — you're merging onto Ring Road Parklands.",
-      detailedGuide: "You'll see the road split into two ahead. Don't worry — just gently steer to the RIGHT side. The left fork goes to Westlands CBD, but you want the right one that curves along Ring Road. There will be a green road sign overhead saying 'Ring Road'.",
-      laneHint: "Stay in the 2nd lane from the right. Move over now if you're in the far left.",
-      tip: "Slow down before the fork — many cars merge here. Keep a safe gap from the car in front.",
-      warning: "Matatus often cut across lanes suddenly at this junction. Watch your mirrors!",
-      roadName: "Ring Road Parklands",
-      estimatedTime: "30 sec",
-      landmark: { name: "Sarit Centre", type: "mall" as const, position: "left" as const },
-    },
-    {
-      direction: "straight" as const,
-      distance: "1.2km",
-      instruction: "Continue straight on Ring Road Parklands — do not take any turns.",
-      detailedGuide: "This is a long, straight stretch. Just keep driving forward. You'll pass some shops and apartments on both sides. The road has two lanes going your direction. Stay in your lane and keep a steady speed. You'll see a traffic light ahead at the end of this stretch.",
-      tip: "Use this straight section to check your mirrors and settle into a comfortable speed. The speed limit here is 50 km/h.",
-      roadName: "Ring Road Parklands",
-      estimatedTime: "2 min",
-    },
-    {
-      direction: "left" as const,
-      distance: "500m",
-      instruction: "Turn LEFT onto Waiyaki Way at the traffic lights.",
-      detailedGuide: "When you reach the traffic lights, you need to turn LEFT. Start moving to the left lane BEFORE you reach the lights — don't wait until the last moment. When the light is green, check for oncoming traffic from your right, then make a smooth left turn. The new road (Waiyaki Way) is a wide dual carriageway.",
-      laneHint: "Move to the LEFT lane now. Use your indicator/signal light so other drivers know you're turning.",
-      tip: "If the light turns yellow while you're close, it's safer to stop than to rush through. There are traffic cameras here.",
-      warning: "Pedestrians often cross at this junction — look carefully before turning. Also watch for boda-bodas on your left.",
-      roadName: "Waiyaki Way",
-      estimatedTime: "1 min",
-      landmark: { name: "Total Petrol Station", type: "fuel" as const, position: "right" as const },
-    },
-  ];
+  // Use AI directions if available, otherwise show fallback
+  const upcomingTurns: Omit<DirectionCardProps, 'isNext'>[] = aiDirections.length > 0
+    ? aiDirections.map(d => ({
+        direction: d.direction,
+        distance: d.distance,
+        instruction: d.instruction,
+        detailedGuide: d.detailedGuide,
+        laneHint: d.laneHint,
+        tip: d.tip,
+        warning: d.warning,
+        roadName: d.roadName,
+        estimatedTime: d.estimatedTime,
+        landmark: d.landmark || undefined,
+      }))
+    : [];
 
   const lanes = [
     { id: 1, active: false, direction: "left" as const },
@@ -153,7 +144,7 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOff
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="absolute bottom-0 left-0 right-0"
     >
-      {/* ETA Bar - Enhanced */}
+      {/* ETA Bar */}
       <div className="bg-gradient-to-r from-primary to-primary/90 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-4 sm:gap-6">
           <div>
@@ -207,9 +198,50 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOff
           <span className="text-sm text-muted-foreground">
             {isExpanded ? "Hide directions" : "Show all directions"}
           </span>
+          {aiDirections.length > 0 && (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+              <Brain className="w-3 h-3" /> AI
+            </span>
+          )}
         </button>
 
         <div className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
+          {/* Loading State */}
+          {aiDirectionsLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center gap-3 py-8"
+            >
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Brain className="w-7 h-7 text-primary" />
+                </div>
+                <motion.div
+                  className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-primary flex items-center justify-center"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader2 className="w-3.5 h-3.5 text-primary" />
+                </motion.div>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-foreground">Generating smart directions…</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  AI is analyzing your route with Nairobi landmarks & traffic tips
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* No directions yet and not loading */}
+          {!aiDirectionsLoading && upcomingTurns.length === 0 && (
+            <div className="text-center py-6 text-muted-foreground">
+              <p className="text-sm">Directions will appear once navigation starts</p>
+            </div>
+          )}
+
+          {/* Direction Cards */}
           <AnimatePresence>
             {(isExpanded ? upcomingTurns : upcomingTurns.slice(0, 1)).map((turn, index) => (
               <DirectionCard
@@ -227,7 +259,7 @@ export const NavigationPanel = ({ isNavigating = false, isPro = false, onOpenOff
           )}
         </div>
 
-        {/* Quick Actions - Enhanced with better touch targets */}
+        {/* Quick Actions */}
         <div className="p-4 border-t border-border/50 flex items-center justify-around">
           <motion.button 
             whileTap={{ scale: 0.9 }}
