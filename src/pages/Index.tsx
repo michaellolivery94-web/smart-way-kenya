@@ -18,6 +18,7 @@ import { TripSummary } from "@/components/navigation/TripSummary";
 import { SearchAlongRoute } from "@/components/navigation/SearchAlongRoute";
 import { ETAProgressBar } from "@/components/navigation/ETAProgressBar";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
+import { useAIDirections } from "@/hooks/useAIDirections";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
