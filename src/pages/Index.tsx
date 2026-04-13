@@ -345,6 +345,18 @@ const Index = () => {
         isOpen={showRoadConditions}
         onClose={() => setShowRoadConditions(false)}
       />
+
+      {/* Trip Summary */}
+      <TripSummary
+        isVisible={showTripSummary}
+        onClose={handleCloseTripSummary}
+        destination={destination}
+        distance={routeDistance}
+        duration={routeETA}
+        avgSpeed={Math.round(currentSpeed * 0.85)}
+        maxSpeed={currentSpeed + 15}
+        fuelCost={`Ksh ${Math.round(parseFloat(routeDistance) * 18)}`}
+      />
     </div>
   );
 };
