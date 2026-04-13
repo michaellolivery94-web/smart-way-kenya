@@ -50,6 +50,7 @@ const Index = () => {
   const [userLocation, setUserLocation] = useState<[number, number]>([-1.2921, 36.8219]);
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
+  const { directions: aiDirections, isLoading: aiDirectionsLoading, generateDirections, clearDirections } = useAIDirections();
 
   // Simulate speed changes during navigation
   useEffect(() => {
