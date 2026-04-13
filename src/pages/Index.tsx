@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, Suspense } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapView, MapViewHandle } from "@/components/navigation/MapView";
 import { Header } from "@/components/navigation/Header";
