@@ -37,14 +37,34 @@ const Index = () => {
   const [showRoadConditions, setShowRoadConditions] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showAlternativeRoutes, setShowAlternativeRoutes] = useState(false);
+  const [showTripSummary, setShowTripSummary] = useState(false);
+  const [currentSpeed, setCurrentSpeed] = useState(42);
+  const [currentSpeedLimit, setCurrentSpeedLimit] = useState(50);
   // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
   const [previewLocation, setPreviewLocation] = useState<Coordinates | null>(null);
   const [routeETA, setRouteETA] = useState<string>("18 min");
   const [routeDistance, setRouteDistance] = useState<string>("7.2 km");
+  const [userLocation, setUserLocation] = useState<[number, number]>([-1.2921, 36.8219]);
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
+
+  // Simulate speed changes during navigation
+  useEffect(() => {
+    if (!isNavigating) return;
+    const interval = setInterval(() => {
+      setCurrentSpeed(prev => {
+        const change = Math.floor(Math.random() * 12) - 5;
+        return Math.max(15, Math.min(85, prev + change));
+      });
+      // Occasionally change speed limit zones
+      if (Math.random() < 0.1) {
+        setCurrentSpeedLimit(prev => [30, 40, 50, 60, 80][Math.floor(Math.random() * 5)]);
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [isNavigating]);
   
   // Ref to access map methods
   const mapRef = useRef<MapViewHandle>(null);
