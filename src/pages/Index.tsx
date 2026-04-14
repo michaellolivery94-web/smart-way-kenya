@@ -401,6 +401,20 @@ const Index = () => {
         maxSpeed={currentSpeed + 15}
         fuelCost={`Ksh ${Math.round(parseFloat(routeDistance) * 18)}`}
       />
+
+      {/* Smart Departure Planner */}
+      <AnimatePresence>
+        {showSmartDeparture && (
+          <SmartDeparture
+            originName={origin}
+            destinationName={destination || undefined}
+            origin={originCoords}
+            destination={destinationCoords}
+            isVisible={showSmartDeparture}
+            onClose={() => setShowSmartDeparture(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
