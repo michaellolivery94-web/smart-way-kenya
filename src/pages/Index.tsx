@@ -52,6 +52,7 @@ const Index = () => {
   const [routeETA, setRouteETA] = useState<string>("18 min");
   const [routeDistance, setRouteDistance] = useState<string>("7.2 km");
   const [userLocation, setUserLocation] = useState<[number, number]>([-1.2921, 36.8219]);
+  const [showSmartDeparture, setShowSmartDeparture] = useState(false);
   
   const { isOnline, downloadedRegions } = useOfflineMaps();
   const { directions: aiDirections, isLoading: aiDirectionsLoading, generateDirections, clearDirections } = useAIDirections();
