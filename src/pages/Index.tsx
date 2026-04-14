@@ -17,12 +17,16 @@ import { SpeedLimitIndicator } from "@/components/navigation/SpeedLimitIndicator
 import { TripSummary } from "@/components/navigation/TripSummary";
 import { SearchAlongRoute } from "@/components/navigation/SearchAlongRoute";
 import { ETAProgressBar } from "@/components/navigation/ETAProgressBar";
+import { CommunityAlerts } from "@/components/navigation/CommunityAlerts";
+import { DriverMood } from "@/components/navigation/DriverMood";
+import { HazardPopup } from "@/components/navigation/HazardPopup";
+import { SmartDeparture } from "@/components/navigation/SmartDeparture";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import { useAIDirections } from "@/hooks/useAIDirections";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
-import { WifiOff, Construction } from "lucide-react";
+import { WifiOff, Construction, Brain } from "lucide-react";
 
 interface Coordinates {
   lat: number;
