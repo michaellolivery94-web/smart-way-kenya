@@ -223,6 +223,15 @@ const Index = () => {
             {/* Speed Camera Alert */}
             <SpeedCameraAlert />
 
+            {/* Hazard Popups — Waze-style floating alerts */}
+            <HazardPopup isNavigating={isNavigating} />
+
+            {/* Community Alerts Ticker */}
+            <CommunityAlerts isNavigating={isNavigating} />
+
+            {/* Driver Mood & Nearby Drivers */}
+            <DriverMood isNavigating={isNavigating} />
+
             {/* Header */}
             <Header 
               mode={mode} 
@@ -247,6 +256,20 @@ const Index = () => {
                   />
                   {/* Quick Category Chips - Google Maps style */}
                   <QuickCategories onLocationSelect={handleLocationSelect} />
+
+                  {/* Smart Departure Button — only when destination is set but not navigating */}
+                  {destination && destinationCoords && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setShowSmartDeparture(true)}
+                      className="w-full flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 backdrop-blur-sm"
+                    >
+                      <Brain className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-semibold text-foreground">Smart Departure — AI suggests best time to leave</span>
+                    </motion.button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
