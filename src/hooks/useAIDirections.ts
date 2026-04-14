@@ -20,6 +20,7 @@ export interface AIDirection {
   } | null;
 }
 
+
 export const useAIDirections = () => {
   const [directions, setDirections] = useState<AIDirection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
