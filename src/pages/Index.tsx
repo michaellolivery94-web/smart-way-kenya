@@ -403,18 +403,16 @@ const Index = () => {
       />
 
       {/* Smart Departure Planner */}
-      <AnimatePresence>
-        {showSmartDeparture && (
-          <SmartDeparture
-            originName={origin}
-            destinationName={destination || undefined}
-            origin={originCoords}
-            destination={destinationCoords}
-            isVisible={showSmartDeparture}
-            onClose={() => setShowSmartDeparture(false)}
-          />
-        )}
-      </AnimatePresence>
+      {showSmartDeparture && (
+        <SmartDeparture
+          originName={origin}
+          destinationName={destination || undefined}
+          origin={originCoords}
+          destination={destinationCoords}
+          isVisible={showSmartDeparture}
+          onClose={() => setShowSmartDeparture(false)}
+        />
+      )}
     </div>
   );
 };
