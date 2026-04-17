@@ -214,6 +214,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   const rerouteCountRef = useRef(0);
   const lastRerouteTimeRef = useRef(0);
   const destinationRef = useRef(destination);
+  const [selectedHazard, setSelectedHazard] = useState<HazardDetail | null>(null);
   
   // Keep destination ref in sync
   useEffect(() => { destinationRef.current = destination; }, [destination]);
