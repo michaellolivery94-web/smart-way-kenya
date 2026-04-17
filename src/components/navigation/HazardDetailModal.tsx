@@ -56,23 +56,26 @@ export const HazardDetailModal = ({ hazard, onClose, onNavigateAround }: HazardD
   return (
     <AnimatePresence>
       {hazard && (
-        <>
+        <motion.div
+          key="hazard-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[60]"
+        >
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             onClick={onClose}
-            className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[60]"
+            className="absolute inset-0 bg-background/60 backdrop-blur-sm"
           />
 
           {/* Sheet */}
           <motion.div
-            initial={{ opacity: 0, y: 60, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 60, scale: 0.95 }}
+            initial={{ y: 60, scale: 0.95 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 60, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className="fixed inset-x-3 bottom-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:bottom-6 sm:w-[420px] z-[61]"
+            className="absolute inset-x-3 bottom-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:bottom-6 sm:w-[420px] z-[61]"
           >
             {hazard.kind === "condition" ? (
               <ConditionContent condition={hazard.data} onClose={onClose} onNavigateAround={onNavigateAround} />
@@ -80,7 +83,7 @@ export const HazardDetailModal = ({ hazard, onClose, onNavigateAround }: HazardD
               <CameraContent camera={hazard.data} onClose={onClose} />
             )}
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
