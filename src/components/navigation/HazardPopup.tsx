@@ -3,7 +3,7 @@ import {
   Shield, AlertTriangle, TrafficCone, Construction, 
   Droplets, Car, Volume2, X
 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Hazard {
   id: string;
