@@ -915,7 +915,8 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
       });
 
       L.marker([condition.lat, condition.lng], { icon: markerIcon, zIndexOffset: 850 })
-        .addTo(roadConditionsLayerRef.current!);
+        .addTo(roadConditionsLayerRef.current!)
+        .on('click', () => setSelectedHazard({ kind: 'condition', data: condition }));
     });
   }, [conditions]);
 
