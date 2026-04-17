@@ -981,7 +981,8 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
       });
 
       L.marker([camera.lat, camera.lng], { icon: markerIcon, zIndexOffset: 900 })
-        .addTo(speedCamerasLayerRef.current!);
+        .addTo(speedCamerasLayerRef.current!)
+        .on('click', () => setSelectedHazard({ kind: 'camera', data: camera }));
     });
   }, [cameras]);
 
