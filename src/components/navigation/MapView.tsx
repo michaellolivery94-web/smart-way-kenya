@@ -1398,6 +1398,12 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Hazard / Camera detail modal — opens when user clicks a map icon */}
+      <HazardDetailModal
+        hazard={selectedHazard}
+        onClose={() => setSelectedHazard(null)}
+      />
     </div>
   );
 });
