@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/tooltip";
 import { VoiceNavigationControl } from "./VoiceNavigationControl";
 import { useVoiceNavigation, parseOSRMSteps } from "@/hooks/useVoiceNavigation";
-import { useRoadConditions, RoadConditionType, SpeedCamera } from "@/contexts/RoadConditionsContext";
+import { useRoadConditions, RoadConditionType, SpeedCamera, RoadCondition } from "@/contexts/RoadConditionsContext";
+import { HazardDetailModal, HazardDetail } from "./HazardDetailModal";
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -213,6 +214,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   const rerouteCountRef = useRef(0);
   const lastRerouteTimeRef = useRef(0);
   const destinationRef = useRef(destination);
+  const [selectedHazard, setSelectedHazard] = useState<HazardDetail | null>(null);
   
   // Keep destination ref in sync
   useEffect(() => { destinationRef.current = destination; }, [destination]);
@@ -913,7 +915,8 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
       });
 
       L.marker([condition.lat, condition.lng], { icon: markerIcon, zIndexOffset: 850 })
-        .addTo(roadConditionsLayerRef.current!);
+        .addTo(roadConditionsLayerRef.current!)
+        .on('click', () => setSelectedHazard({ kind: 'condition', data: condition }));
     });
   }, [conditions]);
 
@@ -978,7 +981,8 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
       });
 
       L.marker([camera.lat, camera.lng], { icon: markerIcon, zIndexOffset: 900 })
-        .addTo(speedCamerasLayerRef.current!);
+        .addTo(speedCamerasLayerRef.current!)
+        .on('click', () => setSelectedHazard({ kind: 'camera', data: camera }));
     });
   }, [cameras]);
 
@@ -1394,6 +1398,12 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Hazard / Camera detail modal — opens when user clicks a map icon */}
+      <HazardDetailModal
+        hazard={selectedHazard}
+        onClose={() => setSelectedHazard(null)}
+      />
     </div>
   );
 });
