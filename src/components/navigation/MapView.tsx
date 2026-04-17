@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/tooltip";
 import { VoiceNavigationControl } from "./VoiceNavigationControl";
 import { useVoiceNavigation, parseOSRMSteps } from "@/hooks/useVoiceNavigation";
-import { useRoadConditions, RoadConditionType, SpeedCamera } from "@/contexts/RoadConditionsContext";
+import { useRoadConditions, RoadConditionType, SpeedCamera, RoadCondition } from "@/contexts/RoadConditionsContext";
+import { HazardDetailModal, HazardDetail } from "./HazardDetailModal";
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
