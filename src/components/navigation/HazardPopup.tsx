@@ -3,7 +3,7 @@ import {
   Shield, AlertTriangle, TrafficCone, Construction, 
   Droplets, Car, Volume2, X
 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Hazard {
   id: string;
@@ -42,33 +42,34 @@ export const HazardPopup = ({ isNavigating }: HazardPopupProps) => {
   const [activeHazard, setActiveHazard] = useState<Hazard | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
+  const dismissedRef = useRef<Set<string>>(new Set());
+  useEffect(() => { dismissedRef.current = dismissed; }, [dismissed]);
+
   useEffect(() => {
     if (!isNavigating) {
       setActiveHazard(null);
       setDismissed(new Set());
+      dismissedRef.current = new Set();
       return;
     }
 
     // Simulate hazards appearing at intervals
     let hazardIndex = 0;
     const showNextHazard = () => {
-      const available = simulatedHazards.filter(h => !dismissed.has(h.id));
-      if (available.length === 0 || hazardIndex >= available.length) return;
-      
+      const available = simulatedHazards.filter(h => !dismissedRef.current.has(h.id));
+      if (available.length === 0) return;
       setActiveHazard(available[hazardIndex % available.length]);
       hazardIndex++;
     };
 
-    // First hazard after 12 seconds
     const firstTimer = setTimeout(showNextHazard, 12000);
-    // Subsequent hazards every 30 seconds
     const interval = setInterval(showNextHazard, 30000);
 
     return () => {
       clearTimeout(firstTimer);
       clearInterval(interval);
     };
-  }, [isNavigating, dismissed]);
+  }, [isNavigating]);
 
   // Auto-dismiss after 8 seconds
   useEffect(() => {
