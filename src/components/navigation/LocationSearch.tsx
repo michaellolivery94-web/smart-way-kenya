@@ -201,6 +201,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
       setFromLocation("Current Location");
       fromGeocoding.clearResults();
       setActiveField(null);
+      localStorage.removeItem("wayfinder_demo_location");
       toast.success("Location found!");
     } catch (error) {
       setGeoDenied(true);
@@ -217,6 +218,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
     setGeoDenied(false);
     fromGeocoding.clearResults();
     setActiveField(null);
+    localStorage.setItem("wayfinder_demo_location", "true");
     onLocationSelect?.({ ...DEMO_LOCATION, name: "Demo Location (Westlands)" });
     toast.success("Using demo location in Westlands");
   };
