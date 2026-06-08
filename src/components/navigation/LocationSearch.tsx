@@ -92,6 +92,19 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
     }
   }, [interimTranscript, isListening, voiceTargetField]);
 
+  // On mount: auto-restore demo location if previously chosen
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("wayfinder_demo_location");
+      if (saved === "true") {
+        setOriginCoords(DEMO_LOCATION);
+        setFromLocation("Demo Location (Westlands)");
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, []);
+
   // Search as user types
   const handleFromChange = useCallback((value: string) => {
     setFromLocation(value);
@@ -188,6 +201,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
       setFromLocation("Current Location");
       fromGeocoding.clearResults();
       setActiveField(null);
+      localStorage.removeItem("wayfinder_demo_location");
       toast.success("Location found!");
     } catch (error) {
       setGeoDenied(true);
@@ -204,6 +218,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
     setGeoDenied(false);
     fromGeocoding.clearResults();
     setActiveField(null);
+    localStorage.setItem("wayfinder_demo_location", "true");
     onLocationSelect?.({ ...DEMO_LOCATION, name: "Demo Location (Westlands)" });
     toast.success("Using demo location in Westlands");
   };
@@ -225,8 +240,16 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
       } catch (error) {
         setGeoDenied(true);
         setIsGettingLocation(false);
-        toast.error("GPS unavailable. Tap 'Use demo location' to test navigation.");
-        return;
+        const autoDemo = localStorage.getItem("wayfinder_demo_location") === "true";
+        if (autoDemo) {
+          finalOriginCoords = DEMO_LOCATION;
+          setOriginCoords(DEMO_LOCATION);
+          setFromLocation("Demo Location (Westlands)");
+          toast.info("GPS unavailable. Auto-using saved demo location in Westlands.");
+        } else {
+          toast.error("GPS unavailable. Tap 'Use demo location' to test navigation.");
+          return;
+        }
       }
       setIsGettingLocation(false);
     }
