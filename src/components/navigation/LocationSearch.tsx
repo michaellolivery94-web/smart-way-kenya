@@ -1,12 +1,16 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, MapPin, Clock, Star, Navigation, ArrowDownUp, X, 
-  Locate, Mic, MicOff, Loader2, Building2, MapPinned, Globe 
+  Locate, Mic, MicOff, Loader2, Building2, MapPinned, Globe,
+  MapPinCheck
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useGeocoding, getCurrentPosition, GeocodingResult } from "@/hooks/useGeocoding";
 import { toast } from "sonner";
+
+// Demo fallback location — central Westlands, Nairobi
+const DEMO_LOCATION = { lat: -1.2689, lng: 36.8092 };
 
 interface LocationSearchProps {
   onStartNavigation?: (from: string, to: string, coords: { 
@@ -40,6 +44,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
   const [isExpanded, setIsExpanded] = useState(false);
   const [voiceTargetField, setVoiceTargetField] = useState<"from" | "to" | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [geoDenied, setGeoDenied] = useState(false);
   
   // Coordinates state
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -176,6 +181,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
 
   const handleUseCurrentLocation = async () => {
     setIsGettingLocation(true);
+    setGeoDenied(false);
     try {
       const position = await getCurrentPosition();
       setOriginCoords(position);
@@ -184,11 +190,22 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
       setActiveField(null);
       toast.success("Location found!");
     } catch (error) {
-      toast.error("Could not get your location. Please enable GPS.");
+      setGeoDenied(true);
+      toast.error("GPS denied. Use the demo location button below to test navigation.");
       console.error("Geolocation error:", error);
     } finally {
       setIsGettingLocation(false);
     }
+  };
+
+  const handleUseDemoLocation = () => {
+    setOriginCoords(DEMO_LOCATION);
+    setFromLocation("Demo Location (Westlands)");
+    setGeoDenied(false);
+    fromGeocoding.clearResults();
+    setActiveField(null);
+    onLocationSelect?.({ ...DEMO_LOCATION, name: "Demo Location (Westlands)" });
+    toast.success("Using demo location in Westlands");
   };
 
   const handleStartNavigation = async () => {
@@ -206,8 +223,9 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
         finalOriginCoords = await getCurrentPosition();
         setOriginCoords(finalOriginCoords);
       } catch (error) {
-        toast.error("Could not get your location. Please enable GPS or enter a starting point.");
+        setGeoDenied(true);
         setIsGettingLocation(false);
+        toast.error("GPS unavailable. Tap 'Use demo location' to test navigation.");
         return;
       }
       setIsGettingLocation(false);
@@ -539,6 +557,26 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                     </motion.button>
                   )}
 
+                  {/* Demo location fallback */}
+                  {activeField === "from" && geoDenied && (
+                    <motion.button
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={handleUseDemoLocation}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-warning/10 active:bg-warning/15 transition-colors text-left border-b border-border/30"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-warning/30 to-warning/10 flex items-center justify-center border border-warning/30">
+                        <MapPinCheck className="w-4 h-4 text-warning" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-foreground">Use Demo Location (Westlands)</p>
+                        <p className="text-xs text-warning">Test navigation without GPS</p>
+                      </div>
+                      <MapPin className="w-4 h-4 text-warning" />
+                    </motion.button>
+                  )}
+
                   {/* Live Search Results - Enhanced */}
                   {currentResults.length > 0 && (
                     <>
@@ -661,6 +699,24 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                     <span className="text-foreground font-medium truncate max-w-[80px]">{toLocation}</span>
                   </div>
                 </div>
+
+                {/* Demo location fallback banner */}
+                {geoDenied && fromLocation === "Current Location" && !originCoords && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={handleUseDemoLocation}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full mb-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-warning/10 border border-warning/30 hover:bg-warning/20 transition-colors text-left"
+                  >
+                    <MapPinCheck className="w-4 h-4 text-warning flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground">GPS unavailable</p>
+                      <p className="text-[10px] text-muted-foreground">Tap to use demo location in Westlands</p>
+                    </div>
+                    <span className="text-xs font-semibold text-warning">Use &rarr;</span>
+                  </motion.button>
+                )}
                 
                 <motion.button
                   onClick={handleStartNavigation}
