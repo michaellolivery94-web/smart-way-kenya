@@ -181,6 +181,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
 
   const handleUseCurrentLocation = async () => {
     setIsGettingLocation(true);
+    setGeoDenied(false);
     try {
       const position = await getCurrentPosition();
       setOriginCoords(position);
@@ -189,11 +190,22 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
       setActiveField(null);
       toast.success("Location found!");
     } catch (error) {
-      toast.error("Could not get your location. Please enable GPS.");
+      setGeoDenied(true);
+      toast.error("GPS denied. Use the demo location button below to test navigation.");
       console.error("Geolocation error:", error);
     } finally {
       setIsGettingLocation(false);
     }
+  };
+
+  const handleUseDemoLocation = () => {
+    setOriginCoords(DEMO_LOCATION);
+    setFromLocation("Demo Location (Westlands)");
+    setGeoDenied(false);
+    fromGeocoding.clearResults();
+    setActiveField(null);
+    onLocationSelect?.({ ...DEMO_LOCATION, name: "Demo Location (Westlands)" });
+    toast.success("Using demo location in Westlands");
   };
 
   const handleStartNavigation = async () => {
