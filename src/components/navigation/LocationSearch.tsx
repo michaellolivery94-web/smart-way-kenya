@@ -699,6 +699,24 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                     <span className="text-foreground font-medium truncate max-w-[80px]">{toLocation}</span>
                   </div>
                 </div>
+
+                {/* Demo location fallback banner */}
+                {geoDenied && fromLocation === "Current Location" && !originCoords && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={handleUseDemoLocation}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full mb-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-warning/10 border border-warning/30 hover:bg-warning/20 transition-colors text-left"
+                  >
+                    <MapPinCheck className="w-4 h-4 text-warning flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-foreground">GPS unavailable</p>
+                      <p className="text-[10px] text-muted-foreground">Tap to use demo location in Westlands</p>
+                    </div>
+                    <span className="text-xs font-semibold text-warning">Use &rarr;</span>
+                  </motion.button>
+                )}
                 
                 <motion.button
                   onClick={handleStartNavigation}
