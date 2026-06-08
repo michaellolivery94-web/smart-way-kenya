@@ -1,12 +1,16 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, MapPin, Clock, Star, Navigation, ArrowDownUp, X, 
-  Locate, Mic, MicOff, Loader2, Building2, MapPinned, Globe 
+  Locate, Mic, MicOff, Loader2, Building2, MapPinned, Globe,
+  MapPinCheck
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useGeocoding, getCurrentPosition, GeocodingResult } from "@/hooks/useGeocoding";
 import { toast } from "sonner";
+
+// Demo fallback location — central Westlands, Nairobi
+const DEMO_LOCATION = { lat: -1.2689, lng: 36.8092 };
 
 interface LocationSearchProps {
   onStartNavigation?: (from: string, to: string, coords: { 
