@@ -223,8 +223,9 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
         finalOriginCoords = await getCurrentPosition();
         setOriginCoords(finalOriginCoords);
       } catch (error) {
-        toast.error("Could not get your location. Please enable GPS or enter a starting point.");
+        setGeoDenied(true);
         setIsGettingLocation(false);
+        toast.error("GPS unavailable. Tap 'Use demo location' to test navigation.");
         return;
       }
       setIsGettingLocation(false);
