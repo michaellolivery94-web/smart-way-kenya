@@ -92,6 +92,19 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
     }
   }, [interimTranscript, isListening, voiceTargetField]);
 
+  // On mount: auto-restore demo location if previously chosen
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("wayfinder_demo_location");
+      if (saved === "true") {
+        setOriginCoords(DEMO_LOCATION);
+        setFromLocation("Demo Location (Westlands)");
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, []);
+
   // Search as user types
   const handleFromChange = useCallback((value: string) => {
     setFromLocation(value);
