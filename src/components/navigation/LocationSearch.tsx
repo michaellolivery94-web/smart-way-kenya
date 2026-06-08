@@ -557,6 +557,26 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
                     </motion.button>
                   )}
 
+                  {/* Demo location fallback */}
+                  {activeField === "from" && geoDenied && (
+                    <motion.button
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={handleUseDemoLocation}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-warning/10 active:bg-warning/15 transition-colors text-left border-b border-border/30"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-warning/30 to-warning/10 flex items-center justify-center border border-warning/30">
+                        <MapPinCheck className="w-4 h-4 text-warning" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-foreground">Use Demo Location (Westlands)</p>
+                        <p className="text-xs text-warning">Test navigation without GPS</p>
+                      </div>
+                      <MapPin className="w-4 h-4 text-warning" />
+                    </motion.button>
+                  )}
+
                   {/* Live Search Results - Enhanced */}
                   {currentResults.length > 0 && (
                     <>
