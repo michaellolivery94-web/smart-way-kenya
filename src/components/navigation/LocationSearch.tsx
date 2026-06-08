@@ -240,8 +240,16 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
       } catch (error) {
         setGeoDenied(true);
         setIsGettingLocation(false);
-        toast.error("GPS unavailable. Tap 'Use demo location' to test navigation.");
-        return;
+        const autoDemo = localStorage.getItem("wayfinder_demo_location") === "true";
+        if (autoDemo) {
+          finalOriginCoords = DEMO_LOCATION;
+          setOriginCoords(DEMO_LOCATION);
+          setFromLocation("Demo Location (Westlands)");
+          toast.info("GPS unavailable. Auto-using saved demo location in Westlands.");
+        } else {
+          toast.error("GPS unavailable. Tap 'Use demo location' to test navigation.");
+          return;
+        }
       }
       setIsGettingLocation(false);
     }
