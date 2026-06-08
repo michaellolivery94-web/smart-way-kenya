@@ -44,6 +44,7 @@ export const LocationSearch = ({ onStartNavigation, onLocationSelect }: Location
   const [isExpanded, setIsExpanded] = useState(false);
   const [voiceTargetField, setVoiceTargetField] = useState<"from" | "to" | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [geoDenied, setGeoDenied] = useState(false);
   
   // Coordinates state
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
