@@ -7,6 +7,7 @@ import { SettingsProvider } from "@/contexts/SettingsContext";
 import { RoadConditionsProvider } from "@/contexts/RoadConditionsContext";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
+import Pitch from "./pages/Pitch";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
