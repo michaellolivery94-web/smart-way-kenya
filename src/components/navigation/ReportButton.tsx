@@ -33,6 +33,7 @@ const reportTypes = [
 ];
 
 export const ReportButton = ({ onReport, userLocation }: ReportButtonProps) => {
+  const { settings } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedType, setSubmittedType] = useState<string | null>(null);
