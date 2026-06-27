@@ -1,14 +1,18 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Globe, Map, Bell, Volume2 } from "lucide-react";
+import { ArrowLeft, Globe, Map, Bell, Volume2, Truck, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSettings, VoiceLanguage, MapStyle } from "@/contexts/SettingsContext";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { getReputation, getTier, tierMeta } from "@/lib/reputation";
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { settings, updateVoiceLanguage, updateMapStyle, updateNotification } = useSettings();
+  const { settings, updateVoiceLanguage, updateMapStyle, updateNotification, updateFleetDriver } = useSettings();
+  const rep = getReputation();
+  const tier = getTier(rep.score);
+  const tm = tierMeta[tier];
 
   const languageOptions: { value: VoiceLanguage; label: string; flag: string }[] = [
     { value: "en", label: "English", flag: "🇬🇧" },

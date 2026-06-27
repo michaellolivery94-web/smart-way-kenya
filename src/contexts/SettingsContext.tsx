@@ -14,6 +14,7 @@ interface Settings {
   voiceLanguage: VoiceLanguage;
   mapStyle: MapStyle;
   notifications: NotificationPreferences;
+  isFleetDriver: boolean;
 }
 
 interface SettingsContextType {
@@ -21,6 +22,7 @@ interface SettingsContextType {
   updateVoiceLanguage: (lang: VoiceLanguage) => void;
   updateMapStyle: (style: MapStyle) => void;
   updateNotification: (key: keyof NotificationPreferences, value: boolean) => void;
+  updateFleetDriver: (value: boolean) => void;
 }
 
 const defaultSettings: Settings = {
@@ -32,6 +34,7 @@ const defaultSettings: Settings = {
     routeUpdates: true,
     communityReports: false,
   },
+  isFleetDriver: false,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -71,9 +74,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const updateFleetDriver = (value: boolean) => {
+    setSettings((prev) => ({ ...prev, isFleetDriver: value }));
+  };
+
   return (
     <SettingsContext.Provider
-      value={{ settings, updateVoiceLanguage, updateMapStyle, updateNotification }}
+      value={{ settings, updateVoiceLanguage, updateMapStyle, updateNotification, updateFleetDriver }}
     >
       {children}
     </SettingsContext.Provider>
