@@ -65,11 +65,12 @@ export const ReportButton = ({ onReport, userLocation }: ReportButtonProps) => {
 
     try {
       onReport?.(type);
-      
+      const rep = recordReport();
+
       const reportLabel = reportTypes.find(r => r.id === type)?.label || type;
-      
+
       toast.success("Report submitted!", {
-        description: `Your ${reportLabel} report has been received. Thank you for helping other drivers.`,
+        description: `${settings.isFleetDriver ? "✓ Fleet-verified · " : ""}${reportLabel} · Trust score: ${rep.score}`,
         icon: <CheckCircle className="w-5 h-5 text-success" />,
         duration: 4000,
       });
