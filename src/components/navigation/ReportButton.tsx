@@ -1,18 +1,21 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  AlertTriangle, 
-  X, 
-  Construction, 
-  Car, 
+import {
+  AlertTriangle,
+  X,
+  Construction,
+  Car,
   TrafficCone,
   MapPinOff,
   Route,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  Bus,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { checkRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/rateLimit";
+import { recordReport } from "@/lib/reputation";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface ReportButtonProps {
   onReport?: (type: string) => void;
@@ -22,6 +25,7 @@ interface ReportButtonProps {
 const reportTypes = [
   { id: "traffic", icon: Car, label: "Traffic", color: "bg-warning" },
   { id: "accident", icon: AlertTriangle, label: "Accident", color: "bg-destructive" },
+  { id: "matatu", icon: Bus, label: "Matatu / Boda", color: "bg-primary" },
   { id: "construction", icon: Construction, label: "Construction", color: "bg-info" },
   { id: "closure", icon: MapPinOff, label: "Road Closed", color: "bg-destructive" },
   { id: "new-road", icon: Route, label: "New Road", color: "bg-success" },
@@ -29,6 +33,7 @@ const reportTypes = [
 ];
 
 export const ReportButton = ({ onReport, userLocation }: ReportButtonProps) => {
+  const { settings } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedType, setSubmittedType] = useState<string | null>(null);
@@ -60,11 +65,12 @@ export const ReportButton = ({ onReport, userLocation }: ReportButtonProps) => {
 
     try {
       onReport?.(type);
-      
+      const rep = recordReport();
+
       const reportLabel = reportTypes.find(r => r.id === type)?.label || type;
-      
+
       toast.success("Report submitted!", {
-        description: `Your ${reportLabel} report has been received. Thank you for helping other drivers.`,
+        description: `${settings.isFleetDriver ? "✓ Fleet-verified · " : ""}${reportLabel} · Trust score: ${rep.score}`,
         icon: <CheckCircle className="w-5 h-5 text-success" />,
         duration: 4000,
       });
