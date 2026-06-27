@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, ReactNode } from "react";
+import { useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft, ChevronRight, Maximize2, Minimize2, MapPin, AlertTriangle,
@@ -7,6 +7,7 @@ import {
   Truck, Car, Bus, Siren, Briefcase, Globe2, CheckCircle2, XCircle,
   Brain, Database, Radio, Eye, Clock, Fuel, Gauge, ArrowRight,
   Sparkles, Activity, LineChart, PieChart, Award, Flag,
+  Play, Pause, RotateCcw, SkipForward, SkipBack,
 } from "lucide-react";
 
 /* =========================================================
