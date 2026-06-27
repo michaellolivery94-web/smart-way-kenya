@@ -172,6 +172,73 @@ const Settings = () => {
           </div>
         </motion.section>
 
+        {/* Fleet Driver — Trust Engine anchor */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="nav-card p-5"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+              <Truck className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-semibold text-foreground">Verified Fleet Driver</h2>
+              <p className="text-sm text-muted-foreground">Trust-anchor reports for ride-hailing & fleets</p>
+            </div>
+            <Switch
+              checked={settings.isFleetDriver}
+              onCheckedChange={updateFleetDriver}
+            />
+          </div>
+          {settings.isFleetDriver && (
+            <p className="text-xs text-primary/90 bg-primary/10 border border-primary/20 rounded-lg p-2.5">
+              Your reports carry extra weight in the 8-layer Trust Engine and display a Fleet badge to other drivers.
+            </p>
+          )}
+        </motion.section>
+
+        {/* Reporter Reputation */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="nav-card p-5"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
+              <Award className="w-5 h-5 text-success" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-foreground">Reporter Reputation</h2>
+              <p className="text-sm text-muted-foreground">Your trust score on the network</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${tm.bg} ${tm.color}`}>
+              {tm.emoji} {tier}
+            </div>
+            <div className="text-2xl font-black text-foreground">{rep.score}</div>
+            <span className="text-xs text-muted-foreground">/ 1000</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="p-2 rounded-lg bg-secondary/60">
+              <div className="text-lg font-bold text-foreground">{rep.reportsSubmitted}</div>
+              <div className="text-[10px] text-muted-foreground uppercase">Reports</div>
+            </div>
+            <div className="p-2 rounded-lg bg-secondary/60">
+              <div className="text-lg font-bold text-success">{rep.confirmsGiven}</div>
+              <div className="text-[10px] text-muted-foreground uppercase">Confirms</div>
+            </div>
+            <div className="p-2 rounded-lg bg-secondary/60">
+              <div className="text-lg font-bold text-warning">{rep.upvotesReceived}</div>
+              <div className="text-[10px] text-muted-foreground uppercase">Upvotes</div>
+            </div>
+          </div>
+        </motion.section>
+
+
         {/* App Info */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
