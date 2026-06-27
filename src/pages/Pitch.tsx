@@ -921,16 +921,44 @@ const S18 = () => (
 
 /* ----- Slide registry ----- */
 const SLIDES = [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18];
+const TITLES = [
+  "Cover", "Problem", "Why Apps Fail", "Solution", "User Journey",
+  "Trust Engine", "Market", "Product", "Traction", "Business Model",
+  "Go-To-Market", "Competition", "Flywheel", "Roadmap", "Team",
+  "Financials", "The Ask", "Vision",
+];
+
+const fmt = (s: number) => {
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+};
 
 /* ----- Page ----- */
 export default function Pitch() {
   const [i, setI] = useState(0);
   const [fs, setFs] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [hudOpen, setHudOpen] = useState(true);
   const navigate = useNavigate();
+  const tickRef = useRef<number | null>(null);
 
   const go = useCallback((d: number) => {
     setI(p => Math.max(0, Math.min(SLIDES.length - 1, p + d)));
   }, []);
+
+  const toggleFs = useCallback(() => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }, []);
+
+  // Timer
+  useEffect(() => {
+    if (!running) return;
+    tickRef.current = window.setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => { if (tickRef.current) window.clearInterval(tickRef.current); };
+  }, [running]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -938,60 +966,145 @@ export default function Pitch() {
       else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(-1); }
       else if (e.key === "Home") setI(0);
       else if (e.key === "End") setI(SLIDES.length - 1);
-      else if (e.key === "f" || e.key === "F") {
-        if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); setFs(true); }
-        else { document.exitFullscreen(); setFs(false); }
-      } else if (e.key === "Escape" && !document.fullscreenElement) navigate("/");
+      else if (e.key === "f" || e.key === "F") { e.preventDefault(); toggleFs(); }
+      else if (e.key === "t" || e.key === "T") { e.preventDefault(); setRunning(r => !r); }
+      else if (e.key === "r" || e.key === "R") { e.preventDefault(); setSeconds(0); setRunning(false); }
+      else if (e.key === "h" || e.key === "H") { e.preventDefault(); setHudOpen(o => !o); }
+      else if (e.key === "Escape" && !document.fullscreenElement) navigate("/");
     };
     window.addEventListener("keydown", onKey);
     const onFs = () => setFs(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFs);
     return () => { window.removeEventListener("keydown", onKey); document.removeEventListener("fullscreenchange", onFs); };
-  }, [go, navigate]);
+  }, [go, navigate, toggleFs]);
 
   const Slide = SLIDES[i];
+  const nextTitle = i < SLIDES.length - 1 ? TITLES[i + 1] : "— End —";
+  const prevTitle = i > 0 ? TITLES[i - 1] : "— Start —";
+  const progress = ((i + 1) / SLIDES.length) * 100;
+
   return (
     <div style={{ background: NAVY, width: "100vw", height: "100vh", overflow: "hidden" }}>
       <ScaledSlide><Slide /></ScaledSlide>
 
-      {/* Controls */}
-      <div style={{
-        position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
-        display: "flex", alignItems: "center", gap: 14, zIndex: 50,
-        background: "rgba(15,30,54,0.85)", backdropFilter: "blur(12px)",
-        border: `1px solid ${NAVY_3}`, borderRadius: 999, padding: "10px 14px",
-      }}>
-        <button onClick={() => go(-1)} style={btn} aria-label="Previous"><ChevronLeft size={20} color={INK} /></button>
-        <div style={{ color: INK, fontSize: 14, fontWeight: 700, fontFamily: "Inter, sans-serif", minWidth: 70, textAlign: "center" }}>
-          {i + 1} / {SLIDES.length}
-        </div>
-        <button onClick={() => go(1)} style={btn} aria-label="Next"><ChevronRight size={20} color={INK} /></button>
-        <div style={{ width: 1, height: 24, background: NAVY_3 }} />
-        <button
-          onClick={() => {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
-          }}
-          style={btn} aria-label="Fullscreen"
-        >
-          {fs ? <Minimize2 size={18} color={INK} /> : <Maximize2 size={18} color={INK} />}
-        </button>
+      {/* Progress bar */}
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, background: "rgba(255,255,255,0.06)", zIndex: 60 }}>
+        <div style={{ height: "100%", width: `${progress}%`, background: ORANGE, transition: "width 0.3s ease" }} />
       </div>
 
-      {/* Hint */}
-      {!fs && (
+      {/* Presenter HUD */}
+      {hudOpen ? (
         <div style={{
-          position: "fixed", top: 16, right: 20, color: MUTED, fontSize: 12,
-          fontFamily: "Inter, sans-serif", letterSpacing: "0.1em", textTransform: "uppercase",
+          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          display: "flex", alignItems: "stretch", gap: 0, zIndex: 50,
+          background: "rgba(10,22,40,0.92)", backdropFilter: "blur(16px)",
+          border: `1px solid ${NAVY_3}`, borderRadius: 20, padding: 10,
+          fontFamily: "Inter, sans-serif", boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
         }}>
-          ← → navigate · F fullscreen · Esc exit
+          {/* Prev with title */}
+          <button onClick={() => go(-1)} disabled={i === 0} style={navBtn(i === 0)} aria-label="Previous slide">
+            <SkipBack size={16} color={INK} />
+            <div style={{ textAlign: "left", lineHeight: 1.15 }}>
+              <div style={{ fontSize: 9, color: MUTED, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>Prev</div>
+              <div style={{ fontSize: 12, color: INK, fontWeight: 600, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prevTitle}</div>
+            </div>
+          </button>
+
+          <div style={divider} />
+
+          {/* Slide counter */}
+          <div style={{ padding: "6px 18px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minWidth: 80 }}>
+            <div style={{ fontSize: 9, color: MUTED, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>Slide</div>
+            <div style={{ fontSize: 18, color: INK, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+              {i + 1}<span style={{ color: MUTED, fontWeight: 600 }}>/{SLIDES.length}</span>
+            </div>
+          </div>
+
+          <div style={divider} />
+
+          {/* Next with title */}
+          <button onClick={() => go(1)} disabled={i === SLIDES.length - 1} style={navBtn(i === SLIDES.length - 1)} aria-label="Next slide">
+            <div style={{ textAlign: "right", lineHeight: 1.15 }}>
+              <div style={{ fontSize: 9, color: ORANGE, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>Next</div>
+              <div style={{ fontSize: 12, color: INK, fontWeight: 600, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextTitle}</div>
+            </div>
+            <SkipForward size={16} color={INK} />
+          </button>
+
+          <div style={divider} />
+
+          {/* Timer */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px" }}>
+            <Clock size={14} color={running ? ORANGE : MUTED} />
+            <div style={{
+              fontSize: 16, color: running ? ORANGE : INK, fontWeight: 700,
+              fontVariantNumeric: "tabular-nums", minWidth: 56, fontFamily: "Inter, monospace",
+            }}>{fmt(seconds)}</div>
+            <button onClick={() => setRunning(r => !r)} style={iconBtn} aria-label={running ? "Pause timer" : "Start timer"}>
+              {running ? <Pause size={14} color={INK} /> : <Play size={14} color={INK} />}
+            </button>
+            <button onClick={() => { setSeconds(0); setRunning(false); }} style={iconBtn} aria-label="Reset timer">
+              <RotateCcw size={13} color={MUTED} />
+            </button>
+          </div>
+
+          <div style={divider} />
+
+          {/* Fullscreen */}
+          <button onClick={toggleFs} style={iconBtnLg} aria-label="Toggle fullscreen">
+            {fs ? <Minimize2 size={16} color={INK} /> : <Maximize2 size={16} color={INK} />}
+          </button>
+
+          {/* Hide HUD */}
+          <button onClick={() => setHudOpen(false)} style={{ ...iconBtnLg, marginLeft: 2 }} aria-label="Hide HUD" title="Hide HUD (H)">
+            <Eye size={16} color={MUTED} />
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setHudOpen(true)}
+          aria-label="Show presenter HUD"
+          style={{
+            position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)",
+            zIndex: 50, background: "rgba(10,22,40,0.85)", backdropFilter: "blur(12px)",
+            border: `1px solid ${NAVY_3}`, borderRadius: 999, padding: "8px 16px",
+            color: MUTED, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
+            fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif",
+          }}
+        >
+          Show HUD · H
+        </button>
+      )}
+
+      {/* Shortcut hint */}
+      {!fs && hudOpen && (
+        <div style={{
+          position: "fixed", top: 14, right: 20, color: MUTED, fontSize: 11,
+          fontFamily: "Inter, sans-serif", letterSpacing: "0.12em", textTransform: "uppercase",
+        }}>
+          ←/→ nav · T timer · R reset · F fullscreen · H hide · Esc exit
         </div>
       )}
     </div>
   );
 }
 
-const btn: React.CSSProperties = {
-  width: 38, height: 38, borderRadius: "50%", background: NAVY_3,
+const divider: React.CSSProperties = { width: 1, background: NAVY_3, margin: "4px 4px" };
+
+const navBtn = (disabled: boolean): React.CSSProperties => ({
+  display: "flex", alignItems: "center", gap: 10, padding: "6px 14px",
+  background: "transparent", border: "none", borderRadius: 12,
+  cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1,
+  color: INK, fontFamily: "Inter, sans-serif",
+});
+
+const iconBtn: React.CSSProperties = {
+  width: 28, height: 28, borderRadius: 8, background: NAVY_3,
   border: "none", display: "grid", placeItems: "center", cursor: "pointer",
 };
+
+const iconBtnLg: React.CSSProperties = {
+  width: 36, height: 36, borderRadius: 10, background: NAVY_3,
+  border: "none", display: "grid", placeItems: "center", cursor: "pointer",
+};
+
