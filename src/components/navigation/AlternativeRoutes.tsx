@@ -171,13 +171,23 @@ export const AlternativeRoutes = ({
             <div className="flex items-center gap-2">
               <Route className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold text-foreground">
-                {routes.length} routes found
+                {routes.length} routes {isOfflineEstimate ? "estimated" : "found"}
               </span>
+              {isOfflineEstimate && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/20 text-warning">
+                  OFFLINE
+                </span>
+              )}
             </div>
             <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground">
               Cancel
             </button>
           </div>
+          {isOfflineEstimate && (
+            <div className="px-3 py-2 bg-warning/10 border-b border-warning/20 text-[11px] text-warning-foreground/90">
+              No network — showing estate-route estimates from distance & typical Nairobi speeds. Fuel savings still apply.
+            </div>
+          )}
 
           {/* Route Options */}
           <div className="p-2 space-y-2 max-h-[35vh] overflow-y-auto">
