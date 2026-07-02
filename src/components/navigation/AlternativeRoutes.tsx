@@ -130,7 +130,12 @@ export const AlternativeRoutes = ({
                 <p className="text-xs text-muted-foreground">Finding best routes...</p>
               </div>
             ) : (
-              routes.map((route, i) => (
+              routes.map((route, i) => {
+                const fuelCost = estimateFuelCost(route.distance);
+                const maxFuel = Math.max(...routes.map(r => estimateFuelCost(r.distance)));
+                const fuelSavings = maxFuel - fuelCost;
+                const timeVsFastest = Math.round((route.duration - routes[0].duration) / 60);
+                return (
                 <motion.button
                   key={i}
                   initial={{ opacity: 0, x: -10 }}
@@ -160,7 +165,7 @@ export const AlternativeRoutes = ({
 
                   {/* Route details */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-lg font-bold text-foreground">
                         {formatDuration(route.duration)}
                       </span>
@@ -171,10 +176,26 @@ export const AlternativeRoutes = ({
                       }`}>
                         {getRouteLabel(i, routes)}
                       </span>
+                      {fuelSavings > 5 && (
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-success/20 text-success">
+                          <TrendingDown className="w-2.5 h-2.5" />
+                          Save Ksh {Math.round(fuelSavings)}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {formatDistance(route.distance)} • Arrive {getArrivalTime(route.duration)}
                     </p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="flex items-center gap-1 text-[10px] text-warning font-medium">
+                        <Fuel className="w-3 h-3" />
+                        Ksh {Math.round(fuelCost)}
+                      </span>
+                      <span className="flex items-center gap-1 text-[10px] text-info font-medium">
+                        <Clock className="w-3 h-3" />
+                        {i === 0 ? "Baseline" : `+${timeVsFastest}m vs fastest`}
+                      </span>
+                    </div>
                     {route.summary && (
                       <p className="text-[10px] text-muted-foreground/70 truncate mt-0.5">
                         via {route.summary}
@@ -186,13 +207,27 @@ export const AlternativeRoutes = ({
                     selectedIndex === i ? "text-primary" : "text-muted-foreground"
                   }`} />
                 </motion.button>
-              ))
+              );})
             )}
           </div>
 
           {/* Start Button */}
           {routes.length > 0 && (
-            <div className="p-3 border-t border-border/50">
+            <div className="p-3 border-t border-border/50 space-y-2">
+              {/* Selected route summary */}
+              <div className="flex items-center justify-around text-xs bg-secondary/40 rounded-lg py-2">
+                <div className="flex items-center gap-1.5 text-info">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span className="font-bold">{formatDuration(routes[selectedIndex].duration)}</span>
+                  <span className="text-muted-foreground">left</span>
+                </div>
+                <div className="w-px h-4 bg-border/50" />
+                <div className="flex items-center gap-1.5 text-warning">
+                  <Fuel className="w-3.5 h-3.5" />
+                  <span className="font-bold">Ksh {Math.round(estimateFuelCost(routes[selectedIndex].distance))}</span>
+                  <span className="text-muted-foreground">fuel</span>
+                </div>
+              </div>
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onSelectRoute(routes[selectedIndex])}
