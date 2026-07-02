@@ -1,5 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, MapPin, Zap, Route, ChevronRight } from "lucide-react";
+import { Clock, MapPin, Zap, Route, ChevronRight, Fuel, TrendingDown } from "lucide-react";
+
+// Nairobi fuel economics (petrol, ~10 L/100km sedan)
+const FUEL_PRICE_KSH_PER_L = 195;
+const CONSUMPTION_L_PER_KM = 0.1;
+const KSH_PER_KM = FUEL_PRICE_KSH_PER_L * CONSUMPTION_L_PER_KM;
+const estimateFuelCost = (meters: number) => (meters / 1000) * KSH_PER_KM;
 import { useState, useEffect } from "react";
 
 export interface RouteOption {
