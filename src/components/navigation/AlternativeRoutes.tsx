@@ -32,19 +32,74 @@ export const AlternativeRoutes = ({
   const [routes, setRoutes] = useState<RouteOption[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOfflineEstimate, setIsOfflineEstimate] = useState(false);
+
+  // Haversine distance in meters (for offline straight-line fallback)
+  const haversine = (a: {lat:number;lng:number}, b: {lat:number;lng:number}) => {
+    const R = 6371000;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(s));
+  };
+
+  // Build offline fallback routes when OSRM is unreachable (estate/offline use)
+  const buildOfflineRoutes = (
+    o: {lat:number;lng:number}, d: {lat:number;lng:number}
+  ): RouteOption[] => {
+    const straight = haversine(o, d);
+    // Nairobi urban detour multipliers & avg speeds (km/h)
+    const variants = [
+      { label: "Direct estate route", detour: 1.25, speed: 28 },
+      { label: "Backroads bypass",     detour: 1.45, speed: 32 },
+      { label: "Main road loop",       detour: 1.6,  speed: 38 },
+    ];
+    return variants.map((v, i) => {
+      const distance = straight * v.detour;
+      const duration = (distance / 1000) / v.speed * 3600; // seconds
+      return {
+        index: i,
+        duration,
+        distance,
+        summary: v.label,
+        geometry: null,
+        coordinates: [[o.lat, o.lng], [d.lat, d.lng]] as [number, number][],
+        steps: [],
+      };
+    }).sort((a, b) => a.duration - b.duration)
+      .map((r, i) => ({ ...r, index: i }));
+  };
 
   useEffect(() => {
     if (!origin || !destination || !isVisible) return;
     
     const fetchRoutes = async () => {
       setIsLoading(true);
+      setIsOfflineEstimate(false);
+      const useOffline = () => {
+        setRoutes(buildOfflineRoutes(origin, destination));
+        setIsOfflineEstimate(true);
+        setSelectedIndex(0);
+      };
+
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        useOffline();
+        setIsLoading(false);
+        return;
+      }
+
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6000);
         const response = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson&steps=true&alternatives=3`
+          `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson&steps=true&alternatives=3`,
+          { signal: controller.signal }
         );
+        clearTimeout(timeout);
         const data = await response.json();
         
-        if (data.routes) {
+        if (data.routes && data.routes.length > 0) {
           const parsed: RouteOption[] = data.routes.map((r: any, i: number) => ({
             index: i,
             duration: r.duration,
@@ -58,9 +113,11 @@ export const AlternativeRoutes = ({
           }));
           setRoutes(parsed);
           setSelectedIndex(0);
+        } else {
+          useOffline();
         }
       } catch {
-        setRoutes([]);
+        useOffline();
       }
       setIsLoading(false);
     };
