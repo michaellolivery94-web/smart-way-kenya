@@ -66,6 +66,7 @@ const MAJOR_LANDMARKS = [
   { name: "Uhuru Gardens", lat: -1.3189, lng: 36.8135, icon: Landmark, description: "National Monument" },
   { name: "Nyayo Stadium", lat: -1.3059, lng: 36.8278, icon: Trophy, description: "Sports Complex" },
   { name: "Jomo Kenyatta International Airport", lat: -1.3192, lng: 36.9278, icon: Building2, description: "JKIA" },
+  { name: "Uhuru Highway Flyover", lat: -1.2938, lng: 36.8207, icon: Route, description: "Haile Selassie Interchange" },
 ];
 
 // Major Roads in Nairobi
