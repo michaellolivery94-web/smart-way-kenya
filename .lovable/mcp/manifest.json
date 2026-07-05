@@ -8,7 +8,7 @@
   "mcp": {
     "server": {
       "name": "wayfinder-africa-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Wayfinder Africa"
     },
     "tools": [
@@ -75,6 +75,46 @@
             "alternatives": {
               "type": "boolean",
               "description": "Include alternative routes (up to 3). Default false."
+            }
+          },
+          "required": [
+            "originLat",
+            "originLng",
+            "destinationLat",
+            "destinationLng"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_turn_by_turn",
+        "title": "Turn-by-turn directions",
+        "description": "Get human-readable turn-by-turn driving directions between two coordinates in/around Nairobi. Returns an ordered list of instructions (e.g. 'Turn right onto Uhuru Highway, continue for 1.2 km'), plus total distance and duration. Use search_place first if you only have place names.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "originLat": {
+              "type": "number",
+              "description": "Origin latitude."
+            },
+            "originLng": {
+              "type": "number",
+              "description": "Origin longitude."
+            },
+            "destinationLat": {
+              "type": "number",
+              "description": "Destination latitude."
+            },
+            "destinationLng": {
+              "type": "number",
+              "description": "Destination longitude."
             }
           },
           "required": [
