@@ -92,19 +92,110 @@ var get_route_default = defineTool2({
   }
 });
 
-// src/lib/mcp/tools/estimate-fuel-cost.ts
+// src/lib/mcp/tools/get-turn-by-turn.ts
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z as z3 } from "npm:zod@^3.25.76";
+function formatDistance(meters) {
+  if (meters < 1e3) return `${Math.round(meters)} m`;
+  return `${(meters / 1e3).toFixed(1)} km`;
+}
+function humanize(step) {
+  const road = step.name?.trim();
+  const type = step.maneuver?.type ?? "continue";
+  const modifier = step.maneuver?.modifier;
+  const dist = formatDistance(step.distance);
+  const onRoad = road ? ` onto ${road}` : "";
+  const along = road ? ` along ${road}` : "";
+  switch (type) {
+    case "depart":
+      return `Head out${along} for ${dist}.`;
+    case "arrive":
+      return `Arrive at your destination${road ? ` on ${road}` : ""}.`;
+    case "turn":
+      return `Turn ${modifier ?? ""}${onRoad}, continue for ${dist}.`.replace(/\s+/g, " ");
+    case "merge":
+      return `Merge ${modifier ?? ""}${onRoad}, continue for ${dist}.`.replace(/\s+/g, " ");
+    case "on ramp":
+      return `Take the on-ramp${onRoad}, continue for ${dist}.`;
+    case "off ramp":
+      return `Take the off-ramp${onRoad}, continue for ${dist}.`;
+    case "fork":
+      return `Keep ${modifier ?? "straight"}${onRoad}, continue for ${dist}.`;
+    case "roundabout":
+    case "rotary": {
+      const exit = step.maneuver?.exit ? `, take exit ${step.maneuver.exit}` : "";
+      return `Enter the roundabout${exit}${onRoad}, continue for ${dist}.`;
+    }
+    case "continue":
+      return `Continue ${modifier ?? "straight"}${along} for ${dist}.`;
+    case "new name":
+      return `Continue${along} for ${dist}.`;
+    default:
+      return `${type[0].toUpperCase()}${type.slice(1)}${modifier ? ` ${modifier}` : ""}${onRoad || along} for ${dist}.`;
+  }
+}
+var get_turn_by_turn_default = defineTool3({
+  name: "get_turn_by_turn",
+  title: "Turn-by-turn directions",
+  description: "Get human-readable turn-by-turn driving directions between two coordinates in/around Nairobi. Returns an ordered list of instructions (e.g. 'Turn right onto Uhuru Highway, continue for 1.2 km'), plus total distance and duration. Use search_place first if you only have place names.",
+  inputSchema: {
+    originLat: z3.number().describe("Origin latitude."),
+    originLng: z3.number().describe("Origin longitude."),
+    destinationLat: z3.number().describe("Destination latitude."),
+    destinationLng: z3.number().describe("Destination longitude.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+  handler: async ({ originLat, originLng, destinationLat, destinationLng }) => {
+    const coords = `${originLng},${originLat};${destinationLng},${destinationLat}`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=false&steps=true`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      return { content: [{ type: "text", text: `OSRM error: ${res.status}` }], isError: true };
+    }
+    const data = await res.json();
+    const route = data.routes?.[0];
+    if (!route) {
+      return { content: [{ type: "text", text: "No route found." }], isError: true };
+    }
+    const rawSteps = route.legs.flatMap((l) => l.steps);
+    const steps = rawSteps.map((s, i) => ({
+      step: i + 1,
+      instruction: humanize(s),
+      road: s.name || null,
+      maneuver: s.maneuver?.type ?? "continue",
+      modifier: s.maneuver?.modifier ?? null,
+      distanceMeters: s.distance,
+      durationSeconds: s.duration
+    }));
+    const totalKm = +(route.distance / 1e3).toFixed(2);
+    const totalMin = +(route.duration / 60).toFixed(1);
+    const text = `Route: ${totalKm} km, ~${totalMin} min
+
+` + steps.map((s) => `${s.step}. ${s.instruction}`).join("\n");
+    return {
+      content: [{ type: "text", text }],
+      structuredContent: {
+        totalDistanceKm: totalKm,
+        totalDurationMinutes: totalMin,
+        steps
+      }
+    };
+  }
+});
+
+// src/lib/mcp/tools/estimate-fuel-cost.ts
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z4 } from "npm:zod@^3.25.76";
 var FUEL_PRICE_KSH_PER_L = 195;
 var CONSUMPTION_L_PER_KM = 0.1;
-var estimate_fuel_cost_default = defineTool3({
+var estimate_fuel_cost_default = defineTool4({
   name: "estimate_fuel_cost",
   title: "Estimate fuel cost",
   description: "Estimate fuel cost in Kenyan Shillings (Ksh) for a given driving distance in kilometers, using Nairobi average fuel price and consumption (~10 km/L, Ksh 195/L).",
   inputSchema: {
-    distanceKm: z3.number().positive().describe("Trip distance in kilometers."),
-    consumptionLPer100Km: z3.number().positive().optional().describe("Optional vehicle consumption in L/100km. Defaults to 10 L/100km."),
-    fuelPriceKshPerL: z3.number().positive().optional().describe("Optional fuel price in Ksh per litre. Defaults to 195.")
+    distanceKm: z4.number().positive().describe("Trip distance in kilometers."),
+    consumptionLPer100Km: z4.number().positive().optional().describe("Optional vehicle consumption in L/100km. Defaults to 10 L/100km."),
+    fuelPriceKshPerL: z4.number().positive().optional().describe("Optional fuel price in Ksh per litre. Defaults to 195.")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: ({ distanceKm, consumptionLPer100Km, fuelPriceKshPerL }) => {
@@ -125,15 +216,15 @@ var estimate_fuel_cost_default = defineTool3({
 });
 
 // src/lib/mcp/tools/reverse-geocode.ts
-import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
-import { z as z4 } from "npm:zod@^3.25.76";
-var reverse_geocode_default = defineTool4({
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+var reverse_geocode_default = defineTool5({
   name: "reverse_geocode",
   title: "Reverse geocode",
   description: "Convert latitude/longitude coordinates into a human-readable Nairobi/Kenya address or place name.",
   inputSchema: {
-    lat: z4.number().describe("Latitude."),
-    lng: z4.number().describe("Longitude.")
+    lat: z5.number().describe("Latitude."),
+    lng: z5.number().describe("Longitude.")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
   handler: async ({ lat, lng }) => {
@@ -156,9 +247,9 @@ var reverse_geocode_default = defineTool4({
 var mcp_default = defineMcp({
   name: "wayfinder-africa-mcp",
   title: "Wayfinder Africa",
-  version: "0.1.0",
-  instructions: "Nairobi-focused navigation tools: search Kenyan places (search_place), compute driving routes with OSRM (get_route), reverse-geocode coordinates (reverse_geocode), and estimate fuel costs in Ksh (estimate_fuel_cost). Use search_place first to turn a place name into coordinates, then pass those to get_route.",
-  tools: [search_place_default, get_route_default, reverse_geocode_default, estimate_fuel_cost_default]
+  version: "0.2.0",
+  instructions: "Nairobi-focused navigation tools: search Kenyan places (search_place), compute driving routes with OSRM (get_route), get human-readable turn-by-turn directions (get_turn_by_turn), reverse-geocode coordinates (reverse_geocode), and estimate fuel costs in Ksh (estimate_fuel_cost). Use search_place first to turn a place name into coordinates, then pass those to get_turn_by_turn or get_route.",
+  tools: [search_place_default, get_route_default, get_turn_by_turn_default, reverse_geocode_default, estimate_fuel_cost_default]
 });
 
 // lovable-mcp-supabase-entry.ts
