@@ -29,6 +29,7 @@ interface SavedLocation {
 }
 
 const SUGGESTIONS: SavedLocation[] = [
+  { icon: Star, text: "Uhuru Highway Flyover (Haile Selassie Interchange)", type: "favorite", lat: -1.2938, lng: 36.8207 },
   { icon: Star, text: "Sarit Centre, Westlands", type: "favorite", lat: -1.2647, lng: 36.8027 },
   { icon: Star, text: "JKIA Airport", type: "favorite", lat: -1.3192, lng: 36.9258 },
   { icon: Clock, text: "Two Rivers Mall", type: "recent", lat: -1.2112, lng: 36.8058 },
