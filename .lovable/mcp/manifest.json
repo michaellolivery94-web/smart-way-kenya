@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "wayfinder-africa-mcp",
+      "version": "0.1.0",
+      "title": "Wayfinder Africa"
+    },
+    "tools": [
+      {
+        "name": "search_place",
+        "title": "Search Nairobi place",
+        "description": "Search for a place, address, or landmark in Nairobi, Kenya. Returns matching locations with coordinates. Use this to resolve a place name to lat/lng.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Place name, address, or landmark in Nairobi (e.g. 'Westgate Mall', 'JKIA')."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "description": "Max results, default 5."
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_route",
+        "title": "Get driving route",
+        "description": "Compute a driving route between two coordinates in/around Nairobi using OSRM. Returns distance (meters), duration (seconds), and turn-by-turn steps.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "originLat": {
+              "type": "number",
+              "description": "Origin latitude."
+            },
+            "originLng": {
+              "type": "number",
+              "description": "Origin longitude."
+            },
+            "destinationLat": {
+              "type": "number",
+              "description": "Destination latitude."
+            },
+            "destinationLng": {
+              "type": "number",
+              "description": "Destination longitude."
+            },
+            "alternatives": {
+              "type": "boolean",
+              "description": "Include alternative routes (up to 3). Default false."
+            }
+          },
+          "required": [
+            "originLat",
+            "originLng",
+            "destinationLat",
+            "destinationLng"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "reverse_geocode",
+        "title": "Reverse geocode",
+        "description": "Convert latitude/longitude coordinates into a human-readable Nairobi/Kenya address or place name.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number",
+              "description": "Latitude."
+            },
+            "lng": {
+              "type": "number",
+              "description": "Longitude."
+            }
+          },
+          "required": [
+            "lat",
+            "lng"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "estimate_fuel_cost",
+        "title": "Estimate fuel cost",
+        "description": "Estimate fuel cost in Kenyan Shillings (Ksh) for a given driving distance in kilometers, using Nairobi average fuel price and consumption (~10 km/L, Ksh 195/L).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "distanceKm": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Trip distance in kilometers."
+            },
+            "consumptionLPer100Km": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Optional vehicle consumption in L/100km. Defaults to 10 L/100km."
+            },
+            "fuelPriceKshPerL": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Optional fuel price in Ksh per litre. Defaults to 195."
+            }
+          },
+          "required": [
+            "distanceKm"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
