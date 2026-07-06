@@ -305,7 +305,7 @@ export const DirectionCard = ({
       )}
 
       {/* Bottom spacer if no extras */}
-      {!detailedGuide && !tip && !warning && !laneHint && !landmark && (
+      {!detailedGuide && !tip && !warning && !laneHint && !landmark && !exit && !lanes?.length && (
         <div className="h-1" />
       )}
     </motion.div>
