@@ -13,11 +13,25 @@ import {
   AlertTriangle,
   Info,
   Eye,
-  Navigation
+  Navigation,
+  LogOut
 } from "lucide-react";
 
 type Direction = "straight" | "slight-right" | "slight-left" | "right" | "left" | "u-turn";
 type LandmarkType = "poi" | "building" | "fuel" | "mall";
+type LaneDir = "left" | "slight-left" | "straight" | "slight-right" | "right";
+
+export interface LaneCallout {
+  direction: LaneDir;
+  active: boolean;
+  isExit?: boolean;
+}
+
+export interface ExitCallout {
+  number?: string;
+  toward?: string;
+  side?: "left" | "right";
+}
 
 export interface DirectionCardProps {
   direction: Direction;
@@ -27,6 +41,8 @@ export interface DirectionCardProps {
   tip?: string;
   warning?: string;
   laneHint?: string;
+  lanes?: LaneCallout[];
+  exit?: ExitCallout;
   landmark?: {
     name: string;
     type: LandmarkType;
