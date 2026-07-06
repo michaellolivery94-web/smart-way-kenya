@@ -80,6 +80,24 @@ export const useAIDirections = () => {
           warning: d.warning || undefined,
           roadName: d.roadName || undefined,
           estimatedTime: d.estimatedTime || undefined,
+          lanes: Array.isArray(d.lanes)
+            ? d.lanes
+                .filter((l: any) => l && typeof l === "object")
+                .map((l: any) => ({
+                  direction: ["left", "slight-left", "straight", "slight-right", "right"].includes(l.direction)
+                    ? l.direction
+                    : "straight",
+                  active: !!l.active,
+                  isExit: !!l.isExit,
+                }))
+            : undefined,
+          exit: d.exit && (d.exit.number || d.exit.toward)
+            ? {
+                number: d.exit.number ? String(d.exit.number) : undefined,
+                toward: d.exit.toward || undefined,
+                side: ["left", "right"].includes(d.exit.side) ? d.exit.side : undefined,
+              }
+            : undefined,
           landmark: d.landmark && d.landmark.name ? {
             name: d.landmark.name,
             type: ["poi", "building", "fuel", "mall"].includes(d.landmark.type) ? d.landmark.type : "poi",
