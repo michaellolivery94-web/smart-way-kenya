@@ -78,6 +78,14 @@ const landmarkIcons: Record<LandmarkType, typeof MapPin> = {
   mall: ShoppingBag,
 };
 
+const laneArrows: Record<LaneDir, string> = {
+  left: "↰",
+  "slight-left": "↖",
+  straight: "↑",
+  "slight-right": "↗",
+  right: "↱",
+};
+
 export const DirectionCard = ({ 
   direction, 
   distance, 
@@ -86,6 +94,8 @@ export const DirectionCard = ({
   tip,
   warning,
   laneHint,
+  lanes,
+  exit,
   landmark,
   roadName,
   estimatedTime,
