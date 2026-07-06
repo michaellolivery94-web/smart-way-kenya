@@ -252,6 +252,17 @@ export const NavigationPanel = ({
             </div>
           )}
 
+          {/* Route Summary (expanded view only) */}
+          {isExpanded && upcomingTurns.length > 0 && (
+            <RouteSummary
+              steps={upcomingTurns}
+              totalDistance={totalDistance}
+              totalDuration={totalDuration}
+              originName={originName}
+              destinationName={destinationName}
+            />
+          )}
+
           {/* Direction Cards */}
           <AnimatePresence>
             {(isExpanded ? upcomingTurns : upcomingTurns.slice(0, 1)).map((turn, index) => (
