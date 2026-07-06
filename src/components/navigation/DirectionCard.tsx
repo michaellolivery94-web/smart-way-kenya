@@ -13,11 +13,25 @@ import {
   AlertTriangle,
   Info,
   Eye,
-  Navigation
+  Navigation,
+  LogOut
 } from "lucide-react";
 
 type Direction = "straight" | "slight-right" | "slight-left" | "right" | "left" | "u-turn";
 type LandmarkType = "poi" | "building" | "fuel" | "mall";
+type LaneDir = "left" | "slight-left" | "straight" | "slight-right" | "right";
+
+export interface LaneCallout {
+  direction: LaneDir;
+  active: boolean;
+  isExit?: boolean;
+}
+
+export interface ExitCallout {
+  number?: string;
+  toward?: string;
+  side?: "left" | "right";
+}
 
 export interface DirectionCardProps {
   direction: Direction;
@@ -27,6 +41,8 @@ export interface DirectionCardProps {
   tip?: string;
   warning?: string;
   laneHint?: string;
+  lanes?: LaneCallout[];
+  exit?: ExitCallout;
   landmark?: {
     name: string;
     type: LandmarkType;
@@ -62,6 +78,14 @@ const landmarkIcons: Record<LandmarkType, typeof MapPin> = {
   mall: ShoppingBag,
 };
 
+const laneArrows: Record<LaneDir, string> = {
+  left: "↰",
+  "slight-left": "↖",
+  straight: "↑",
+  "slight-right": "↗",
+  right: "↱",
+};
+
 export const DirectionCard = ({ 
   direction, 
   distance, 
@@ -70,6 +94,8 @@ export const DirectionCard = ({
   tip,
   warning,
   laneHint,
+  lanes,
+  exit,
   landmark,
   roadName,
   estimatedTime,
@@ -148,6 +174,64 @@ export const DirectionCard = ({
         </div>
       </div>
 
+      {/* Exit Callout */}
+      {exit && (
+        <div className={`mx-3 sm:mx-4 mb-2 p-2.5 rounded-xl border flex items-center gap-2.5 ${
+          isNext
+            ? "bg-primary/10 border-primary/30"
+            : "bg-secondary/60 border-border/50"
+        }`}>
+          <div className={`flex-shrink-0 h-9 min-w-[2.75rem] px-2 rounded-lg flex flex-col items-center justify-center font-extrabold ${
+            isNext ? "bg-primary text-primary-foreground" : "bg-foreground/80 text-background"
+          }`}>
+            <span className="text-[8px] leading-none uppercase tracking-wider opacity-80">Exit</span>
+            <span className="text-sm leading-tight">{exit.number || "→"}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            {exit.toward && (
+              <p className="text-xs text-foreground/80 leading-tight">
+                <span className="font-bold text-foreground">Toward </span>
+                <span className="truncate">{exit.toward}</span>
+              </p>
+            )}
+            {exit.side && (
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
+                Exit on the {exit.side}
+              </p>
+            )}
+          </div>
+          <LogOut className={`w-4 h-4 flex-shrink-0 ${isNext ? "text-primary" : "text-muted-foreground"} ${exit.side === "left" ? "-scale-x-100" : ""}`} />
+        </div>
+      )}
+
+      {/* Inline Lane Callouts */}
+      {lanes && lanes.length > 0 && (
+        <div className="mx-3 sm:mx-4 mb-2 p-2.5 rounded-xl bg-accent/40 border border-accent-foreground/10">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Lanes
+            </span>
+            <div className="flex gap-1">
+              {lanes.map((lane, i) => (
+                <div
+                  key={i}
+                  className={`w-7 h-9 rounded-md flex items-center justify-center text-base font-bold border transition-colors ${
+                    lane.active
+                      ? lane.isExit
+                        ? "bg-warning/25 border-warning text-warning"
+                        : "bg-primary/25 border-primary text-primary"
+                      : "bg-muted/40 border-border/50 text-muted-foreground/50"
+                  }`}
+                >
+                  {laneArrows[lane.direction]}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* Detailed Guide - The "explain like I'm 3" section */}
       {detailedGuide && (
         <div className="mx-3 sm:mx-4 mb-2 p-3 rounded-xl bg-info/8 border border-info/20">
@@ -221,7 +305,7 @@ export const DirectionCard = ({
       )}
 
       {/* Bottom spacer if no extras */}
-      {!detailedGuide && !tip && !warning && !laneHint && !landmark && (
+      {!detailedGuide && !tip && !warning && !laneHint && !landmark && !exit && !lanes?.length && (
         <div className="h-1" />
       )}
     </motion.div>

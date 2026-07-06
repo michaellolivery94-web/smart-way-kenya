@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 import { DirectionCard, type DirectionCardProps } from "./DirectionCard";
 import { LaneGuidance } from "./LaneGuidance";
+import { RouteSummary } from "./RouteSummary";
 import { useOfflineMaps } from "@/hooks/useOfflineMaps";
 import type { AIDirection } from "@/hooks/useAIDirections";
 
@@ -24,6 +25,10 @@ interface NavigationPanelProps {
   onOpenOfflineMaps?: () => void;
   aiDirections?: AIDirection[];
   aiDirectionsLoading?: boolean;
+  totalDistance?: string;
+  totalDuration?: string;
+  originName?: string;
+  destinationName?: string;
 }
 
 export const NavigationPanel = ({ 
@@ -32,6 +37,10 @@ export const NavigationPanel = ({
   onOpenOfflineMaps,
   aiDirections = [],
   aiDirectionsLoading = false,
+  totalDistance,
+  totalDuration,
+  originName,
+  destinationName,
 }: NavigationPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOnline, downloadedRegions } = useOfflineMaps();
@@ -44,6 +53,8 @@ export const NavigationPanel = ({
         instruction: d.instruction,
         detailedGuide: d.detailedGuide,
         laneHint: d.laneHint,
+        lanes: d.lanes,
+        exit: d.exit || undefined,
         tip: d.tip,
         warning: d.warning,
         roadName: d.roadName,
@@ -239,6 +250,17 @@ export const NavigationPanel = ({
             <div className="text-center py-6 text-muted-foreground">
               <p className="text-sm">Directions will appear once navigation starts</p>
             </div>
+          )}
+
+          {/* Route Summary (expanded view only) */}
+          {isExpanded && upcomingTurns.length > 0 && (
+            <RouteSummary
+              steps={upcomingTurns}
+              totalDistance={totalDistance}
+              totalDuration={totalDuration}
+              originName={originName}
+              destinationName={destinationName}
+            />
           )}
 
           {/* Direction Cards */}

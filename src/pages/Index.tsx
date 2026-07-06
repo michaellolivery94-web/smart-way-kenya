@@ -340,6 +340,10 @@ const Index = () => {
               onOpenOfflineMaps={() => setShowOfflineMaps(true)}
               aiDirections={aiDirections}
               aiDirectionsLoading={aiDirectionsLoading}
+              totalDistance={routeDistance}
+              totalDuration={routeETA}
+              originName={origin}
+              destinationName={destination || undefined}
             />
 
             {/* Search Along Route */}
