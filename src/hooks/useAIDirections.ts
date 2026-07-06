@@ -13,6 +13,16 @@ export interface AIDirection {
   warning?: string;
   roadName?: string;
   estimatedTime?: string;
+  lanes?: Array<{
+    direction: "left" | "slight-left" | "straight" | "slight-right" | "right";
+    active: boolean;
+    isExit?: boolean;
+  }>;
+  exit?: {
+    number?: string;
+    toward?: string;
+    side?: "left" | "right";
+  } | null;
   landmark?: {
     name: string;
     type: "poi" | "building" | "fuel" | "mall";
