@@ -287,7 +287,7 @@ export const NavigationPanel = ({
           )}
         </button>
 
-        <div className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
+        <div id="directions-list" className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
           {/* Loading State */}
           {aiDirectionsLoading && (
             <motion.div
