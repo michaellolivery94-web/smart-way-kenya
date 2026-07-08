@@ -45,6 +45,74 @@ export const NavigationPanel = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOnline, downloadedRegions } = useOfflineMaps();
 
+  // Detour-aware summary: detect when the route summary changes mid-trip.
+  const prevTotalsRef = useRef<{ distance?: string; duration?: string }>({});
+  const [detour, setDetour] = useState<
+    | { deltaDistance?: string; deltaDuration?: string; reason?: string; direction?: "faster" | "slower" | "shorter" | "longer" }
+    | null
+  >(null);
+
+  const parseMinutes = (s?: string) => {
+    if (!s) return null;
+    const m = s.match(/(\d+(?:\.\d+)?)\s*(h|hr|hour|hours)?\s*(\d+(?:\.\d+)?)?\s*(min|m)?/i);
+    if (!m) return null;
+    // simple: capture leading number, treat "h" as hours
+    const numMatch = s.match(/(\d+(?:\.\d+)?)/g);
+    if (!numMatch) return null;
+    if (/h/i.test(s) && numMatch.length >= 1) {
+      const h = parseFloat(numMatch[0]);
+      const mm = numMatch[1] ? parseFloat(numMatch[1]) : 0;
+      return h * 60 + mm;
+    }
+    return parseFloat(numMatch[0]);
+  };
+  const parseKm = (s?: string) => {
+    if (!s) return null;
+    const n = s.match(/(\d+(?:\.\d+)?)/);
+    if (!n) return null;
+    const v = parseFloat(n[1]);
+    return /m\b/i.test(s) && !/km/i.test(s) ? v / 1000 : v;
+  };
+
+  useEffect(() => {
+    const prev = prevTotalsRef.current;
+    if (!isNavigating) {
+      prevTotalsRef.current = { distance: totalDistance, duration: totalDuration };
+      return;
+    }
+    if (prev.distance === undefined && prev.duration === undefined) {
+      prevTotalsRef.current = { distance: totalDistance, duration: totalDuration };
+      return;
+    }
+
+    const prevMin = parseMinutes(prev.duration);
+    const nextMin = parseMinutes(totalDuration);
+    const prevKm = parseKm(prev.distance);
+    const nextKm = parseKm(totalDistance);
+
+    const durChanged = prevMin != null && nextMin != null && Math.abs(nextMin - prevMin) >= 1;
+    const distChanged = prevKm != null && nextKm != null && Math.abs(nextKm - prevKm) >= 0.2;
+
+    if (durChanged || distChanged) {
+      const dMin = nextMin! - (prevMin ?? nextMin!);
+      const dKm = nextKm! - (prevKm ?? nextKm!);
+      const direction =
+        durChanged
+          ? dMin < 0 ? "faster" : "slower"
+          : dKm < 0 ? "shorter" : "longer";
+      setDetour({
+        deltaDuration: durChanged ? `${dMin > 0 ? "+" : ""}${Math.round(dMin)} min` : undefined,
+        deltaDistance: distChanged ? `${dKm > 0 ? "+" : ""}${dKm.toFixed(1)} km` : undefined,
+        reason: "Route recalculated to reflect your latest detour.",
+        direction,
+      });
+      const t = setTimeout(() => setDetour(null), 12000);
+      prevTotalsRef.current = { distance: totalDistance, duration: totalDuration };
+      return () => clearTimeout(t);
+    }
+    prevTotalsRef.current = { distance: totalDistance, duration: totalDuration };
+  }, [totalDistance, totalDuration, isNavigating]);
+
   // Use AI directions if available, otherwise show fallback
   const upcomingTurns: Omit<DirectionCardProps, 'isNext'>[] = aiDirections.length > 0
     ? aiDirections.map(d => ({
