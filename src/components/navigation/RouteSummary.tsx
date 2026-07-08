@@ -114,6 +114,37 @@ export const RouteSummary = ({
           </div>
         )}
 
+        {/* Detour / reroute banner */}
+        {detour && (detour.deltaDistance || detour.deltaDuration || detour.reason) && (
+          <div
+            role="status"
+            aria-live="assertive"
+            className={`mt-2.5 p-2 rounded-lg border text-xs flex items-start gap-2 ${
+              isPositive
+                ? "bg-success/10 border-success/30 text-success"
+                : "bg-warning/10 border-warning/30 text-warning"
+            }`}
+          >
+            <RouteIcon aria-hidden="true" className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="font-bold uppercase tracking-wider text-[10px]">
+                Route updated{detour.direction ? ` · ${detour.direction}` : ""}
+              </p>
+              <p className="text-foreground/80 leading-snug">
+                {detour.reason || "Summary refreshed for your new path."}
+                {(detour.deltaDuration || detour.deltaDistance) && (
+                  <>
+                    {" "}
+                    <span className="font-semibold">
+                      {[detour.deltaDuration, detour.deltaDistance].filter(Boolean).join(" · ")}
+                    </span>
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Chips */}
         {(exitCount > 0 || laneCallouts > 0) && (
           <div className="flex flex-wrap gap-1.5 mt-2.5">
