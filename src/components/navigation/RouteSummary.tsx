@@ -164,7 +164,8 @@ export const RouteSummary = ({
       </div>
 
       {/* Timeline */}
-      <ol className="p-3 sm:p-4 space-y-2">
+      <ol className="p-3 sm:p-4 space-y-2" aria-label={`${steps.length} step turn-by-turn route`}>
+
         {steps.map((s, i) => {
           const Icon = directionIcons[s.direction] || ArrowUp;
           const isLast = i === steps.length - 1;
