@@ -331,6 +331,7 @@ export const NavigationPanel = ({
               totalDuration={totalDuration}
               originName={originName}
               destinationName={destinationName}
+              detour={detour}
             />
           )}
 
