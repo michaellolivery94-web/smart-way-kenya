@@ -267,19 +267,22 @@ export const NavigationPanel = ({
       <div className="nav-card rounded-t-none border-t-0">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full p-3 flex items-center justify-center gap-2 border-b border-border/50"
+          aria-expanded={isExpanded}
+          aria-controls="directions-list"
+          aria-label={isExpanded ? "Hide all directions" : "Show all directions"}
+          className="w-full p-3 flex items-center justify-center gap-2 border-b border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           {isExpanded ? (
-            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+            <ChevronDown aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
           ) : (
-            <ChevronUp className="w-5 h-5 text-muted-foreground" />
+            <ChevronUp aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
           )}
           <span className="text-sm text-muted-foreground">
             {isExpanded ? "Hide directions" : "Show all directions"}
           </span>
           {aiDirections.length > 0 && (
             <span className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-              <Brain className="w-3 h-3" /> AI
+              <Brain aria-hidden="true" className="w-3 h-3" /> AI
             </span>
           )}
         </button>
