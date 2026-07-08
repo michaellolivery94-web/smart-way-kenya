@@ -178,10 +178,11 @@ export const RouteSummary = ({
                   className="absolute left-[13px] top-8 bottom-[-8px] w-px bg-border"
                 />
               )}
-              <div className="w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center flex-shrink-0 relative z-10">
+              <div aria-hidden="true" className="w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center flex-shrink-0 relative z-10">
                 <Icon className="w-3.5 h-3.5 text-foreground/80" />
               </div>
               <div className="flex-1 min-w-0 pb-1">
+                <span className="sr-only">Step {i + 1} of {steps.length}: </span>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-foreground">{s.distance}</span>
                   {s.roadName && (
@@ -191,13 +192,13 @@ export const RouteSummary = ({
                   )}
                   {s.exit && (
                     <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-warning">
-                      <LogOut className="w-3 h-3" />
+                      <LogOut aria-hidden="true" className="w-3 h-3" />
                       {s.exit.number ? `Exit ${s.exit.number}` : "Exit"}
                     </span>
                   )}
                   {s.landmark && (
                     <span className="inline-flex items-center gap-0.5 text-[10px] text-success">
-                      <MapPin className="w-3 h-3" />
+                      <MapPin aria-hidden="true" className="w-3 h-3" />
                       {s.landmark.name}
                     </span>
                   )}
