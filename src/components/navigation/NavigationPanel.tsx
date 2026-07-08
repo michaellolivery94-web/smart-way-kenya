@@ -12,7 +12,7 @@ import {
   Brain,
   Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DirectionCard, type DirectionCardProps } from "./DirectionCard";
 import { LaneGuidance } from "./LaneGuidance";
 import { RouteSummary } from "./RouteSummary";
