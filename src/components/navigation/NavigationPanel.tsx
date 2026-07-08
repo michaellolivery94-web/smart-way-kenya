@@ -354,21 +354,23 @@ export const NavigationPanel = ({
         </div>
 
         {/* Quick Actions */}
-        <div className="p-4 border-t border-border/50 flex items-center justify-around">
+        <div className="p-4 border-t border-border/50 flex items-center justify-around" role="toolbar" aria-label="Navigation quick actions">
           <motion.button 
             whileTap={{ scale: 0.9 }}
-            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+            aria-label="Add a stop along the route"
+            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center" aria-hidden="true">
               <MapPin className="w-5 h-5" />
             </div>
             <span className="text-xs font-medium">Add Stop</span>
           </motion.button>
           <motion.button 
             whileTap={{ scale: 0.9 }}
-            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+            aria-label="Find fuel stations along the route"
+            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center" aria-hidden="true">
               <Fuel className="w-5 h-5 text-warning" />
             </div>
             <span className="text-xs font-medium">Fuel</span>
@@ -376,9 +378,10 @@ export const NavigationPanel = ({
           <motion.button 
             whileTap={{ scale: 0.9 }}
             onClick={onOpenOfflineMaps}
-            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+            aria-label="Manage offline maps"
+            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <div className="w-10 h-10 rounded-xl bg-info/15 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-info/15 flex items-center justify-center" aria-hidden="true">
               <Download className="w-5 h-5 text-info" />
             </div>
             <span className="text-xs font-medium">Offline</span>
