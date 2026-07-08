@@ -20,6 +20,12 @@ interface RouteSummaryProps {
   totalDuration?: string;
   originName?: string;
   destinationName?: string;
+  detour?: {
+    deltaDistance?: string;
+    deltaDuration?: string;
+    reason?: string;
+    direction?: "faster" | "slower" | "shorter" | "longer";
+  } | null;
 }
 
 const directionIcons = {
@@ -37,14 +43,19 @@ export const RouteSummary = ({
   totalDuration,
   originName,
   destinationName,
+  detour,
 }: RouteSummaryProps) => {
   const exitCount = steps.filter((s) => s.exit).length;
   const laneCallouts = steps.filter((s) => s.lanes && s.lanes.length > 0).length;
+  const isPositive = detour?.direction === "faster" || detour?.direction === "shorter";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
+      role="region"
+      aria-label="Route summary"
+      aria-live="polite"
       className="rounded-2xl border border-border/50 bg-card/80 overflow-hidden"
     >
       {/* Header */}
@@ -103,6 +114,37 @@ export const RouteSummary = ({
           </div>
         )}
 
+        {/* Detour / reroute banner */}
+        {detour && (detour.deltaDistance || detour.deltaDuration || detour.reason) && (
+          <div
+            role="status"
+            aria-live="assertive"
+            className={`mt-2.5 p-2 rounded-lg border text-xs flex items-start gap-2 ${
+              isPositive
+                ? "bg-success/10 border-success/30 text-success"
+                : "bg-warning/10 border-warning/30 text-warning"
+            }`}
+          >
+            <RouteIcon aria-hidden="true" className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="font-bold uppercase tracking-wider text-[10px]">
+                Route updated{detour.direction ? ` · ${detour.direction}` : ""}
+              </p>
+              <p className="text-foreground/80 leading-snug">
+                {detour.reason || "Summary refreshed for your new path."}
+                {(detour.deltaDuration || detour.deltaDistance) && (
+                  <>
+                    {" "}
+                    <span className="font-semibold">
+                      {[detour.deltaDuration, detour.deltaDistance].filter(Boolean).join(" · ")}
+                    </span>
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Chips */}
         {(exitCount > 0 || laneCallouts > 0) && (
           <div className="flex flex-wrap gap-1.5 mt-2.5">
@@ -122,7 +164,8 @@ export const RouteSummary = ({
       </div>
 
       {/* Timeline */}
-      <ol className="p-3 sm:p-4 space-y-2">
+      <ol className="p-3 sm:p-4 space-y-2" aria-label={`${steps.length} step turn-by-turn route`}>
+
         {steps.map((s, i) => {
           const Icon = directionIcons[s.direction] || ArrowUp;
           const isLast = i === steps.length - 1;
@@ -135,10 +178,11 @@ export const RouteSummary = ({
                   className="absolute left-[13px] top-8 bottom-[-8px] w-px bg-border"
                 />
               )}
-              <div className="w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center flex-shrink-0 relative z-10">
+              <div aria-hidden="true" className="w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center flex-shrink-0 relative z-10">
                 <Icon className="w-3.5 h-3.5 text-foreground/80" />
               </div>
               <div className="flex-1 min-w-0 pb-1">
+                <span className="sr-only">Step {i + 1} of {steps.length}: </span>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-foreground">{s.distance}</span>
                   {s.roadName && (
@@ -148,13 +192,13 @@ export const RouteSummary = ({
                   )}
                   {s.exit && (
                     <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-warning">
-                      <LogOut className="w-3 h-3" />
+                      <LogOut aria-hidden="true" className="w-3 h-3" />
                       {s.exit.number ? `Exit ${s.exit.number}` : "Exit"}
                     </span>
                   )}
                   {s.landmark && (
                     <span className="inline-flex items-center gap-0.5 text-[10px] text-success">
-                      <MapPin className="w-3 h-3" />
+                      <MapPin aria-hidden="true" className="w-3 h-3" />
                       {s.landmark.name}
                     </span>
                   )}

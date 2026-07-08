@@ -12,7 +12,7 @@ import {
   Brain,
   Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DirectionCard, type DirectionCardProps } from "./DirectionCard";
 import { LaneGuidance } from "./LaneGuidance";
 import { RouteSummary } from "./RouteSummary";
@@ -44,6 +44,74 @@ export const NavigationPanel = ({
 }: NavigationPanelProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOnline, downloadedRegions } = useOfflineMaps();
+
+  // Detour-aware summary: detect when the route summary changes mid-trip.
+  const prevTotalsRef = useRef<{ distance?: string; duration?: string }>({});
+  const [detour, setDetour] = useState<
+    | { deltaDistance?: string; deltaDuration?: string; reason?: string; direction?: "faster" | "slower" | "shorter" | "longer" }
+    | null
+  >(null);
+
+  const parseMinutes = (s?: string) => {
+    if (!s) return null;
+    const m = s.match(/(\d+(?:\.\d+)?)\s*(h|hr|hour|hours)?\s*(\d+(?:\.\d+)?)?\s*(min|m)?/i);
+    if (!m) return null;
+    // simple: capture leading number, treat "h" as hours
+    const numMatch = s.match(/(\d+(?:\.\d+)?)/g);
+    if (!numMatch) return null;
+    if (/h/i.test(s) && numMatch.length >= 1) {
+      const h = parseFloat(numMatch[0]);
+      const mm = numMatch[1] ? parseFloat(numMatch[1]) : 0;
+      return h * 60 + mm;
+    }
+    return parseFloat(numMatch[0]);
+  };
+  const parseKm = (s?: string) => {
+    if (!s) return null;
+    const n = s.match(/(\d+(?:\.\d+)?)/);
+    if (!n) return null;
+    const v = parseFloat(n[1]);
+    return /m\b/i.test(s) && !/km/i.test(s) ? v / 1000 : v;
+  };
+
+  useEffect(() => {
+    const prev = prevTotalsRef.current;
+    if (!isNavigating) {
+      prevTotalsRef.current = { distance: totalDistance, duration: totalDuration };
+      return;
+    }
+    if (prev.distance === undefined && prev.duration === undefined) {
+      prevTotalsRef.current = { distance: totalDistance, duration: totalDuration };
+      return;
+    }
+
+    const prevMin = parseMinutes(prev.duration);
+    const nextMin = parseMinutes(totalDuration);
+    const prevKm = parseKm(prev.distance);
+    const nextKm = parseKm(totalDistance);
+
+    const durChanged = prevMin != null && nextMin != null && Math.abs(nextMin - prevMin) >= 1;
+    const distChanged = prevKm != null && nextKm != null && Math.abs(nextKm - prevKm) >= 0.2;
+
+    if (durChanged || distChanged) {
+      const dMin = nextMin! - (prevMin ?? nextMin!);
+      const dKm = nextKm! - (prevKm ?? nextKm!);
+      const direction =
+        durChanged
+          ? dMin < 0 ? "faster" : "slower"
+          : dKm < 0 ? "shorter" : "longer";
+      setDetour({
+        deltaDuration: durChanged ? `${dMin > 0 ? "+" : ""}${Math.round(dMin)} min` : undefined,
+        deltaDistance: distChanged ? `${dKm > 0 ? "+" : ""}${dKm.toFixed(1)} km` : undefined,
+        reason: "Route recalculated to reflect your latest detour.",
+        direction,
+      });
+      const t = setTimeout(() => setDetour(null), 12000);
+      prevTotalsRef.current = { distance: totalDistance, duration: totalDuration };
+      return () => clearTimeout(t);
+    }
+    prevTotalsRef.current = { distance: totalDistance, duration: totalDuration };
+  }, [totalDistance, totalDuration, isNavigating]);
 
   // Use AI directions if available, otherwise show fallback
   const upcomingTurns: Omit<DirectionCardProps, 'isNext'>[] = aiDirections.length > 0
@@ -199,24 +267,27 @@ export const NavigationPanel = ({
       <div className="nav-card rounded-t-none border-t-0">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full p-3 flex items-center justify-center gap-2 border-b border-border/50"
+          aria-expanded={isExpanded}
+          aria-controls="directions-list"
+          aria-label={isExpanded ? "Hide all directions" : "Show all directions"}
+          className="w-full p-3 flex items-center justify-center gap-2 border-b border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           {isExpanded ? (
-            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+            <ChevronDown aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
           ) : (
-            <ChevronUp className="w-5 h-5 text-muted-foreground" />
+            <ChevronUp aria-hidden="true" className="w-5 h-5 text-muted-foreground" />
           )}
           <span className="text-sm text-muted-foreground">
             {isExpanded ? "Hide directions" : "Show all directions"}
           </span>
           {aiDirections.length > 0 && (
             <span className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-              <Brain className="w-3 h-3" /> AI
+              <Brain aria-hidden="true" className="w-3 h-3" /> AI
             </span>
           )}
         </button>
 
-        <div className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
+        <div id="directions-list" className="p-3 sm:p-4 space-y-3 max-h-[50vh] overflow-y-auto">
           {/* Loading State */}
           {aiDirectionsLoading && (
             <motion.div
@@ -260,6 +331,7 @@ export const NavigationPanel = ({
               totalDuration={totalDuration}
               originName={originName}
               destinationName={destinationName}
+              detour={detour}
             />
           )}
 
@@ -282,21 +354,23 @@ export const NavigationPanel = ({
         </div>
 
         {/* Quick Actions */}
-        <div className="p-4 border-t border-border/50 flex items-center justify-around">
+        <div className="p-4 border-t border-border/50 flex items-center justify-around" role="toolbar" aria-label="Navigation quick actions">
           <motion.button 
             whileTap={{ scale: 0.9 }}
-            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+            aria-label="Add a stop along the route"
+            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center" aria-hidden="true">
               <MapPin className="w-5 h-5" />
             </div>
             <span className="text-xs font-medium">Add Stop</span>
           </motion.button>
           <motion.button 
             whileTap={{ scale: 0.9 }}
-            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+            aria-label="Find fuel stations along the route"
+            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center" aria-hidden="true">
               <Fuel className="w-5 h-5 text-warning" />
             </div>
             <span className="text-xs font-medium">Fuel</span>
@@ -304,9 +378,10 @@ export const NavigationPanel = ({
           <motion.button 
             whileTap={{ scale: 0.9 }}
             onClick={onOpenOfflineMaps}
-            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+            aria-label="Manage offline maps"
+            className="flex flex-col items-center gap-1.5 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <div className="w-10 h-10 rounded-xl bg-info/15 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-info/15 flex items-center justify-center" aria-hidden="true">
               <Download className="w-5 h-5 text-info" />
             </div>
             <span className="text-xs font-medium">Offline</span>
