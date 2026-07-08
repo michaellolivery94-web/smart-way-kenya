@@ -43,14 +43,19 @@ export const RouteSummary = ({
   totalDuration,
   originName,
   destinationName,
+  detour,
 }: RouteSummaryProps) => {
   const exitCount = steps.filter((s) => s.exit).length;
   const laneCallouts = steps.filter((s) => s.lanes && s.lanes.length > 0).length;
+  const isPositive = detour?.direction === "faster" || detour?.direction === "shorter";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
+      role="region"
+      aria-label="Route summary"
+      aria-live="polite"
       className="rounded-2xl border border-border/50 bg-card/80 overflow-hidden"
     >
       {/* Header */}
