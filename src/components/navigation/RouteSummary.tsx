@@ -20,6 +20,12 @@ interface RouteSummaryProps {
   totalDuration?: string;
   originName?: string;
   destinationName?: string;
+  detour?: {
+    deltaDistance?: string;
+    deltaDuration?: string;
+    reason?: string;
+    direction?: "faster" | "slower" | "shorter" | "longer";
+  } | null;
 }
 
 const directionIcons = {
