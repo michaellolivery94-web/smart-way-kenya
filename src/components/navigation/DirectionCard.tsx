@@ -108,6 +108,10 @@ export const DirectionCard = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      role="group"
+      aria-label={`${isNext ? "Next maneuver: " : ""}${directionLabels[direction]} in ${distance}${roadName ? ` onto ${roadName}` : ""}. ${instruction}`}
+      aria-live={isNext ? "polite" : "off"}
+      aria-current={isNext ? "step" : undefined}
       className={`rounded-2xl border overflow-hidden transition-all ${
         isNext 
           ? "border-primary/40 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-lg shadow-primary/10" 
