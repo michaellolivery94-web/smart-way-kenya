@@ -127,7 +127,7 @@ export const DirectionCard = ({
             ? "bg-primary text-primary-foreground shadow-md shadow-primary/30" 
             : "bg-secondary text-secondary-foreground"
           }
-        `}>
+        `} aria-hidden="true">
           <DirectionIcon className="w-7 h-7 sm:w-8 sm:h-8" />
           {isNext && (
             <motion.div 
