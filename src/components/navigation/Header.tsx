@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Menu, Bell, Settings, Download, User, MapPin, Construction } from "lucide-react";
+import { Menu, Bell, Settings, Download, User, MapPin, Construction, Activity } from "lucide-react";
 import { ModeToggle } from "./ModeToggle";
 import {
   Tooltip,
@@ -66,6 +66,25 @@ export const Header = ({ mode, onModeChange, isNavigating = false, onOpenOffline
               <TooltipContent side="bottom" className="bg-card border-border">
                 <p className="flex items-center gap-1.5 text-xs font-medium">
                   <Download className="w-3 h-3" /> Offline Maps
+                </p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Nairobi Live Traffic */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  onClick={() => window.location.href = "/traffic"}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative w-9 h-9 sm:w-10 sm:h-10 nav-card rounded-xl flex items-center justify-center shadow-md"
+                  aria-label="Nairobi live traffic"
+                >
+                  <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-card border-border">
+                <p className="flex items-center gap-1.5 text-xs font-medium">
+                  <Activity className="w-3 h-3" /> Live Traffic
                 </p>
               </TooltipContent>
             </Tooltip>
