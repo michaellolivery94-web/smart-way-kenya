@@ -27,6 +27,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
 import { WifiOff, Construction, Brain } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { getCorridor, getCorridorStatus } from "@/data/corridors";
 
 interface Coordinates {
   lat: number;
@@ -127,6 +129,25 @@ const Index = () => {
     setPreviewLocation({ lat: location.lat, lng: location.lng });
     mapRef.current?.flyTo(location.lat, location.lng, 15);
   }, []);
+
+  // Deep link from the Nairobi live traffic corridor pages: /?corridor=thika-road
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const slug = searchParams.get("corridor");
+    if (!slug) return;
+    const corridor = getCorridor(slug);
+    if (!corridor) return;
+    const timer = window.setTimeout(() => {
+      setPreviewLocation({ lat: corridor.lat, lng: corridor.lng });
+      mapRef.current?.flyTo(corridor.lat, corridor.lng, corridor.zoom);
+      const status = getCorridorStatus(corridor);
+      toast.info(corridor.name, {
+        description: `${status.label} • ${status.averageSpeed} km/h • ${status.travelMinutes} min end to end`,
+      });
+    }, 900);
+    setSearchParams({}, { replace: true });
+    return () => window.clearTimeout(timer);
+  }, [searchParams, setSearchParams]);
 
   const handleEndNavigation = () => {
     setIsNavigating(false);
