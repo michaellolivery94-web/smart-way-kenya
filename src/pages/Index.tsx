@@ -28,7 +28,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
 import { WifiOff, Construction, Brain } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { getCorridor, getCorridorStatus } from "@/data/corridors";
+import { getCorridor } from "@/data/corridors";
+import { fetchLiveReadings, recordSpeedSample, resolveStatus } from "@/lib/liveTraffic";
+
 
 interface Coordinates {
   lat: number;
