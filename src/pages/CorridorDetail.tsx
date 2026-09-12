@@ -64,10 +64,18 @@ const CorridorDetail = () => {
         </motion.header>
 
         <div className={`mt-5 rounded-xl border p-4 ${cls.bg}`} role="status" aria-live="polite">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className={`w-3 h-3 rounded-full ${cls.dot}`} aria-hidden="true" />
             <span className={`font-semibold ${cls.text}`}>{status.label} right now</span>
+            {status.source === "live" ? (
+              <span className="inline-flex items-center gap-1 text-xs text-success font-medium">
+                <Users className="w-3.5 h-3.5" aria-hidden="true" /> Live from {status.sampleCount} driver readings
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground">Estimated from rush-hour patterns</span>
+            )}
           </div>
+
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">
             <div>
               <Gauge className="w-4 h-4 mx-auto text-muted-foreground" aria-hidden="true" />
