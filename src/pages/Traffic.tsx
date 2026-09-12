@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Clock, Gauge, MapPin, RefreshCw } from "lucide-react";
-import { CORRIDORS, LEVEL_CLASSES, getCorridorStatus } from "@/data/corridors";
+import { ArrowLeft, ArrowRight, Clock, Gauge, MapPin, RefreshCw, Radio, Users } from "lucide-react";
+import { CORRIDORS, LEVEL_CLASSES } from "@/data/corridors";
+import { useLiveTraffic } from "@/hooks/useLiveTraffic";
+import { resolveStatus } from "@/lib/liveTraffic";
 
 const Traffic = () => {
   const [now, setNow] = useState(() => new Date());
+  const { readings, liveCount } = useLiveTraffic();
 
   useEffect(() => {
     document.title = "Nairobi Live Traffic — Corridor Status | Smart-Way";
@@ -19,8 +22,8 @@ const Traffic = () => {
   }, []);
 
   const rows = useMemo(
-    () => CORRIDORS.map((c) => ({ corridor: c, status: getCorridorStatus(c, now) })),
-    [now],
+    () => CORRIDORS.map((c) => ({ corridor: c, status: resolveStatus(c, readings, now) })),
+    [now, readings],
   );
 
   const timeLabel = now.toLocaleTimeString("en-GB", {
@@ -28,6 +31,7 @@ const Traffic = () => {
     minute: "2-digit",
     timeZone: "Africa/Nairobi",
   });
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
