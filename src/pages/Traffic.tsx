@@ -98,7 +98,15 @@ const Traffic = () => {
                           <Clock className="w-3.5 h-3.5" aria-hidden="true" /> {status.travelMinutes} min
                           {status.delayMinutes > 0 && ` (+${status.delayMinutes})`}
                         </span>
+                        {status.source === "live" ? (
+                          <span className="inline-flex items-center gap-1 text-success font-medium">
+                            <Users className="w-3.5 h-3.5" aria-hidden="true" /> Live · {status.sampleCount} readings
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground/70">Estimated</span>
+                        )}
                       </div>
+
                     </div>
                     <ArrowRight className="w-4 h-4 mt-1 shrink-0 text-muted-foreground" aria-hidden="true" />
                   </div>
@@ -113,10 +121,12 @@ const Traffic = () => {
             <MapPin className="w-4 h-4 text-primary" aria-hidden="true" /> How this works
           </h2>
           <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-            Status blends each corridor's congestion profile with Nairobi rush-hour patterns and live
-            community reports. Open a corridor to see its landmarks, choke points and to drop the map
-            straight onto that road.
+            When Smart-Way drivers are moving along a corridor, their anonymous speeds are averaged
+            over the last 30 minutes and shown as a Live reading. Corridors without enough drivers
+            right now fall back to Nairobi rush-hour estimates. Open a corridor to see its landmarks,
+            choke points and to drop the map straight onto that road.
           </p>
+
         </div>
       </div>
     </div>
