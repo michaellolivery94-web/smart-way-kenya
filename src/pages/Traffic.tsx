@@ -49,11 +49,22 @@ const Traffic = () => {
             Current conditions across the city's main corridors, with landmark-aware detail and a
             one-tap jump straight onto the road in the map.
           </p>
-          <p className="mt-3 inline-flex items-center gap-2 text-xs text-muted-foreground">
-            <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-            Updated {timeLabel} EAT · refreshes every minute
+          <p className="mt-3 inline-flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+              Updated {timeLabel} EAT
+            </span>
+            {liveCount > 0 ? (
+              <span className="inline-flex items-center gap-1.5 text-success font-medium">
+                <Radio className="w-3.5 h-3.5" aria-hidden="true" />
+                {liveCount} corridor{liveCount === 1 ? "" : "s"} reporting live driver speeds
+              </span>
+            ) : (
+              <span>No live driver data yet — showing rush-hour estimates</span>
+            )}
           </p>
         </header>
+
 
         <ul className="space-y-3" aria-label="Nairobi traffic corridors">
           {rows.map(({ corridor, status }, i) => {
