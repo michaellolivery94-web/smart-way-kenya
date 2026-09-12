@@ -76,6 +76,19 @@ const Index = () => {
     }, 2000);
     return () => clearInterval(interval);
   }, [isNavigating]);
+
+  // Contribute anonymous speed readings so the Nairobi live traffic pages show real data
+  useEffect(() => {
+    if (!isNavigating) return;
+    const lat = originCoords?.lat ?? userLocation[0];
+    const lng = originCoords?.lng ?? userLocation[1];
+    const send = () => { void recordSpeedSample(lat, lng, currentSpeedRef.current); };
+    send();
+    const id = window.setInterval(send, 30000);
+    return () => window.clearInterval(id);
+  }, [isNavigating, originCoords, userLocation]);
+
+
   
   // Ref to access map methods
   const mapRef = useRef<MapViewHandle>(null);
