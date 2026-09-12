@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Clock, Gauge, Navigation, Route, TimerReset } from "lucide-react";
-import { CORRIDORS, LEVEL_CLASSES, getCorridor, getCorridorStatus } from "@/data/corridors";
+import { ArrowLeft, Clock, Gauge, Navigation, Route, TimerReset, Users } from "lucide-react";
+import { CORRIDORS, LEVEL_CLASSES, getCorridor } from "@/data/corridors";
+import { useLiveTraffic } from "@/hooks/useLiveTraffic";
+import { resolveStatus } from "@/lib/liveTraffic";
 
 const CorridorDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const corridor = getCorridor(slug);
   const [now, setNow] = useState(() => new Date());
+  const { readings } = useLiveTraffic();
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 60000);
@@ -24,9 +27,10 @@ const CorridorDetail = () => {
   }, [corridor]);
 
   const status = useMemo(
-    () => (corridor ? getCorridorStatus(corridor, now) : null),
-    [corridor, now],
+    () => (corridor ? resolveStatus(corridor, readings, now) : null),
+    [corridor, readings, now],
   );
+
 
   if (!corridor || !status) {
     return (
