@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      corridor_speed_samples: {
+        Row: {
+          corridor_slug: string
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          session_id: string
+          speed_kmh: number
+        }
+        Insert: {
+          corridor_slug: string
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          session_id: string
+          speed_kmh: number
+        }
+        Update: {
+          corridor_slug?: string
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          session_id?: string
+          speed_kmh?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
