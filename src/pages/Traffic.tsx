@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Clock, Gauge, MapPin, RefreshCw } from "lucide-react";
-import { CORRIDORS, LEVEL_CLASSES, getCorridorStatus } from "@/data/corridors";
+import { ArrowLeft, ArrowRight, Clock, Gauge, MapPin, RefreshCw, Radio, Users } from "lucide-react";
+import { CORRIDORS, LEVEL_CLASSES } from "@/data/corridors";
+import { useLiveTraffic } from "@/hooks/useLiveTraffic";
+import { resolveStatus } from "@/lib/liveTraffic";
 
 const Traffic = () => {
   const [now, setNow] = useState(() => new Date());
+  const { readings, liveCount } = useLiveTraffic();
 
   useEffect(() => {
     document.title = "Nairobi Live Traffic — Corridor Status | Smart-Way";
@@ -19,8 +22,8 @@ const Traffic = () => {
   }, []);
 
   const rows = useMemo(
-    () => CORRIDORS.map((c) => ({ corridor: c, status: getCorridorStatus(c, now) })),
-    [now],
+    () => CORRIDORS.map((c) => ({ corridor: c, status: resolveStatus(c, readings, now) })),
+    [now, readings],
   );
 
   const timeLabel = now.toLocaleTimeString("en-GB", {
@@ -28,6 +31,7 @@ const Traffic = () => {
     minute: "2-digit",
     timeZone: "Africa/Nairobi",
   });
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -45,11 +49,22 @@ const Traffic = () => {
             Current conditions across the city's main corridors, with landmark-aware detail and a
             one-tap jump straight onto the road in the map.
           </p>
-          <p className="mt-3 inline-flex items-center gap-2 text-xs text-muted-foreground">
-            <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-            Updated {timeLabel} EAT · refreshes every minute
+          <p className="mt-3 inline-flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+              Updated {timeLabel} EAT
+            </span>
+            {liveCount > 0 ? (
+              <span className="inline-flex items-center gap-1.5 text-success font-medium">
+                <Radio className="w-3.5 h-3.5" aria-hidden="true" />
+                {liveCount} corridor{liveCount === 1 ? "" : "s"} reporting live driver speeds
+              </span>
+            ) : (
+              <span>No live driver data yet — showing rush-hour estimates</span>
+            )}
           </p>
         </header>
+
 
         <ul className="space-y-3" aria-label="Nairobi traffic corridors">
           {rows.map(({ corridor, status }, i) => {
@@ -83,7 +98,15 @@ const Traffic = () => {
                           <Clock className="w-3.5 h-3.5" aria-hidden="true" /> {status.travelMinutes} min
                           {status.delayMinutes > 0 && ` (+${status.delayMinutes})`}
                         </span>
+                        {status.source === "live" ? (
+                          <span className="inline-flex items-center gap-1 text-success font-medium">
+                            <Users className="w-3.5 h-3.5" aria-hidden="true" /> Live · {status.sampleCount} readings
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground/70">Estimated</span>
+                        )}
                       </div>
+
                     </div>
                     <ArrowRight className="w-4 h-4 mt-1 shrink-0 text-muted-foreground" aria-hidden="true" />
                   </div>
@@ -98,10 +121,12 @@ const Traffic = () => {
             <MapPin className="w-4 h-4 text-primary" aria-hidden="true" /> How this works
           </h2>
           <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-            Status blends each corridor's congestion profile with Nairobi rush-hour patterns and live
-            community reports. Open a corridor to see its landmarks, choke points and to drop the map
-            straight onto that road.
+            When Smart-Way drivers are moving along a corridor, their anonymous speeds are averaged
+            over the last 30 minutes and shown as a Live reading. Corridors without enough drivers
+            right now fall back to Nairobi rush-hour estimates. Open a corridor to see its landmarks,
+            choke points and to drop the map straight onto that road.
           </p>
+
         </div>
       </div>
     </div>

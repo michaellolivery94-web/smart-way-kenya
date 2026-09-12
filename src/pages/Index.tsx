@@ -28,7 +28,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
 import { WifiOff, Construction, Brain } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { getCorridor, getCorridorStatus } from "@/data/corridors";
+import { getCorridor } from "@/data/corridors";
+import { fetchLiveReadings, recordSpeedSample, resolveStatus } from "@/lib/liveTraffic";
+
 
 interface Coordinates {
   lat: number;
@@ -59,6 +61,11 @@ const Index = () => {
   const { isOnline, downloadedRegions } = useOfflineMaps();
   const { directions: aiDirections, isLoading: aiDirectionsLoading, generateDirections, clearDirections } = useAIDirections();
 
+  // Latest speed, read by the live-traffic contributor without restarting its timer
+  const currentSpeedRef = useRef(currentSpeed);
+  useEffect(() => { currentSpeedRef.current = currentSpeed; }, [currentSpeed]);
+
+
   // Simulate speed changes during navigation
   useEffect(() => {
     if (!isNavigating) return;
@@ -74,6 +81,19 @@ const Index = () => {
     }, 2000);
     return () => clearInterval(interval);
   }, [isNavigating]);
+
+  // Contribute anonymous speed readings so the Nairobi live traffic pages show real data
+  useEffect(() => {
+    if (!isNavigating) return;
+    const lat = originCoords?.lat ?? userLocation[0];
+    const lng = originCoords?.lng ?? userLocation[1];
+    const send = () => { void recordSpeedSample(lat, lng, currentSpeedRef.current); };
+    send();
+    const id = window.setInterval(send, 30000);
+    return () => window.clearInterval(id);
+  }, [isNavigating, originCoords, userLocation]);
+
+
   
   // Ref to access map methods
   const mapRef = useRef<MapViewHandle>(null);
@@ -137,14 +157,16 @@ const Index = () => {
     if (!slug) return;
     const corridor = getCorridor(slug);
     if (!corridor) return;
-    const timer = window.setTimeout(() => {
+    const timer = window.setTimeout(async () => {
       setPreviewLocation({ lat: corridor.lat, lng: corridor.lng });
       mapRef.current?.flyTo(corridor.lat, corridor.lng, corridor.zoom);
-      const status = getCorridorStatus(corridor);
+      const readings = await fetchLiveReadings();
+      const status = resolveStatus(corridor, readings);
       toast.info(corridor.name, {
-        description: `${status.label} • ${status.averageSpeed} km/h • ${status.travelMinutes} min end to end`,
+        description: `${status.label} • ${status.averageSpeed} km/h • ${status.travelMinutes} min end to end${status.source === "live" ? ` • Live (${status.sampleCount} readings)` : ""}`,
       });
     }, 900);
+
     setSearchParams({}, { replace: true });
     return () => window.clearTimeout(timer);
   }, [searchParams, setSearchParams]);

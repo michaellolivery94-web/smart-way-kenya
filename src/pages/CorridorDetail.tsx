@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Clock, Gauge, Navigation, Route, TimerReset } from "lucide-react";
-import { CORRIDORS, LEVEL_CLASSES, getCorridor, getCorridorStatus } from "@/data/corridors";
+import { ArrowLeft, Clock, Gauge, Navigation, Route, TimerReset, Users } from "lucide-react";
+import { CORRIDORS, LEVEL_CLASSES, getCorridor } from "@/data/corridors";
+import { useLiveTraffic } from "@/hooks/useLiveTraffic";
+import { resolveStatus } from "@/lib/liveTraffic";
 
 const CorridorDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const corridor = getCorridor(slug);
   const [now, setNow] = useState(() => new Date());
+  const { readings } = useLiveTraffic();
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 60000);
@@ -24,9 +27,10 @@ const CorridorDetail = () => {
   }, [corridor]);
 
   const status = useMemo(
-    () => (corridor ? getCorridorStatus(corridor, now) : null),
-    [corridor, now],
+    () => (corridor ? resolveStatus(corridor, readings, now) : null),
+    [corridor, readings, now],
   );
+
 
   if (!corridor || !status) {
     return (
@@ -60,10 +64,18 @@ const CorridorDetail = () => {
         </motion.header>
 
         <div className={`mt-5 rounded-xl border p-4 ${cls.bg}`} role="status" aria-live="polite">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className={`w-3 h-3 rounded-full ${cls.dot}`} aria-hidden="true" />
             <span className={`font-semibold ${cls.text}`}>{status.label} right now</span>
+            {status.source === "live" ? (
+              <span className="inline-flex items-center gap-1 text-xs text-success font-medium">
+                <Users className="w-3.5 h-3.5" aria-hidden="true" /> Live from {status.sampleCount} driver readings
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground">Estimated from rush-hour patterns</span>
+            )}
           </div>
+
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">
             <div>
               <Gauge className="w-4 h-4 mx-auto text-muted-foreground" aria-hidden="true" />
