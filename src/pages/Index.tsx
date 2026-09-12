@@ -61,6 +61,11 @@ const Index = () => {
   const { isOnline, downloadedRegions } = useOfflineMaps();
   const { directions: aiDirections, isLoading: aiDirectionsLoading, generateDirections, clearDirections } = useAIDirections();
 
+  // Latest speed, read by the live-traffic contributor without restarting its timer
+  const currentSpeedRef = useRef(currentSpeed);
+  useEffect(() => { currentSpeedRef.current = currentSpeed; }, [currentSpeed]);
+
+
   // Simulate speed changes during navigation
   useEffect(() => {
     if (!isNavigating) return;
@@ -152,14 +157,16 @@ const Index = () => {
     if (!slug) return;
     const corridor = getCorridor(slug);
     if (!corridor) return;
-    const timer = window.setTimeout(() => {
+    const timer = window.setTimeout(async () => {
       setPreviewLocation({ lat: corridor.lat, lng: corridor.lng });
       mapRef.current?.flyTo(corridor.lat, corridor.lng, corridor.zoom);
-      const status = getCorridorStatus(corridor);
+      const readings = await fetchLiveReadings();
+      const status = resolveStatus(corridor, readings);
       toast.info(corridor.name, {
-        description: `${status.label} • ${status.averageSpeed} km/h • ${status.travelMinutes} min end to end`,
+        description: `${status.label} • ${status.averageSpeed} km/h • ${status.travelMinutes} min end to end${status.source === "live" ? ` • Live (${status.sampleCount} readings)` : ""}`,
       });
     }, 900);
+
     setSearchParams({}, { replace: true });
     return () => window.clearTimeout(timer);
   }, [searchParams, setSearchParams]);
