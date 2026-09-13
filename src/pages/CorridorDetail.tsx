@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Clock, Gauge, Navigation, Route, TimerReset, Users } from "lucide-react";
 import { CORRIDORS, LEVEL_CLASSES, getCorridor } from "@/data/corridors";
