@@ -11,6 +11,9 @@ import { ModeTrafficIndicator } from "@/components/navigation/ModeTrafficIndicat
 const CorridorDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const modeParam = searchParams.get("mode");
+  const mode: "commuter" | "pro" = modeParam === "pro" ? "pro" : "commuter";
   const corridor = getCorridor(slug);
   const [now, setNow] = useState(() => new Date());
   const { readings } = useLiveTraffic();
