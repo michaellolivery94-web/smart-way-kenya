@@ -5,9 +5,20 @@ import { ArrowLeft, ArrowRight, Clock, Gauge, MapPin, RefreshCw, Radio, Users } 
 import { CORRIDORS, LEVEL_CLASSES } from "@/data/corridors";
 import { useLiveTraffic } from "@/hooks/useLiveTraffic";
 import { resolveStatus } from "@/lib/liveTraffic";
+import { getModeIndicator, type NavMode } from "@/lib/modeGuidance";
+import { ModeTrafficIndicator } from "@/components/navigation/ModeTrafficIndicator";
+
+type ViewMode = NavMode | "compare";
+
+const VIEW_OPTIONS: { id: ViewMode; label: string }[] = [
+  { id: "commuter", label: "Commuter" },
+  { id: "pro", label: "Pro Driver" },
+  { id: "compare", label: "Compare" },
+];
 
 const Traffic = () => {
   const [now, setNow] = useState(() => new Date());
+  const [view, setView] = useState<ViewMode>("commuter");
   const { readings, liveCount } = useLiveTraffic();
 
   useEffect(() => {
