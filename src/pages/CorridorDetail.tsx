@@ -5,6 +5,8 @@ import { ArrowLeft, Clock, Gauge, Navigation, Route, TimerReset, Users } from "l
 import { CORRIDORS, LEVEL_CLASSES, getCorridor } from "@/data/corridors";
 import { useLiveTraffic } from "@/hooks/useLiveTraffic";
 import { resolveStatus } from "@/lib/liveTraffic";
+import { getBothIndicators } from "@/lib/modeGuidance";
+import { ModeTrafficIndicator } from "@/components/navigation/ModeTrafficIndicator";
 
 const CorridorDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -94,6 +96,17 @@ const CorridorDetail = () => {
             </div>
           </div>
         </div>
+
+        <section className="mt-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Guidance by mode
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {getBothIndicators(corridor, status).map((ind) => (
+              <ModeTrafficIndicator key={ind.mode} indicator={ind} />
+            ))}
+          </div>
+        </section>
 
         <button
           onClick={() => navigate(`/?corridor=${corridor.slug}`)}
