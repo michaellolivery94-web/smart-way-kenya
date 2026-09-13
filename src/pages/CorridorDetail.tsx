@@ -161,7 +161,7 @@ const CorridorDetail = () => {
             {others.map((c) => (
               <Link
                 key={c.slug}
-                to={`/traffic/${c.slug}`}
+                to={`/traffic/${c.slug}?mode=${mode}`}
                 className="nav-card rounded-lg border border-border p-3 text-sm hover:border-primary/50 transition-colors inline-flex items-center gap-2"
               >
                 <Route className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
