@@ -76,6 +76,34 @@ const Traffic = () => {
           </p>
         </header>
 
+        <div className="mb-5">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Guidance for</p>
+          <div
+            className="inline-flex rounded-xl border border-border bg-card p-1"
+            role="tablist"
+            aria-label="Navigation mode"
+          >
+            {VIEW_OPTIONS.map((o) => (
+              <button
+                key={o.id}
+                role="tab"
+                aria-selected={view === o.id}
+                onClick={() => setView(o.id)}
+                className={`px-3 sm:px-4 py-2 text-xs font-semibold rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  view === o.id
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Same road, different call: Commuter Mode keeps it simple, Pro Driver Mode prices the
+            delay.
+          </p>
+        </div>
 
         <ul className="space-y-3" aria-label="Nairobi traffic corridors">
           {rows.map(({ corridor, status }, i) => {
@@ -118,6 +146,20 @@ const Traffic = () => {
                         )}
                       </div>
 
+                      <div
+                        className={`mt-3 grid gap-2 ${view === "compare" ? "sm:grid-cols-2" : ""}`}
+                      >
+                        {(view === "compare"
+                          ? (["commuter", "pro"] as const)
+                          : ([view] as const)
+                        ).map((m) => (
+                          <ModeTrafficIndicator
+                            key={m}
+                            indicator={getModeIndicator(corridor, status, m)}
+                            compact
+                          />
+                        ))}
+                      </div>
                     </div>
                     <ArrowRight className="w-4 h-4 mt-1 shrink-0 text-muted-foreground" aria-hidden="true" />
                   </div>
