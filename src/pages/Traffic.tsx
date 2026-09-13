@@ -116,7 +116,7 @@ const Traffic = () => {
                 transition={{ delay: i * 0.04 }}
               >
                 <Link
-                  to={`/traffic/${corridor.slug}`}
+                  to={`/traffic/${corridor.slug}${view !== "compare" ? `?mode=${view}` : ""}`}
                   className={`block nav-card rounded-xl border p-4 hover:border-primary/50 transition-colors focus-visible:ring-2 focus-visible:ring-ring ${cls.bg}`}
                 >
                   <div className="flex items-start justify-between gap-4">
