@@ -157,13 +157,16 @@ const Index = () => {
     if (!slug) return;
     const corridor = getCorridor(slug);
     if (!corridor) return;
+    const modeParam = searchParams.get("mode");
+    const linkedMode: "commuter" | "pro" = modeParam === "pro" ? "pro" : "commuter";
     const timer = window.setTimeout(async () => {
+      setMode(linkedMode);
       setPreviewLocation({ lat: corridor.lat, lng: corridor.lng });
       mapRef.current?.flyTo(corridor.lat, corridor.lng, corridor.zoom);
       const readings = await fetchLiveReadings();
       const status = resolveStatus(corridor, readings);
       toast.info(corridor.name, {
-        description: `${status.label} • ${status.averageSpeed} km/h • ${status.travelMinutes} min end to end${status.source === "live" ? ` • Live (${status.sampleCount} readings)` : ""}`,
+        description: `${status.label} • ${status.averageSpeed} km/h • ${status.travelMinutes} min end to end${status.source === "live" ? ` • Live (${status.sampleCount} readings)` : ""} • ${linkedMode === "pro" ? "Pro Driver Mode" : "Commuter Mode"}`,
       });
     }, 900);
 

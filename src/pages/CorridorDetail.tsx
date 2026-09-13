@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Clock, Gauge, Navigation, Route, TimerReset, Users } from "lucide-react";
 import { CORRIDORS, LEVEL_CLASSES, getCorridor } from "@/data/corridors";
@@ -11,6 +11,9 @@ import { ModeTrafficIndicator } from "@/components/navigation/ModeTrafficIndicat
 const CorridorDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const modeParam = searchParams.get("mode");
+  const mode: "commuter" | "pro" = modeParam === "pro" ? "pro" : "commuter";
   const corridor = getCorridor(slug);
   const [now, setNow] = useState(() => new Date());
   const { readings } = useLiveTraffic();
@@ -109,10 +112,13 @@ const CorridorDetail = () => {
         </section>
 
         <button
-          onClick={() => navigate(`/?corridor=${corridor.slug}`)}
+          onClick={() => navigate(`/?corridor=${corridor.slug}&mode=${mode}`)}
           className="mt-4 w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2 shadow-lg hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Navigation className="w-4 h-4" aria-hidden="true" /> Open {corridor.shortName} on the map
+          <span className="text-xs font-normal opacity-80">
+            · {mode === "pro" ? "Pro Driver Mode" : "Commuter Mode"}
+          </span>
         </button>
 
         <section className="mt-6">
@@ -155,7 +161,7 @@ const CorridorDetail = () => {
             {others.map((c) => (
               <Link
                 key={c.slug}
-                to={`/traffic/${c.slug}`}
+                to={`/traffic/${c.slug}?mode=${mode}`}
                 className="nav-card rounded-lg border border-border p-3 text-sm hover:border-primary/50 transition-colors inline-flex items-center gap-2"
               >
                 <Route className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
