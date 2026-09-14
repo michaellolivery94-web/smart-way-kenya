@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:ci": "vitest run --reporter=default --reporter=junit --outputFile.junit=./test-results/junit.xml"
+    "test:ci": "vitest run --coverage --reporter=default --reporter=junit --outputFile.junit=./test-results/junit.xml"
   },
   "dependencies": {
     "@lovable.dev/mcp-js": "^0.20.0",
