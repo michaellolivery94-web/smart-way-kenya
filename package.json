@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:ci": "vitest run --reporter=default --reporter=junit --outputFile.junit=./test-results/junit.xml"
+    "test:ci": "vitest run --coverage --reporter=default --reporter=junit --outputFile.junit=./test-results/junit.xml"
   },
   "dependencies": {
     "@lovable.dev/mcp-js": "^0.20.0",
@@ -77,6 +77,7 @@
     "@types/react": "^18.3.8",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
+    "@vitest/coverage-v8": "2.1.9",
     "autoprefixer": "^10.4.20",
     "jsdom": "^30.0.1",
     "postcss": "^8.4.47",

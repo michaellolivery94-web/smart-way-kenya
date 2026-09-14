@@ -9,6 +9,11 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   vitest:
     name: Vitest (mode deep links + suite)
@@ -28,8 +33,18 @@ jobs:
       - name: Typecheck
         run: bunx tsc --noEmit -p tsconfig.app.json
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: bun run test:ci
+
+      - name: Coverage summary on the pull request
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: Coverage
+          json-summary-path: ./coverage/coverage-summary.json
+          json-final-path: ./coverage/coverage-final.json
+          file-coverage-mode: changes
+
 
       - name: Publish test report
         if: always()
