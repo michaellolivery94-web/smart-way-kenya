@@ -9,6 +9,11 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   vitest:
     name: Vitest (mode deep links + suite)
