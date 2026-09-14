@@ -26,3 +26,6 @@ dist-ssr
 # test output
 test-results/
 coverage/
+coverage-base/
+coverage-diff.md
+base-branch/
