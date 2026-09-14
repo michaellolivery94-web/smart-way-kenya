@@ -36,6 +36,40 @@ jobs:
       - name: Run tests with coverage
         run: bun run test:ci
 
+      - name: Check out base branch
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base-branch
+
+      - name: Base branch coverage
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        working-directory: base-branch
+        run: |
+          bun install --frozen-lockfile
+          bun run test:ci || true
+
+      - name: Collect base coverage summary
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p coverage-base
+          if [ -f base-branch/coverage/coverage-summary.json ]; then
+            cp base-branch/coverage/coverage-summary.json coverage-base/coverage-summary.json
+          fi
+
+      - name: Build coverage diff
+        if: always()
+        run: node scripts/coverage-diff.mjs ./coverage/coverage-summary.json ./coverage-base/coverage-summary.json ./coverage-diff.md
+
+      - name: Post coverage diff comment
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: coverage-diff
+          path: ./coverage-diff.md
+
       - name: Coverage summary on the pull request
         if: always()
         uses: davelosert/vitest-coverage-report-action@v2
@@ -43,7 +77,9 @@ jobs:
           name: Coverage
           json-summary-path: ./coverage/coverage-summary.json
           json-final-path: ./coverage/coverage-final.json
+          json-summary-compare-path: ./coverage-base/coverage-summary.json
           file-coverage-mode: changes
+
 
 
       - name: Publish test report
