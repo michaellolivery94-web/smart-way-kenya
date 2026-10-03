@@ -63,6 +63,32 @@ jobs:
         if: always()
         run: node scripts/coverage-diff.mjs ./coverage/coverage-summary.json ./coverage-base/coverage-summary.json ./coverage-diff.md
 
+      - name: Upload PR coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-pr
+          path: |
+            coverage/coverage-summary.json
+            coverage/coverage-final.json
+          if-no-files-found: warn
+
+      - name: Upload base branch coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-base
+          path: coverage-base/coverage-summary.json
+          if-no-files-found: warn
+
+      - name: Upload coverage diff report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-diff
+          path: ./coverage-diff.md
+          if-no-files-found: warn
+
       - name: Post coverage diff comment
         if: always() && github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
