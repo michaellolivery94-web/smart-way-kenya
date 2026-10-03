@@ -165,31 +165,42 @@ const EXPRESSWAY_BYPASSES = [
   },
 ];
 
-// Map tile providers
+// Map tile providers — Light/Dark use free OpenStreetMap tiles (Dark is filtered via CSS)
 const MAP_TILES = {
-  streets: {
+  light: {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    name: "Streets"
+    name: "Light",
+    className: "",
+    maxNativeZoom: 19
   },
   satellite: {
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; Esri',
-    name: "Satellite"
+    name: "Satellite",
+    className: "",
+    maxNativeZoom: 19
   },
   dark: {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    name: "Dark"
+    name: "Dark",
+    className: "map-tiles-dark",
+    maxNativeZoom: 19
   },
   terrain: {
-    url: "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
-    attribution: '&copy; Stamen Design',
-    name: "Terrain"
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; OpenTopoMap',
+    name: "Terrain",
+    className: "",
+    maxNativeZoom: 17
   }
 };
 
 type MapTileType = keyof typeof MAP_TILES;
+
+const MAP_TILE_STORAGE_KEY = "wayfinder-map-tile";
+const DEFAULT_MAP_TILE: MapTileType = "light";
 
 export const MapView = forwardRef<MapViewHandle, MapViewProps>(({ 
   isNavigating = false, 
