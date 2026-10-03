@@ -37,14 +37,14 @@ jobs:
         run: bun run test:ci
 
       - name: Check out base branch
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: base-branch
 
       - name: Base branch coverage
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         continue-on-error: true
         working-directory: base-branch
         run: |
@@ -52,7 +52,7 @@ jobs:
           bun run test:ci || true
 
       - name: Collect base coverage summary
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         run: |
           mkdir -p coverage-base
           if [ -f base-branch/coverage/coverage-summary.json ]; then
@@ -61,6 +61,7 @@ jobs:
 
       - name: Build coverage diff
         if: always()
+        continue-on-error: true
         run: node scripts/coverage-diff.mjs ./coverage/coverage-summary.json ./coverage-base/coverage-summary.json ./coverage-diff.md
 
       - name: Upload PR coverage reports
