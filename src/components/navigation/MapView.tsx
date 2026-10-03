@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHand
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Compass, Plus, Minus, Navigation2, Layers, MapPin, 
-  Building2, Fuel, ShoppingBag, Trees, Locate, Satellite,
+  Building2, Fuel, ShoppingBag, Trees, Locate, Satellite, Sun,
   Map as MapIcon, TrafficCone, Mountain, Moon, CircleDot,
   Trophy, Landmark, Route, Construction, AlertTriangle, Waves
 } from "lucide-react";
@@ -1230,6 +1230,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
                     const LayerIcon = type === 'satellite' ? Satellite 
                       : type === 'terrain' ? Mountain 
                       : type === 'dark' ? Moon 
+                      : type === 'light' ? Sun 
                       : MapIcon;
                     
                     const description = type === 'satellite' ? 'Aerial imagery view'
