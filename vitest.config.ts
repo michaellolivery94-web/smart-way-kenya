@@ -13,6 +13,8 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text-summary", "json-summary", "json"],
       reportsDirectory: "./coverage",
+      // Still write coverage files when tests fail so CI artifacts stay diagnosable
+      reportOnFailure: true,
       include: ["src/pages/**", "src/lib/**", "src/data/**", "src/components/navigation/**"],
       exclude: ["src/**/*.{test,spec}.{ts,tsx}", "src/test/**"],
     },
