@@ -330,7 +330,24 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
 
-    tileLayerRef.current.setUrl(MAP_TILES[mapTileType].url);
+    const config = MAP_TILES[mapTileType];
+    tileLayerRef.current.setUrl(config.url);
+    tileLayerRef.current.options.maxNativeZoom = config.maxNativeZoom;
+
+    // Sync the dark-mode filter class on the tile layer container
+    const container = tileLayerRef.current.getContainer();
+    if (container) {
+      Object.values(MAP_TILES).forEach((t) => {
+        if (t.className) container.classList.remove(t.className);
+      });
+      if (config.className) container.classList.add(config.className);
+    }
+
+    try {
+      localStorage.setItem(MAP_TILE_STORAGE_KEY, mapTileType);
+    } catch {
+      // storage unavailable — style just won't persist
+    }
   }, [mapTileType]);
 
   // Handle preview location marker
