@@ -216,7 +216,14 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   const previewMarkerRef = useRef<L.Marker | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   
-  const [mapTileType, setMapTileType] = useState<MapTileType>("dark");
+  const [mapTileType, setMapTileType] = useState<MapTileType>(() => {
+    try {
+      const stored = localStorage.getItem(MAP_TILE_STORAGE_KEY);
+      return stored && stored in MAP_TILES ? (stored as MapTileType) : DEFAULT_MAP_TILE;
+    } catch {
+      return DEFAULT_MAP_TILE;
+    }
+  });
   const [showLayerPicker, setShowLayerPicker] = useState(false);
   const [currentSpeed, setCurrentSpeed] = useState(45);
   const [userLocation, setUserLocation] = useState<[number, number]>(NAIROBI_CENTER);
@@ -268,9 +275,12 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     });
 
     // Add tile layer
-    const tileLayer = L.tileLayer(MAP_TILES[mapTileType].url, {
-      attribution: MAP_TILES[mapTileType].attribution,
+    const tileConfig = MAP_TILES[mapTileType];
+    const tileLayer = L.tileLayer(tileConfig.url, {
+      attribution: tileConfig.attribution,
       maxZoom: 19,
+      maxNativeZoom: tileConfig.maxNativeZoom,
+      className: tileConfig.className || undefined,
     }).addTo(map);
 
     tileLayerRef.current = tileLayer;
