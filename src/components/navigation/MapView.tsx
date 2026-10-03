@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHand
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Compass, Plus, Minus, Navigation2, Layers, MapPin, 
-  Building2, Fuel, ShoppingBag, Trees, Locate, Satellite,
+  Building2, Fuel, ShoppingBag, Trees, Locate, Satellite, Sun,
   Map as MapIcon, TrafficCone, Mountain, Moon, CircleDot,
   Trophy, Landmark, Route, Construction, AlertTriangle, Waves
 } from "lucide-react";
@@ -165,31 +165,42 @@ const EXPRESSWAY_BYPASSES = [
   },
 ];
 
-// Map tile providers
+// Map tile providers — Light/Dark use free OpenStreetMap tiles (Dark is filtered via CSS)
 const MAP_TILES = {
-  streets: {
+  light: {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    name: "Streets"
+    name: "Light",
+    className: "",
+    maxNativeZoom: 19
   },
   satellite: {
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; Esri',
-    name: "Satellite"
+    name: "Satellite",
+    className: "",
+    maxNativeZoom: 19
   },
   dark: {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    name: "Dark"
+    name: "Dark",
+    className: "map-tiles-dark",
+    maxNativeZoom: 19
   },
   terrain: {
-    url: "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg",
-    attribution: '&copy; Stamen Design',
-    name: "Terrain"
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; OpenTopoMap',
+    name: "Terrain",
+    className: "",
+    maxNativeZoom: 17
   }
 };
 
 type MapTileType = keyof typeof MAP_TILES;
+
+const MAP_TILE_STORAGE_KEY = "wayfinder-map-tile";
+const DEFAULT_MAP_TILE: MapTileType = "light";
 
 export const MapView = forwardRef<MapViewHandle, MapViewProps>(({ 
   isNavigating = false, 
@@ -205,7 +216,14 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   const previewMarkerRef = useRef<L.Marker | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   
-  const [mapTileType, setMapTileType] = useState<MapTileType>("dark");
+  const [mapTileType, setMapTileType] = useState<MapTileType>(() => {
+    try {
+      const stored = localStorage.getItem(MAP_TILE_STORAGE_KEY);
+      return stored && stored in MAP_TILES ? (stored as MapTileType) : DEFAULT_MAP_TILE;
+    } catch {
+      return DEFAULT_MAP_TILE;
+    }
+  });
   const [showLayerPicker, setShowLayerPicker] = useState(false);
   const [currentSpeed, setCurrentSpeed] = useState(45);
   const [userLocation, setUserLocation] = useState<[number, number]>(NAIROBI_CENTER);
@@ -257,9 +275,12 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
     });
 
     // Add tile layer
-    const tileLayer = L.tileLayer(MAP_TILES[mapTileType].url, {
-      attribution: MAP_TILES[mapTileType].attribution,
+    const tileConfig = MAP_TILES[mapTileType];
+    const tileLayer = L.tileLayer(tileConfig.url, {
+      attribution: tileConfig.attribution,
       maxZoom: 19,
+      maxNativeZoom: tileConfig.maxNativeZoom,
+      className: tileConfig.className || undefined,
     }).addTo(map);
 
     tileLayerRef.current = tileLayer;
@@ -309,7 +330,24 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
 
-    tileLayerRef.current.setUrl(MAP_TILES[mapTileType].url);
+    const config = MAP_TILES[mapTileType];
+    tileLayerRef.current.setUrl(config.url);
+    tileLayerRef.current.options.maxNativeZoom = config.maxNativeZoom;
+
+    // Sync the dark-mode filter class on the tile layer container
+    const container = tileLayerRef.current.getContainer();
+    if (container) {
+      Object.values(MAP_TILES).forEach((t) => {
+        if (t.className) container.classList.remove(t.className);
+      });
+      if (config.className) container.classList.add(config.className);
+    }
+
+    try {
+      localStorage.setItem(MAP_TILE_STORAGE_KEY, mapTileType);
+    } catch {
+      // storage unavailable — style just won't persist
+    }
   }, [mapTileType]);
 
   // Handle preview location marker
@@ -1192,6 +1230,7 @@ export const MapView = forwardRef<MapViewHandle, MapViewProps>(({
                     const LayerIcon = type === 'satellite' ? Satellite 
                       : type === 'terrain' ? Mountain 
                       : type === 'dark' ? Moon 
+                      : type === 'light' ? Sun 
                       : MapIcon;
                     
                     const description = type === 'satellite' ? 'Aerial imagery view'
