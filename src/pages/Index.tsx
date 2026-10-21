@@ -26,7 +26,8 @@ import { useAIDirections } from "@/hooks/useAIDirections";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
-import { WifiOff, Construction, Brain } from "lucide-react";
+import { WifiOff, Construction, Brain, Orbit } from "lucide-react";
+import { DestinationPreview360 } from "@/components/navigation/DestinationPreview360";
 import { useSearchParams } from "react-router-dom";
 import { getCorridor } from "@/data/corridors";
 import { fetchLiveReadings, recordSpeedSample, resolveStatus } from "@/lib/liveTraffic";
@@ -52,6 +53,7 @@ const Index = () => {
   // Coordinate states for map
   const [originCoords, setOriginCoords] = useState<Coordinates | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<Coordinates | null>(null);
+  const [show360, setShow360] = useState(false);
   const [previewLocation, setPreviewLocation] = useState<Coordinates | null>(null);
   const [routeETA, setRouteETA] = useState<string>("18 min");
   const [routeDistance, setRouteDistance] = useState<string>("7.2 km");
@@ -316,6 +318,15 @@ const Index = () => {
                       <span className="text-xs font-semibold text-foreground">Smart Departure — AI suggests best time to leave</span>
                     </motion.button>
                   )}
+                  {destination && destinationCoords && (
+                    <button
+                      onClick={() => setShow360(true)}
+                      className="w-full flex items-center gap-2 p-3 rounded-xl bg-card/90 border border-border backdrop-blur-sm"
+                    >
+                      <Orbit className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-semibold text-foreground">360° preview — see your destination before you go</span>
+                    </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -461,6 +472,15 @@ const Index = () => {
           destination={destinationCoords}
           isVisible={showSmartDeparture}
           onClose={() => setShowSmartDeparture(false)}
+        />
+      )}
+
+      {show360 && destinationCoords && (
+        <DestinationPreview360
+          isOpen={show360}
+          onClose={() => setShow360(false)}
+          destination={destinationCoords}
+          destinationName={destination || undefined}
         />
       )}
     </div>

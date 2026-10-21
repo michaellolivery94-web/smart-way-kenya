@@ -3,7 +3,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { X, Box, Camera, RotateCw, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Coordinates } from "@/types/navigation";
+type Coordinates = { lat: number; lng: number };
 
 type Tab = "street" | "3d";
 type StreetResult = { id?: string; isPano?: boolean; capturedAt?: number; meters?: number; error?: string };
