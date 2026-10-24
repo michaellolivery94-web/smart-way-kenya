@@ -432,6 +432,7 @@ const Index = () => {
         destination={destinationCoords}
         isVisible={showAlternativeRoutes}
         onSelectRoute={handleSelectRoute}
+        onPreview360={() => setShow360(true)}
         onClose={() => {
           setShowAlternativeRoutes(false);
           setDestinationCoords(null);
