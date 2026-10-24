@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, MapPin, Zap, Route, ChevronRight, Fuel, TrendingDown } from "lucide-react";
+import { Clock, MapPin, Zap, Route, ChevronRight, Fuel, TrendingDown, Orbit } from "lucide-react";
 
 // Nairobi fuel economics (petrol, ~10 L/100km sedan)
 const FUEL_PRICE_KSH_PER_L = 195;
@@ -24,10 +24,11 @@ interface AlternativeRoutesProps {
   isVisible: boolean;
   onSelectRoute: (route: RouteOption) => void;
   onClose: () => void;
+  onPreview360?: () => void;
 }
 
 export const AlternativeRoutes = ({ 
-  origin, destination, isVisible, onSelectRoute, onClose 
+  origin, destination, isVisible, onSelectRoute, onClose, onPreview360 
 }: AlternativeRoutesProps) => {
   const [routes, setRoutes] = useState<RouteOption[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -295,6 +296,17 @@ export const AlternativeRoutes = ({
                   <span className="text-muted-foreground">fuel</span>
                 </div>
               </div>
+              {onPreview360 && (
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={onPreview360}
+                  aria-label="Open 360° preview of the destination"
+                  className="w-full py-2.5 rounded-xl bg-card/90 border border-border text-sm font-semibold text-foreground flex items-center justify-center gap-2"
+                >
+                  <Orbit className="w-4 h-4 text-primary" />
+                  360° preview — see your destination before you go
+                </motion.button>
+              )}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onSelectRoute(routes[selectedIndex])}
