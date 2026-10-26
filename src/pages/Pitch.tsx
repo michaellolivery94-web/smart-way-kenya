@@ -12,7 +12,7 @@ import {
 
 /* =========================================================
    Smart-Way Investor Pitch Deck
-   Dark navy + orange · 18 slides · 1920x1080 scaled
+   Dark navy + orange · 19 slides · 1920x1080 scaled
    ========================================================= */
 
 const NAVY = "#0A1628";
@@ -172,7 +172,7 @@ const S2 = () => (
         </div>
       </Card>
     </div>
-    <SlideFooter n={2} total={18} />
+    <SlideFooter n={2} total={19} />
   </div>
 );
 
@@ -220,7 +220,7 @@ const S3 = () => {
           ))}
         </Card>
       </div>
-      <SlideFooter n={3} total={18} />
+      <SlideFooter n={3} total={19} />
     </div>
   );
 };
@@ -277,7 +277,7 @@ const S4 = () => {
           </div>
         </Card>
       </div>
-      <SlideFooter n={4} total={18} />
+      <SlideFooter n={4} total={19} />
     </div>
   );
 };
@@ -327,7 +327,7 @@ const S5 = () => {
           </div>
         </Card>
       </div>
-      <SlideFooter n={5} total={18} />
+      <SlideFooter n={5} total={19} />
     </div>
   );
 };
@@ -372,7 +372,7 @@ const S6 = () => {
           </div>
         </Card>
       </div>
-      <SlideFooter n={6} total={18} />
+      <SlideFooter n={6} total={19} />
     </div>
   );
 };
@@ -423,7 +423,7 @@ const S7 = () => (
         </Card>
       </div>
     </div>
-    <SlideFooter n={7} total={18} />
+    <SlideFooter n={7} total={19} />
   </div>
 );
 
@@ -454,7 +454,7 @@ const S8 = () => {
           </Card>
         ))}
       </div>
-      <SlideFooter n={8} total={18} />
+      <SlideFooter n={8} total={19} />
     </div>
   );
 };
@@ -506,7 +506,7 @@ const S9 = () => {
           ))}
         </Card>
       </div>
-      <SlideFooter n={9} total={18} />
+      <SlideFooter n={9} total={19} />
     </div>
   );
 };
@@ -531,7 +531,7 @@ const S10 = () => (
         * Illustrative Pilot Targets — figures represent projected milestones for the Nairobi launch cohort, not historical claims.
       </div>
     </div>
-    <SlideFooter n={10} total={18} />
+    <SlideFooter n={10} total={19} />
   </div>
 );
 
@@ -557,9 +557,9 @@ const S11 = () => (
         </div>
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
           {[
-            ["Starter", "≤ 10 vehicles", "$15 / vehicle / mo"],
-            ["Growth", "11–100 vehicles", "$12 / vehicle / mo"],
-            ["Enterprise", "100+ vehicles", "Custom + SLA"],
+            ["Starter", "Small fleets", "From $500 / mo"],
+            ["Growth", "Mid-size fleets", "$1,200 / mo"],
+            ["Enterprise", "Large fleets + SLA", "Up to $2,000 / mo"],
           ].map(([t, s, p], i) => (
             <div key={i} style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -590,9 +590,9 @@ const S11 = () => (
         </div>
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
           {[
-            ["Developer", "Per-request tiers", "$0.002 / call"],
-            ["Enterprise API", "Volume contracts", "From $2.5K / mo"],
-            ["Gov & Infrastructure", "Annual licensing", "$50K–$250K / yr"],
+            ["Starter", "Pilot integrations", "$5,000 / mo"],
+            ["Enterprise API", "Volume contracts", "$5K–$50K / mo"],
+            ["Gov & Infrastructure", "Nationwide scope", "From $50,000 / mo"],
           ].map(([t, s, p], i) => (
             <div key={i} style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -608,11 +608,130 @@ const S11 = () => (
         </div>
       </Card>
     </div>
-    <SlideFooter n={11} total={18} />
+    <SlideFooter n={11} total={19} />
   </div>
 );
 
-/* 12 — GTM */
+/* 12 — Enterprise & Fleet Solutions */
+const S11B = () => {
+  const channels = [
+    {
+      tag: "REVENUE CHANNEL 1",
+      icon: Truck,
+      title: "Fleet SaaS Subscriptions",
+      audience: "Ride-hailing · Logistics · Delivery fleets",
+      price: "$500 – $2,000",
+      priceUnit: "per fleet / month · tiered by fleet size",
+      blurb: "Tiered per-vehicle monthly SaaS subscriptions that keep fleets moving and cut their biggest costs.",
+      features: [
+        "Real-time routing dashboards",
+        "Driver optimization tools",
+        "Verified traffic intelligence",
+        "Less vehicle downtime & fuel waste",
+      ],
+    },
+    {
+      tag: "REVENUE CHANNEL 2",
+      icon: Database,
+      title: "Data & API Licensing",
+      audience: "Enterprises · Urban planners · Third-party platforms",
+      price: "$5,000 – $50,000",
+      priceUnit: "per month · by data call volume & scope",
+      blurb: "Recurring data subscriptions feeding verified African road analytics straight into enterprise pipelines.",
+      features: [
+        "Direct API integration",
+        "Verified African road analytics",
+        "Macro-mobility insights",
+        "Into enterprise operational pipelines",
+      ],
+    },
+  ];
+
+  const whyItems = [
+    {
+      icon: TrendingUp,
+      title: "Predictable Recurring Revenue (ARR)",
+      desc: "High-margin, sticky revenue streams replacing one-off sales.",
+    },
+    {
+      icon: DollarSign,
+      title: "Measurable Economic ROI",
+      desc: "Pricing directly tied to customer savings — fuel efficiency, reduced delays, optimized routes.",
+    },
+    {
+      icon: Rocket,
+      title: "Proven Scalability",
+      desc: "SaaS tooling and raw intelligence monetize separately as the data flywheel grows across Nairobi and beyond.",
+    },
+  ];
+
+  return (
+    <div>
+      <SlideHeader
+        kicker="Enterprise & Fleet Solutions"
+        title="B2B monetization: sell the tool, then license the intelligence."
+        subtitle="Two recurring-revenue channels — operational SaaS for fleets, and verified road analytics for enterprises."
+      />
+      <div style={{ padding: "8px 110px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+        {channels.map((c, i) => (
+          <Card key={i} style={{ padding: 26, display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: ORANGE, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <c.icon size={28} color={NAVY} />
+              </div>
+              <div>
+                <div style={{ fontSize: 15, color: ORANGE, fontWeight: 800, letterSpacing: "0.15em" }}>{c.tag}</div>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>{c.title}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 16, color: MUTED, marginTop: 10, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
+              {c.audience}
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 40, fontWeight: 800, color: ORANGE, letterSpacing: "-0.02em" }}>{c.price}</div>
+              <div style={{ fontSize: 16, color: MUTED }}>{c.priceUnit}</div>
+            </div>
+            <div style={{ fontSize: 18, color: MUTED, marginTop: 8, lineHeight: 1.45 }}>{c.blurb}</div>
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+              {c.features.map((f, j) => (
+                <div key={j} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <CheckCircle2 size={18} color={ORANGE} style={{ flexShrink: 0 }} />
+                  <div style={{ fontSize: 18, fontWeight: 600 }}>{f}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+      <div style={{ padding: "14px 110px 0" }}>
+        <Card style={{ padding: 22, border: `1px solid ${ORANGE}`, background: `linear-gradient(180deg, ${ORANGE_SOFT}, transparent)` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Sparkles size={20} color={ORANGE} />
+            <div style={{ fontSize: 15, color: ORANGE, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase" }}>
+              Why This Model Works
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, marginTop: 14 }}>
+            {whyItems.map((w, i) => (
+              <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: NAVY_3, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <w.icon size={22} color={ORANGE} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.25 }}>{w.title}</div>
+                  <div style={{ fontSize: 16, color: MUTED, marginTop: 6, lineHeight: 1.4 }}>{w.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+      <SlideFooter n={12} total={19} />
+    </div>
+  );
+};
+
+/* 13 — GTM */
 const S12 = () => {
   const phases = [
     { p: "01", t: "Nairobi Launch", d: "Ride-hailing & delivery driver community, free consumer app", color: ORANGE },
@@ -647,7 +766,7 @@ const S12 = () => {
           </div>
         </Card>
       </div>
-      <SlideFooter n={12} total={18} />
+      <SlideFooter n={13} total={19} />
     </div>
   );
 };
@@ -709,7 +828,7 @@ const S13 = () => {
           </Card>
         </div>
       </div>
-      <SlideFooter n={13} total={18} />
+      <SlideFooter n={14} total={19} />
     </div>
   );
 };
@@ -741,7 +860,7 @@ const S14 = () => {
           </Card>
         ))}
       </div>
-      <SlideFooter n={14} total={18} />
+      <SlideFooter n={15} total={19} />
     </div>
   );
 };
@@ -778,7 +897,7 @@ const S15 = () => {
           </Card>
         ))}
       </div>
-      <SlideFooter n={15} total={18} />
+      <SlideFooter n={16} total={19} />
     </div>
   );
 };
@@ -827,7 +946,7 @@ const S16 = () => {
           ))}
         </div>
       </div>
-      <SlideFooter n={16} total={18} />
+      <SlideFooter n={17} total={19} />
     </div>
   );
 };
@@ -887,7 +1006,7 @@ const S17 = () => {
           </Card>
         </div>
       </div>
-      <SlideFooter n={17} total={18} />
+      <SlideFooter n={18} total={19} />
     </div>
   );
 };
@@ -915,15 +1034,15 @@ const S18 = () => (
         <div>invest@smart-way.africa</div>
       </div>
     </div>
-    <SlideFooter n={18} total={18} />
+    <SlideFooter n={19} total={19} />
   </div>
 );
 
 /* ----- Slide registry ----- */
-const SLIDES = [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18];
+const SLIDES = [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S11B, S12, S13, S14, S15, S16, S17, S18];
 const TITLES = [
   "Cover", "Problem", "Why Apps Fail", "Solution", "User Journey",
-  "Trust Engine", "Market", "Product", "Traction", "Business Model",
+  "Trust Engine", "Market", "Product", "Traction", "Business Model", "Enterprise & Fleet",
   "Go-To-Market", "Competition", "Flywheel", "Roadmap", "Team",
   "Financials", "The Ask", "Vision",
 ];
