@@ -172,7 +172,7 @@ const S2 = () => (
         </div>
       </Card>
     </div>
-    <SlideFooter n={2} total={18} />
+    <SlideFooter n={2} total={19} />
   </div>
 );
 
@@ -220,7 +220,7 @@ const S3 = () => {
           ))}
         </Card>
       </div>
-      <SlideFooter n={3} total={18} />
+      <SlideFooter n={3} total={19} />
     </div>
   );
 };
@@ -277,7 +277,7 @@ const S4 = () => {
           </div>
         </Card>
       </div>
-      <SlideFooter n={4} total={18} />
+      <SlideFooter n={4} total={19} />
     </div>
   );
 };
@@ -327,7 +327,7 @@ const S5 = () => {
           </div>
         </Card>
       </div>
-      <SlideFooter n={5} total={18} />
+      <SlideFooter n={5} total={19} />
     </div>
   );
 };
@@ -372,7 +372,7 @@ const S6 = () => {
           </div>
         </Card>
       </div>
-      <SlideFooter n={6} total={18} />
+      <SlideFooter n={6} total={19} />
     </div>
   );
 };
@@ -423,7 +423,7 @@ const S7 = () => (
         </Card>
       </div>
     </div>
-    <SlideFooter n={7} total={18} />
+    <SlideFooter n={7} total={19} />
   </div>
 );
 
@@ -454,7 +454,7 @@ const S8 = () => {
           </Card>
         ))}
       </div>
-      <SlideFooter n={8} total={18} />
+      <SlideFooter n={8} total={19} />
     </div>
   );
 };
@@ -506,7 +506,7 @@ const S9 = () => {
           ))}
         </Card>
       </div>
-      <SlideFooter n={9} total={18} />
+      <SlideFooter n={9} total={19} />
     </div>
   );
 };
@@ -531,7 +531,7 @@ const S10 = () => (
         * Illustrative Pilot Targets — figures represent projected milestones for the Nairobi launch cohort, not historical claims.
       </div>
     </div>
-    <SlideFooter n={10} total={18} />
+    <SlideFooter n={10} total={19} />
   </div>
 );
 
