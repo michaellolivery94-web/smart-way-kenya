@@ -672,9 +672,9 @@ const S11B = () => {
         title="B2B monetization: sell the tool, then license the intelligence."
         subtitle="Two recurring-revenue channels — operational SaaS for fleets, and verified road analytics for enterprises."
       />
-      <div style={{ padding: "14px 110px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+      <div style={{ padding: "8px 110px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
         {channels.map((c, i) => (
-          <Card key={i} style={{ padding: 32, display: "flex", flexDirection: "column" }}>
+          <Card key={i} style={{ padding: 26, display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ width: 52, height: 52, borderRadius: 14, background: ORANGE, display: "grid", placeItems: "center", flexShrink: 0 }}>
                 <c.icon size={28} color={NAVY} />
@@ -684,15 +684,15 @@ const S11B = () => {
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{c.title}</div>
               </div>
             </div>
-            <div style={{ fontSize: 16, color: MUTED, marginTop: 12, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
+            <div style={{ fontSize: 16, color: MUTED, marginTop: 10, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
               {c.audience}
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
               <div style={{ fontSize: 40, fontWeight: 800, color: ORANGE, letterSpacing: "-0.02em" }}>{c.price}</div>
               <div style={{ fontSize: 16, color: MUTED }}>{c.priceUnit}</div>
             </div>
-            <div style={{ fontSize: 18, color: MUTED, marginTop: 10, lineHeight: 1.45 }}>{c.blurb}</div>
-            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ fontSize: 18, color: MUTED, marginTop: 8, lineHeight: 1.45 }}>{c.blurb}</div>
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
               {c.features.map((f, j) => (
                 <div key={j} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <CheckCircle2 size={18} color={ORANGE} style={{ flexShrink: 0 }} />
@@ -703,15 +703,15 @@ const S11B = () => {
           </Card>
         ))}
       </div>
-      <div style={{ padding: "24px 110px 0" }}>
-        <Card style={{ padding: 28, border: `1px solid ${ORANGE}`, background: `linear-gradient(180deg, ${ORANGE_SOFT}, transparent)` }}>
+      <div style={{ padding: "14px 110px 0" }}>
+        <Card style={{ padding: 22, border: `1px solid ${ORANGE}`, background: `linear-gradient(180deg, ${ORANGE_SOFT}, transparent)` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Sparkles size={20} color={ORANGE} />
             <div style={{ fontSize: 15, color: ORANGE, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase" }}>
               Why This Model Works
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, marginTop: 18 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, marginTop: 14 }}>
             {whyItems.map((w, i) => (
               <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: NAVY_3, display: "grid", placeItems: "center", flexShrink: 0 }}>
