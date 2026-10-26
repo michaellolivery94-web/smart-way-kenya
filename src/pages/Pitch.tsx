@@ -557,9 +557,9 @@ const S11 = () => (
         </div>
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
           {[
-            ["Starter", "≤ 10 vehicles", "$15 / vehicle / mo"],
-            ["Growth", "11–100 vehicles", "$12 / vehicle / mo"],
-            ["Enterprise", "100+ vehicles", "Custom + SLA"],
+            ["Starter", "Small fleets", "From $500 / mo"],
+            ["Growth", "Mid-size fleets", "$1,200 / mo"],
+            ["Enterprise", "Large fleets + SLA", "Up to $2,000 / mo"],
           ].map(([t, s, p], i) => (
             <div key={i} style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -590,9 +590,9 @@ const S11 = () => (
         </div>
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
           {[
-            ["Developer", "Per-request tiers", "$0.002 / call"],
-            ["Enterprise API", "Volume contracts", "From $2.5K / mo"],
-            ["Gov & Infrastructure", "Annual licensing", "$50K–$250K / yr"],
+            ["Starter", "Pilot integrations", "$5,000 / mo"],
+            ["Enterprise API", "Volume contracts", "$5K–$50K / mo"],
+            ["Gov & Infrastructure", "Nationwide scope", "From $50,000 / mo"],
           ].map(([t, s, p], i) => (
             <div key={i} style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
