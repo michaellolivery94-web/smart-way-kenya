@@ -608,11 +608,130 @@ const S11 = () => (
         </div>
       </Card>
     </div>
-    <SlideFooter n={11} total={18} />
+    <SlideFooter n={11} total={19} />
   </div>
 );
 
-/* 12 — GTM */
+/* 12 — Enterprise & Fleet Solutions */
+const S11B = () => {
+  const channels = [
+    {
+      tag: "REVENUE CHANNEL 1",
+      icon: Truck,
+      title: "Fleet SaaS Subscriptions",
+      audience: "Ride-hailing · Logistics · Delivery fleets",
+      price: "$500 – $2,000",
+      priceUnit: "per fleet / month · tiered by fleet size",
+      blurb: "Tiered per-vehicle monthly SaaS subscriptions that keep fleets moving and cut their biggest costs.",
+      features: [
+        "Real-time routing dashboards",
+        "Driver optimization tools",
+        "Verified traffic intelligence",
+        "Less vehicle downtime & fuel waste",
+      ],
+    },
+    {
+      tag: "REVENUE CHANNEL 2",
+      icon: Database,
+      title: "Data & API Licensing",
+      audience: "Enterprises · Urban planners · Third-party platforms",
+      price: "$5,000 – $50,000",
+      priceUnit: "per month · by data call volume & scope",
+      blurb: "Recurring data subscriptions feeding verified African road analytics straight into enterprise pipelines.",
+      features: [
+        "Direct API integration",
+        "Verified African road analytics",
+        "Macro-mobility insights",
+        "Into enterprise operational pipelines",
+      ],
+    },
+  ];
+
+  const whyItems = [
+    {
+      icon: TrendingUp,
+      title: "Predictable Recurring Revenue (ARR)",
+      desc: "High-margin, sticky revenue streams replacing one-off sales.",
+    },
+    {
+      icon: DollarSign,
+      title: "Measurable Economic ROI",
+      desc: "Pricing directly tied to customer savings — fuel efficiency, reduced delays, optimized routes.",
+    },
+    {
+      icon: Rocket,
+      title: "Proven Scalability",
+      desc: "SaaS tooling and raw intelligence monetize separately as the data flywheel grows across Nairobi and beyond.",
+    },
+  ];
+
+  return (
+    <div>
+      <SlideHeader
+        kicker="Enterprise & Fleet Solutions"
+        title="B2B monetization: sell the tool, then license the intelligence."
+        subtitle="Two recurring-revenue channels — operational SaaS for fleets, and verified road analytics for enterprises."
+      />
+      <div style={{ padding: "14px 110px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+        {channels.map((c, i) => (
+          <Card key={i} style={{ padding: 32, display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: ORANGE, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <c.icon size={28} color={NAVY} />
+              </div>
+              <div>
+                <div style={{ fontSize: 15, color: ORANGE, fontWeight: 800, letterSpacing: "0.15em" }}>{c.tag}</div>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>{c.title}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 16, color: MUTED, marginTop: 12, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
+              {c.audience}
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 40, fontWeight: 800, color: ORANGE, letterSpacing: "-0.02em" }}>{c.price}</div>
+              <div style={{ fontSize: 16, color: MUTED }}>{c.priceUnit}</div>
+            </div>
+            <div style={{ fontSize: 18, color: MUTED, marginTop: 10, lineHeight: 1.45 }}>{c.blurb}</div>
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+              {c.features.map((f, j) => (
+                <div key={j} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <CheckCircle2 size={18} color={ORANGE} style={{ flexShrink: 0 }} />
+                  <div style={{ fontSize: 18, fontWeight: 600 }}>{f}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+      <div style={{ padding: "24px 110px 0" }}>
+        <Card style={{ padding: 28, border: `1px solid ${ORANGE}`, background: `linear-gradient(180deg, ${ORANGE_SOFT}, transparent)` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Sparkles size={20} color={ORANGE} />
+            <div style={{ fontSize: 15, color: ORANGE, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase" }}>
+              Why This Model Works
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, marginTop: 18 }}>
+            {whyItems.map((w, i) => (
+              <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: NAVY_3, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <w.icon size={22} color={ORANGE} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.25 }}>{w.title}</div>
+                  <div style={{ fontSize: 16, color: MUTED, marginTop: 6, lineHeight: 1.4 }}>{w.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+      <SlideFooter n={12} total={19} />
+    </div>
+  );
+};
+
+/* 13 — GTM */
 const S12 = () => {
   const phases = [
     { p: "01", t: "Nairobi Launch", d: "Ride-hailing & delivery driver community, free consumer app", color: ORANGE },
