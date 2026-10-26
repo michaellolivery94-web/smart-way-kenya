@@ -12,7 +12,7 @@ import {
 
 /* =========================================================
    Smart-Way Investor Pitch Deck
-   Dark navy + orange · 18 slides · 1920x1080 scaled
+   Dark navy + orange · 19 slides · 1920x1080 scaled
    ========================================================= */
 
 const NAVY = "#0A1628";
@@ -766,7 +766,7 @@ const S12 = () => {
           </div>
         </Card>
       </div>
-      <SlideFooter n={12} total={18} />
+      <SlideFooter n={13} total={19} />
     </div>
   );
 };
@@ -828,7 +828,7 @@ const S13 = () => {
           </Card>
         </div>
       </div>
-      <SlideFooter n={13} total={18} />
+      <SlideFooter n={14} total={19} />
     </div>
   );
 };
@@ -860,7 +860,7 @@ const S14 = () => {
           </Card>
         ))}
       </div>
-      <SlideFooter n={14} total={18} />
+      <SlideFooter n={15} total={19} />
     </div>
   );
 };
@@ -897,7 +897,7 @@ const S15 = () => {
           </Card>
         ))}
       </div>
-      <SlideFooter n={15} total={18} />
+      <SlideFooter n={16} total={19} />
     </div>
   );
 };
@@ -946,7 +946,7 @@ const S16 = () => {
           ))}
         </div>
       </div>
-      <SlideFooter n={16} total={18} />
+      <SlideFooter n={17} total={19} />
     </div>
   );
 };
@@ -1006,7 +1006,7 @@ const S17 = () => {
           </Card>
         </div>
       </div>
-      <SlideFooter n={17} total={18} />
+      <SlideFooter n={18} total={19} />
     </div>
   );
 };
@@ -1034,15 +1034,15 @@ const S18 = () => (
         <div>invest@smart-way.africa</div>
       </div>
     </div>
-    <SlideFooter n={18} total={18} />
+    <SlideFooter n={19} total={19} />
   </div>
 );
 
 /* ----- Slide registry ----- */
-const SLIDES = [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18];
+const SLIDES = [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S11B, S12, S13, S14, S15, S16, S17, S18];
 const TITLES = [
   "Cover", "Problem", "Why Apps Fail", "Solution", "User Journey",
-  "Trust Engine", "Market", "Product", "Traction", "Business Model",
+  "Trust Engine", "Market", "Product", "Traction", "Business Model", "Enterprise & Fleet",
   "Go-To-Market", "Competition", "Flywheel", "Roadmap", "Team",
   "Financials", "The Ask", "Vision",
 ];
